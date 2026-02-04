@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:56:13 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/02 13:58:56 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/03 18:34:44 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
 // pseudocode
-
+/* 
 int	eval(t_node node)
 {
 	if (node.type == PLUS)
@@ -31,3 +31,4 @@ int	execute(t_node node)
 }
 
 
+ */
