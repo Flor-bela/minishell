@@ -3,32 +3,30 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:56:13 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/03 18:34:44 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/04 17:05:01 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-// pseudocode
-/* 
-int	eval(t_node node)
+void	check_cmd(t_intvec array)
 {
-	if (node.type == PLUS)
-		return (node.left + node.right);
-	else
-		return (node.value);
+	int	len;
+	int	i;
+	int	counter_cmd;
+
+	len = array.len;
+	i = 0;
+	counter_cmd = 0;
+	// procurar en data cuantos comandos tengo para ver cuantos procesos hijos crear...algo asi?? pero siendo un array de int como hago para recogerlo?
+	while (i < len)
+	{
+		if(array.data[i] == 0)
+			counter_cmd++;
+	}
+	// aqui supuestamente ya se cuantos tengo y podría empezar a ver paths??? o a crear los child processes??
+	
 }
-
-int	execute(t_node node)
-{
-	if (node.type == PIPE)
-		return (execute_pipe(node.left, node.right));
-	else
-		return (execute_simple_command(node.value));
-}
-
-
- */
