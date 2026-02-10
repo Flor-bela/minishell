@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/10 17:16:57 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/10 17:50:49 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@
 typedef struct s_cmdnode // lexer
 {
 	char				*cmd; // token string
-	char				**phrase;
+	char				**phrase; // cambié para probar con execve
 	struct s_cmdnode	*prev;
 	struct s_cmdnode	*next;
 }						t_cmdnode;
