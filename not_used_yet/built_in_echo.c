@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/03 17:47:05 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/03 18:55:55 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/09 18:25:02 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,10 +35,10 @@ int	builtin_echo(char **args)
 	return (0); // exit code is 0
 }
 
-int	main(int argc, char **argv)
+/* int	main(int argc, char **argv)
 {
 	if (argc == 1)
 		return (1);
 	builtin_echo(argv);
 	return (0);
-}
+} */

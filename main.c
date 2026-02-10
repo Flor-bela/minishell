@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/03 17:09:31 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/03 18:28:46 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/09 18:30:36 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,9 @@
 
 int	main (int argc, char **argv, char **envp)
 {
-	
+	(void)argc;
+	(void)argv;
+	(void)envp;
 
 	return (0);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/04 14:59:07 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/09 18:30:46 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,9 +25,9 @@
 /*
 * Structs
 */
-typedef struct s_cmdnode
+typedef struct s_cmdnode // lexer
 {
-	char				*cmd;
+	char				*cmd; // token string
 	char				*phrase;
 	struct s_cmdnode	*prev;
 	struct s_cmdnode	*next;
@@ -46,5 +46,15 @@ typedef struct s_list
 	struct s_list	*prev;
 	struct s_list	*next;
 }					t_list;
+
+void	count_cmds(t_intvec array);
+int		count_pipes(t_intvec array);
+
+t_list	*ft_lstnew(void *content);
+void	ft_lstadd_back(t_list **lst, t_list *new);
+void	*ft_malloc(size_t size);
+void	ft_free_malloc(void);
+
+int		main (int argc, char **argv, char **envp);
 
 #endif
