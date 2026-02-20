@@ -1,23 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   execution_2.c                                      :+:      :+:    :+:   */
+/*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/11 19:26:13 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/11 18:35:14 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
-
-static void	error_fork(void)
-{
-	perror("fork"); // fork is what is written in the manual for fork
-	// free something more here?
-	exit(EXIT_FAILURE);
-}
 
 // 1st step: only executing one command
 void	execute_cmds(t_cmdnode *data) // taking command as if absolute path directly
@@ -29,29 +22,8 @@ void	execute_cmds(t_cmdnode *data) // taking command as if absolute path directl
 		printf("cmd %d %s\n", i, data[i].cmd);
 		i++;
 	}
-	// Uso lo de antes para contar cuantos nodos tiene la estructura.
-	pid_t	*pids; // array de pids
-	int	len;
-
-	len = i;
-	i = 0;
-	pids = malloc(sizeof(len));
-	/* if (pids == NULL)
-		return (1); */
-	while (i < len) // ir executando este loop para crear los procesos y ejecutar los comandos
-	{
-		pids[i] = fork();
-		if (pids[i] == -1)
-			error_fork();
-		if (pids[i] == 0)
-		{
-			// funcion executa comando
-			printf("Executando comando %d\n", i);
-			execve(data[i].cmd, data[i].phrase, NULL);
-			// error si no executa la funcion con el exit code correcto
-		}
-		i++;
-	}
+	/* printf("cmd 1 %s\n", data[0].cmd);
+	printf("cmd 2 %s\n", data[1].cmd); */
 	/* if (execve(data->cmd, data->phrase, NULL) < 0)
 	{
 		perror(data->cmd);
@@ -59,15 +31,6 @@ void	execute_cmds(t_cmdnode *data) // taking command as if absolute path directl
 		//ft_error_args(args);
 		exit(127);
 	} */
-i = 0;
-int status;
-
-status = 0; // not sure about this...
-while (i < len)
-{
-	waitpid(pids[i], &status, 0); // ?? deberia estar fuera del loop? creo que sí
-	i++;
-}
 }
 
 int	main(void)

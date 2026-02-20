@@ -1,7 +1,7 @@
 NAME = minishell
 
-SOURCES = count_cmds.c count_pipes.c ft_lstnew.c ft_lstadd_back.c ft_mallocs_list.c\
-		main.c
+SOURCES = ft_lstnew.c ft_lstadd_back.c ft_mallocs_list.c\
+		ft_split.c ft_strlen.c ft_strlcpy.c execution.c\
 
 
 OBJECTS = $(SOURCES:.c=.o)

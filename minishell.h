@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/10 17:50:49 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/19 15:10:21 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@
 typedef struct s_cmdnode // lexer
 {
 	char				*cmd; // token string
-	char				**phrase; // cambié para probar con execve
+	char				*phrase; // cambié a **phrase para probar con execve sin hacer ft_split
 	struct s_cmdnode	*prev;
 	struct s_cmdnode	*next;
 }						t_cmdnode;
@@ -47,13 +47,19 @@ typedef struct s_list
 	struct s_list	*next;
 }					t_list;
 
-void	count_cmds(t_intvec array);
-int		count_pipes(t_intvec array);
+//void	count_cmds(t_intvec array);
+//int		count_pipes(t_intvec array);
 
 t_list	*ft_lstnew(void *content);
 void	ft_lstadd_back(t_list **lst, t_list *new);
 void	*ft_malloc(size_t size);
 void	ft_free_malloc(void);
+
+char	**ft_split(char const *s, char c);
+size_t	ft_strlen(const char *s);
+size_t	ft_strlcpy(char *dst, const char *src, size_t size);
+
+int		execute_cmds(t_cmdnode *data);
 
 //int		main (int argc, char **argv, char **envp);
 
