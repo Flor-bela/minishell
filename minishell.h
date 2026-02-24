@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/19 15:10:21 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/24 13:40:08 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,8 @@ void	ft_free_malloc(void);
 char	**ft_split(char const *s, char c);
 size_t	ft_strlen(const char *s);
 size_t	ft_strlcpy(char *dst, const char *src, size_t size);
+int		find_chr(const char *s, int c);
+char	*strchr_modif(const char *s, int c);
 
 int		execute_cmds(t_cmdnode *data);
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/24 11:34:09 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/24 13:51:16 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,9 +44,8 @@ int	execute_cmds(t_cmdnode *data) // taking command as its absolute path directl
 		else if (pids[i] == 0) // in child process
 		{
 			printf("Executing command %d\n", i);
-			printf(" Sentence of %d is %s\n", i, data[i].phrase);
 			// find path if needed here!
-			// if it has / -> then we need to obtain the name of the comand and give it in argv[0], if it is the name directly, then put it directly in argv[0]
+			
 			// if (data[i].cmd has a /, then it will be the direct pathname)
 			char **split;
 			int	word_count;
@@ -56,15 +55,27 @@ int	execute_cmds(t_cmdnode *data) // taking command as its absolute path directl
 				word_count++;
 
 			char **args;
-			args = (char **)ft_malloc(sizeof(char *) * (word_count + 2));
-			//args[word_count] = NULL;
+			args = (char **)ft_malloc(sizeof(char *) * (word_count + 2)); // + 2 para añadir el array con nombre del comando (args[0]) y el ultimo array que es el del caracter nulo
+			args[word_count] = NULL;
 			
-			// args 0 is name of command...
-			
+				
 			i = 0;
 			// here obtain the name of the command:
+			if (find_chr(data[i].cmd, '/') == 1) // if it has / in the name of the command...
+			{
+				char	*cmd_name;
+				cmd_name = strchr_modif(data[i].cmd, '/');
+				printf("Command name is %s\n", cmd_name);
+				// go until the end and obtain the name of the command... from null character to the first / we find...
+				// ft_strlen -> veo cuantos tiene
+				// despues uso el original ft_strchr desde el final (desde el resultado de ft_strlen) y hago i-- hasta encontrar el ultimo /
+				// y ahí obtengo la posicion de la primera letra del comando.
+				args[0] = cmd_name;
+			}
+			else //-> si no tiene / entonces pon el nombre data[i].cmd directamente
+				args[0] = data[i].cmd;
+
 			
-			args[0] = "echo"; //
 			while (i < word_count)
 			{
 				args[i + 1] = split[i];
