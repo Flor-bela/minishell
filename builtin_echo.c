@@ -1,44 +1,52 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   built_in_echo.c                                    :+:      :+:    :+:   */
+/*   builtin_echo.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/03 17:47:05 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/09 18:25:02 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/24 17:22:34 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-// necesitamos opcion con -n (no hacer newline después)
-// no estoy segura donde vamos a poner esa informacion de si tiene -n o no...
-
-int	builtin_echo(char **args)
+int	builtin_echo(char *phrase)
 {
-	int	i;
+	int		i;
+	char	**words;
 	
-	i = 1;
-	if (args == NULL || args[0] == NULL)
+	i = 0;
+	if (phrase == NULL)
 	{
 		printf("\n");
 		return (0); // escribir echo sin nada más devulve salto de línea y salida de 0
 	}
-	
-	while (args[i] != NULL)
+	words = ft_split(phrase, ' ');
+	if (words[0][0] == '-' && words[0][1] == 'n')
 	{
-		printf("%s ", args[i]);
-		i++;
+		while (words[i] != NULL)
+		{
+			printf("%s ", words[i]);
+			i++;
+		}
+		printf("\n");
 	}
-	printf("\n");
+	else
+	{
+		while (words[i] != NULL)
+		{
+			printf("%s ", words[i]);
+			i++;
+		}
+	}
 	return (0); // exit code is 0
 }
 
-/* int	main(int argc, char **argv)
+int	main(void)
 {
-	if (argc == 1)
-		return (1);
-	builtin_echo(argv);
+	char phrase[] = "hello world";
+	builtin_echo(phrase);
 	return (0);
-} */
+}

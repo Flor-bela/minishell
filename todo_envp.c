@@ -1,5 +1,5 @@
-#include <stdio.h> 
-// TO DO: 
+#include <stdio.h>
+// TO DO:
 
 int main(int argc, char* argv[], char **envp) 
 {

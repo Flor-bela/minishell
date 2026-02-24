@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/24 16:33:22 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/24 16:50:05 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@ int	execute_cmds(t_cmdnode *data, char **envp) // taking command as its absolute
 					//close(fds[0]);
 					//close(fds[1]);
 					//close(fd_file);
-					exit(127); 
+					exit(127);
 				}
 			}
 			else //-> si no tiene / entonces busca el path del comando y añade el nombre directamente a args[0];
@@ -111,7 +111,7 @@ int	execute_cmds(t_cmdnode *data, char **envp) // taking command as its absolute
 				perror(cmd_path);
 				//free(data.cmd); // liberar todo si no funciona!!! Muy importante hacerlo inmediatamente después
 				//ft_error_args(args);
-				exit(126); // 126?? not sure
+				exit(126); // 126??
 			}
 		}
 		i++;
@@ -134,16 +134,17 @@ int	main(int argc, char **argv, char **envp)
 	char		*cmd0 = "/usr/bin/echo";
 	char		*cmd1 = "echo";
 	char		*cmd2 = "ls";
-	char		phrase0[] = "Hola Mundo"; //-> it is not printing the first word...
+	char		phrase0[] = "Hola Mundo";
 	char		phrase1[] = "World Wide Web";
-	char		phrase2[] = "-a"; // here also only executes if I put the flag twice...doesn´t take the first one like in echo...why??? 
+	char		phrase2[] = "-a";
+	
 	
 	(void)argc;
 	(void)argv;
 	
 	data[0].cmd = cmd0;
 	data[0].phrase = phrase0;
-	data[0].prev = &data[3]; // linking both nodes
+	data[0].prev = &data[3];
 	data[0].next = &data[1];
 	data[1].prev = &data[0];
 	data[1].cmd = cmd1;
