@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/24 13:40:08 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/24 16:02:43 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,8 +60,12 @@ size_t	ft_strlen(const char *s);
 size_t	ft_strlcpy(char *dst, const char *src, size_t size);
 int		find_chr(const char *s, int c);
 char	*strchr_modif(const char *s, int c);
+char	*ft_strjoin(char const *s1, char const *s2);
+int		ft_strncmp(const char *s1, const char *s2, size_t n);
 
-int		execute_cmds(t_cmdnode *data);
+char	*get_cmd_path(char **envp, char *cmd_name);
+
+int		execute_cmds(t_cmdnode *data, char **envp);
 
 //int		main (int argc, char **argv, char **envp);
 
