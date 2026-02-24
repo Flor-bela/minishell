@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/24 16:24:26 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/24 16:33:22 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,9 +69,23 @@ int	execute_cmds(t_cmdnode *data, char **envp) // taking command as its absolute
 				char	*cmd_name;
 				cmd_name = strchr_modif(data[i].cmd, '/');
 				cmd_path = data[i].cmd;
-				args[0] = cmd_name;
-				printf("With / -> Command nº %d name is %s\n", i, args[0]);
-				
+				if (access(cmd_path, X_OK) == 0) // still need to see if we have access to it!!!
+				{
+					args[0] = cmd_name;
+					printf("With / -> Command nº %d name is %s\n", i, args[0]);
+				}
+				else // when there is no access to this path
+				{
+					char	*error;
+
+					error = ft_strjoin(cmd_name, ": command not found\n");
+					write(2, error, ft_strlen(error));
+					free(error);
+					//close(fds[0]);
+					//close(fds[1]);
+					//close(fd_file);
+					exit(127); 
+				}
 			}
 			else //-> si no tiene / entonces busca el path del comando y añade el nombre directamente a args[0];
 			{
