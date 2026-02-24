@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/20 16:26:57 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/24 11:34:09 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ int	execute_cmds(t_cmdnode *data) // taking command as its absolute path directl
 			word_count = 0;
 			split = ft_split(data[i].phrase, ' ');
 			while (split[word_count] != NULL)
-				word_count++; 
+				word_count++;
 
 			char **args;
 			args = (char **)ft_malloc(sizeof(char *) * (word_count + 2));
@@ -62,6 +62,8 @@ int	execute_cmds(t_cmdnode *data) // taking command as its absolute path directl
 			// args 0 is name of command...
 			
 			i = 0;
+			// here obtain the name of the command:
+			
 			args[0] = "echo"; //
 			while (i < word_count)
 			{
@@ -96,7 +98,7 @@ int	main(void)
 {
 	t_cmdnode	data[4];
 	char		*cmd = "/usr/bin/echo";
-	char		*cmd2 = "/usr/bin/echo";
+	char		*cmd2 = "echo";
 	//char		*cmd3 = "/usr/bin/ls";
 	char		path[] = "Hola Mundo"; //-> it is not printing the first word...
 	char		path2[] = "World Wide Web";
