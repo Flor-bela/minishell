@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/25 12:55:06 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/25 13:33:09 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			cmd_path = check_cmd_name_path(args, envp, data[i].cmd);
 			
 			// 3rd: executes the command:
-			if (execve(cmd_path, args, NULL) < 0)
+			if (execve(cmd_path, args, envp) < 0)
 			{
 				perror(cmd_path);
 				ft_free_malloc();
@@ -132,10 +132,10 @@ int	main(int argc, char **argv, char **envp)
 {
 	t_cmdnode	data[4];
 	char		*cmd0 = "/usr/bin/echo";
-	char		*cmd1 = "echo";
+	char		*cmd1 = "sleep";
 	char		*cmd2 = "ls";
 	char		phrase0[] = "Hola Mundo";
-	char		phrase1[] = "World Wide Web";
+	char		phrase1[] = "6";
 	char		phrase2[] = "-a";
 	
 	
