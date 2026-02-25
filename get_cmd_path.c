@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/24 16:03:29 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/25 12:22:07 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 	free(cmd_temp);
 } */
 
-static void	free_paths(char **paths)
+/* static void	free_paths(char **paths)
 {
 	int	i;
 
@@ -36,7 +36,7 @@ static void	free_paths(char **paths)
 		i++;
 	}
 	free(paths);
-}
+} */
 
 static char	**get_all_paths(char **envp) // in the variable PATH= we have many different paths there, we need to split them all here to then later try them all and see if the command we are looking for is in one of them
 {
@@ -74,14 +74,14 @@ static char	*find_path(char **paths, char *cmd_name)
 	{
 		temp = ft_strjoin(paths[i], "/");
 		cmd_path = ft_strjoin(temp, cmd_name);
-		free(temp); // tampoco necesitaria hacer free aqui creo! De hecho verlo mejor porque uso 
+		//free(temp);
 		if (access(cmd_path, X_OK) == 0)
 		{
 			//free_cmd_temp(cmd_temp); // ver esto!!! no necesitaría hacer free aquí con ft_malloc creo...
 			return (cmd_path);
 		}
 		i++;
-		free(cmd_path); // // tampoco necesitaria hacer free aqui creo!
+		//free(cmd_path); // // tampoco necesitaria hacer free aqui creo!
 	}
 	//free_cmd_temp(cmd_temp);
 	return (NULL);
@@ -101,15 +101,16 @@ char	*get_cmd_path(char **envp, char *cmd_name) // cmd_name = data[i].cmd
 	cmd_path = find_path(paths, cmd_name);
 	if (cmd_path == NULL)
 	{
-		free_paths(paths); // ver esto!!! tengo ft_split con ft_malloc que es lo que crea este paths...
+		//free_paths(paths); // ver esto!!! tengo ft_split con ft_malloc que es lo que crea este paths...
 		error = ft_strjoin(cmd_name, ": command not found\n");
 		write(2, error, ft_strlen(error));
-		free(error);
+		//free(error);
 		//close(fds[0]);
 		//close(fds[1]);
 		//close(fd_file);
+		ft_free_malloc();
 		exit(127); // command not found
 	}
-	free_paths(paths);
+	//free_paths(paths);
 	return (cmd_path);
 }

@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/24 16:50:05 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/25 12:19:01 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,27 +15,21 @@
 static void	error_fork(void)
 {
 	perror("fork"); // fork is what is written in the manual for fork
-	// free something more here?
+	ft_free_malloc();
 	exit(EXIT_FAILURE);
 }
 
-// 1st step: only executing one command
-int	execute_cmds(t_cmdnode *data, char **envp) // taking command as its absolute path directly
+int	execute_cmds(t_cmdnode *data, char **envp)
 {
-	int	i;
-	i = 0;
-	
-	while (data[i].next != NULL)
-	{
-		printf("cmd %d %s\n", i, data[i].cmd);
-		i++;
-	}
-	
 	pid_t	*pids; // array de pids
 	int		len;
-
-	len = i;
+	int		i;
+	
+	len = 0;
 	i = 0;
+	while (data[len].next != NULL)
+		len++;
+
 	pids = ft_malloc(sizeof(pid_t) * len);
 	while (i < len) // ir executando este loop para crear los procesos y ejecutar los comandos
 	{
@@ -59,8 +53,6 @@ int	execute_cmds(t_cmdnode *data, char **envp) // taking command as its absolute
 			args = (char **)ft_malloc(sizeof(char *) * (word_count + 2)); // + 2 para añadir el array con nombre del comando (args[0]) y el ultimo array que es el del caracter nulo
 			args[word_count] = NULL;
 			
-				
-			//i = 0;
 			// here obtain the name of the command:
 			char	*cmd_path;
 
@@ -80,7 +72,7 @@ int	execute_cmds(t_cmdnode *data, char **envp) // taking command as its absolute
 
 					error = ft_strjoin(cmd_name, ": command not found\n");
 					write(2, error, ft_strlen(error));
-					free(error);
+					ft_free_malloc();
 					//close(fds[0]);
 					//close(fds[1]);
 					//close(fd_file);
@@ -94,7 +86,7 @@ int	execute_cmds(t_cmdnode *data, char **envp) // taking command as its absolute
 				printf("Without / -> Command nº %d name is %s\n", i, args[0]);
 				// buscar el path ahora (pasar la copia de **envp de main para que la pueda usar aquí)
 				
-			}	
+			}
 			
 			int j;
 			j = 0;
@@ -109,8 +101,7 @@ int	execute_cmds(t_cmdnode *data, char **envp) // taking command as its absolute
 			if (execve(cmd_path, args, NULL) < 0)
 			{
 				perror(cmd_path);
-				//free(data.cmd); // liberar todo si no funciona!!! Muy importante hacerlo inmediatamente después
-				//ft_error_args(args);
+				ft_free_malloc(); // ??
 				exit(126); // 126??
 			}
 		}
@@ -125,6 +116,7 @@ int	execute_cmds(t_cmdnode *data, char **envp) // taking command as its absolute
 		waitpid(pids[i], &status, 0);
 		i++;
 	}
+	ft_free_malloc();
 	return (status);
 }
 
@@ -132,7 +124,7 @@ int	main(int argc, char **argv, char **envp)
 {
 	t_cmdnode	data[4];
 	char		*cmd0 = "/usr/bin/echo";
-	char		*cmd1 = "echo";
+	char		*cmd1 = "echosd";
 	char		*cmd2 = "ls";
 	char		phrase0[] = "Hola Mundo";
 	char		phrase1[] = "World Wide Web";

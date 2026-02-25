@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 15:07:38 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/24 15:44:12 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/25 12:14:14 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ char	*ft_strjoin(char const *s1, char const *s2)
 		return (NULL);
 	len_s1 = ft_strlen(s1);
 	len_s2 = ft_strlen(s2);
-	ptr = malloc((len_s1 + len_s2 + 1) * sizeof(char));
+	ptr = ft_malloc((len_s1 + len_s2 + 1) * sizeof(char));
 	if (ptr == NULL)
 		return (NULL);
 	while (++i < len_s1)

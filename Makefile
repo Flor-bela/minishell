@@ -8,7 +8,7 @@ SOURCES = ft_lstnew.c ft_lstadd_back.c ft_mallocs_list.c\
 
 OBJECTS = $(SOURCES:.c=.o)
 
-FLAGS = -Wall -Werror -Wextra
+FLAGS = -Wall -Werror -Wextra -g
 
 CC = cc
 
