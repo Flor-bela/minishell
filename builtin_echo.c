@@ -6,11 +6,12 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/03 17:47:05 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/24 17:22:34 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/25 12:56:31 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
+// not working yet!!!
 
 int	builtin_echo(char *phrase)
 {
