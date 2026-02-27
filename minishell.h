@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/25 15:55:01 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/27 11:02:43 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,10 +28,24 @@
 typedef struct s_cmdnode // lexer
 {
 	char				*cmd; // token string
-	char				*phrase; // cambié a **phrase para probar con execve sin hacer ft_split
+	char				*phrase;
 	struct s_cmdnode	*prev;
 	struct s_cmdnode	*next;
 }						t_cmdnode;
+
+
+typedef struct s_cmdnode
+{
+	char				*cmd;
+	char				*phrase;
+	int					has_pipe_after; // -> 1 or 0
+	char				*infile; // -> name of infile
+	char				*outfile; // > -> name of outfile
+	int					append; // >> -> 1 or 0
+	struct s_cmdnode	*prev;
+	struct s_cmdnode	*next;
+}						t_cmdnode;
+
 
 typedef struct s_intvec
 {
