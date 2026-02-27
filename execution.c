@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/25 13:33:09 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/27 18:07:43 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,13 @@
 static void	error_fork(void)
 {
 	perror("fork"); // fork is what is written in the manual for fork
+	ft_free_malloc();
+	exit(EXIT_FAILURE);
+}
+
+static void	error_pipe(void)
+{
+	perror("pipe");
 	ft_free_malloc();
 	exit(EXIT_FAILURE);
 }
@@ -84,14 +91,27 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 	int		len;
 	int		i;
 	int		status;
-	
-	len = 0;
+	int		**arr_fds;
+		
+	len = 1;
 	i = 0;
 	status = 0;
 	while (data[len].next != NULL)
-		len++;
+		len++; // si tengo todos estos comandos, entonces tengo que crear el numero de cmds - 1 para crear todos los pipes
+	
+	arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
+	while (i < len - 1)
+	{
+		arr_fds[i] = (int *)ft_malloc(sizeof(int) * 2); 
+		if (pipe(arr_fds[i]) == -1)
+			error_pipe();
+		printf("created pipe nº %d\n", i);
+		printf("arr_fds [i][0] %d y arr_fds [i][1] %d\n", arr_fds[i][0], arr_fds[i][1]);
+		i++;
+	}
 
 	pids = ft_malloc(sizeof(pid_t) * len);
+	i = 0;
 	while (i < len) // ir executando este loop para crear los procesos y ejecutar los comandos
 	{
 		pids[i] = fork();
@@ -132,11 +152,11 @@ int	main(int argc, char **argv, char **envp)
 {
 	t_cmdnode	data[4];
 	char		*cmd0 = "/usr/bin/echo";
-	char		*cmd1 = "sleep";
+	char		*cmd1 = "echo";
 	char		*cmd2 = "ls";
 	char		phrase0[] = "Hola Mundo";
 	char		phrase1[] = "6";
-	char		phrase2[] = "-a";
+	char		phrase2[] = "-a -l";
 	
 	
 	(void)argc;
@@ -144,24 +164,19 @@ int	main(int argc, char **argv, char **envp)
 	
 	data[0].cmd = cmd0;
 	data[0].phrase = phrase0;
-	data[0].prev = &data[3];
 	data[0].next = &data[1];
-	data[1].prev = &data[0];
 	data[1].cmd = cmd1;
 	data[1].phrase = phrase1;
 	data[1].next = &data[2];
 	data[2].cmd = NULL;
 	data[2].phrase = NULL;
 	data[2].next = NULL;
-	data[2].prev = &data[1];
 	data[2].cmd = cmd2;
 	data[2].phrase = phrase2;
 	data[2].next = &data[3];
-	data[2].prev = &data[1];
 	data[3].cmd = NULL;
 	data[3].phrase = NULL;
 	data[3].next = NULL;
-	data[3].prev = &data[2];
 	return (WEXITSTATUS(execute_cmds(data, envp)));
 } 
 

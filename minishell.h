@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/27 11:02:43 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/02/27 17:32:07 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,34 +25,13 @@
 /*
 * Structs
 */
-typedef struct s_cmdnode // lexer
-{
-	char				*cmd; // token string
-	char				*phrase;
-	struct s_cmdnode	*prev;
-	struct s_cmdnode	*next;
-}						t_cmdnode;
-
-
-typedef struct s_cmdnode
+/* typedef struct s_cmdnode // tokens
 {
 	char				*cmd;
 	char				*phrase;
-	int					has_pipe_after; // -> 1 or 0
-	char				*infile; // -> name of infile
-	char				*outfile; // > -> name of outfile
-	int					append; // >> -> 1 or 0
 	struct s_cmdnode	*prev;
 	struct s_cmdnode	*next;
-}						t_cmdnode;
-
-
-typedef struct s_intvec
-{
-	int		*data;
-	size_t	len;
-	size_t	cap;
-}			t_intvec;
+}						t_cmdnode; */
 
 typedef struct s_list
 {
@@ -60,6 +39,34 @@ typedef struct s_list
 	struct s_list	*prev;
 	struct s_list	*next;
 }					t_list;
+
+typedef struct s_cmdnode // tokens
+{
+	char				*cmd;
+	char				*phrase;
+	t_list				*infiles;
+	t_list				*outfiles;
+	//int					append; //??? Como sé cuando aparece y donde ??
+	struct s_cmdnode	*next;
+}						t_cmdnode;
+
+/* typedef struct s_cmdnode // esta estructura sería mejor...
+{
+	int			pid; // opcional
+	char		*cmd;
+	char		**params; // ya separados en un array seria mejor, pero yo tambien lo puedo hacer en execucion
+	t_list		*infiles;
+	t_list		*outfiles;
+	int			append;
+	struct name	*next;
+}				t_cmdnode; */
+
+typedef struct s_intvec
+{
+	int		*data;
+	size_t	len;
+	size_t	cap;
+}			t_intvec;
 
 //void	count_cmds(t_intvec array);
 //int		count_pipes(t_intvec array);
