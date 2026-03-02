@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_cmd_path.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/25 12:22:07 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/02 11:54:33 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,9 +94,9 @@ char	*get_cmd_path(char **envp, char *cmd_name) // cmd_name = data[i].cmd
 	char	**paths;
 	char	*cmd_path;
 	char	*error;
-	int		i;
+	//int		i;
 
-	i = 0;
+	//i = 0;
 	paths = get_all_paths(envp);
 	cmd_path = find_path(paths, cmd_name);
 	if (cmd_path == NULL)
