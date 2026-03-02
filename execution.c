@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/02 14:34:59 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/02 14:47:00 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,30 +148,19 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			{
 				// faltan redirecciones
 				dup2(arr_fds[i][1], STDOUT_FILENO); // std_outfile is now the write end of pipe
-				//close(arr_fds[i][1]); // cierro ya?? (creo)
-				
 			}
 			else if (i == (len - 1)) // last command
 			{
 				dup2(arr_fds[i - 1][0], STDIN_FILENO); // lee del pipe
-				//close(arr_fds[i - 1][0]);
-				//close(arr_fds[i - 1][1]); // cierra escribir en el pipe
-				// escribe directamente en STDOUT
-				
+				// escribe directamente en STDOUT - o sea en la terminal
 			}
 			else // in the middle
 			{
 				// faltan redirecciones y cerrar fds originales?
-				dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the read part of pipe as standard input
-				//close(arr_fds[i - 1][0]);
-							
-				//close(arr_fds[i][0]); // we close the reading part of the next pipe since we are not going to use it for this command.
-				dup2(arr_fds[i][1], STDOUT_FILENO);
-				//close(arr_fds[i][1]);
+				dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the reading part of the previous pipe as standard input
+				dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe.
 			}
-			close_fds(arr_fds, len);
-			
-
+			close_fds(arr_fds, len); // cierra todos los fds
 			
 			// 4th: executes the command:
 			if (execve(cmd_path, args, envp) < 0)
