@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/02 14:47:00 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/02 17:59:00 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,18 +26,15 @@ static void	error_pipe(void)
 	exit(EXIT_FAILURE);
 }
 
-static void	close_fds(int **arr_fds, int len_cmds)
+/* 
+static void	error_fd_file(char *name_infile)
 {
-	int	j;
+	perror(name_infile);
+	ft_free_malloc();
+	exit(1);
+} */
 
-	j = 0;
-	while (j < len_cmds - 1) // close all fds from all pipes created (also here in the parent process)
-	{
-		close(arr_fds[j][0]); //  to read
-		close(arr_fds[j][1]); // cierro ya?? (creo)
-		j++;
-	}
-}
+
 
 static	char **split_phrase(char *cmd_phrase)
 {
@@ -64,7 +61,7 @@ static	char **split_phrase(char *cmd_phrase)
 	return (args);
 }
 
-static char	*check_cmd_name_path(char **args, char **envp, char *data_cmd) // adds args[0] has the name of the command and gets command path
+static char	*check_cmd_name_path(char **args, char **envp, char *data_cmd, int **arr_fds, int len) // adds args[0] has the name of the command and gets command path
 {
 	char	*cmd_name;
 	char	*cmd_path;
@@ -80,6 +77,7 @@ static char	*check_cmd_name_path(char **args, char **envp, char *data_cmd) // ad
 		{
 			error = ft_strjoin(cmd_name, ": command not found\n");
 			write(2, error, ft_strlen(error));
+			close_fds(arr_fds, len); // tengo que cerrarlos todos aquí también!!!
 			ft_free_malloc();
 			//close(fds[0]);
 			//close(fds[1]);
@@ -89,7 +87,7 @@ static char	*check_cmd_name_path(char **args, char **envp, char *data_cmd) // ad
 	}
 	else //-> si no tiene / entonces busca el path del comando y añade el nombre directamente a args[0];
 	{
-		cmd_path = get_cmd_path(envp, data_cmd);
+		cmd_path = get_cmd_path(envp, data_cmd, arr_fds, len);
 		args[0] = data_cmd;
 		// buscar el path ahora (pasar la copia de **envp de main para que la pueda usar aquí)
 	}
@@ -106,8 +104,6 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 	int		status;
 	int		**arr_fds;
 
-		
-		
 	len = 1;
 	i = 0;
 	status = 0;
@@ -140,23 +136,55 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			args = split_phrase(data[i].phrase);
 			
 			// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
-			cmd_path = check_cmd_name_path(args, envp, data[i].cmd);
+			cmd_path = check_cmd_name_path(args, envp, data[i].cmd, arr_fds, len);
 			
 			// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
 			
 			if (i == 0) // first command
 			{
-				// faltan redirecciones
+				// redirection <
+				/* int		fd_file;
+				if (data[i].infiles != NULL)
+				{
+					while (data[i].infiles->next != NULL)
+					{
+						fd_file = open(data[i].infiles->content, O_RDONLY);
+						if (fd_file == -1)
+						{
+							close_fds(arr_fds, len);
+							error_fd_file(data[i].infiles->content);
+						}
+						dup2(fd_file, STDIN_FILENO);
+						close (fd_file);
+						data[i].infiles = data[i].infiles->next; // moverme hasta que no tenga más ningun infile
+					} 
+				} */
 				dup2(arr_fds[i][1], STDOUT_FILENO); // std_outfile is now the write end of pipe
 			}
 			else if (i == (len - 1)) // last command
 			{
+				/* int		fd_file;
+				if (data[i].infiles != NULL)
+				{
+					while (data[i].infiles->next != NULL)
+					{
+						fd_file = open(data[i].infiles->content, O_RDONLY);
+						if (fd_file == -1)
+						{
+							close_fds(arr_fds, len);
+							error_fd_file(data[i].infiles->content);
+						}
+						dup2(fd_file, STDIN_FILENO);
+						close (fd_file);
+						data[i].infiles = data[i].infiles->next; // moverme hasta que no tenga más ningun infile
+					} 
+				} */
 				dup2(arr_fds[i - 1][0], STDIN_FILENO); // lee del pipe
-				// escribe directamente en STDOUT - o sea en la terminal
+				// escribe directamente en STDOUT -> o sea la terminal
 			}
 			else // in the middle
 			{
-				// faltan redirecciones y cerrar fds originales?
+				// faltan redirecciones
 				dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the reading part of the previous pipe as standard input
 				dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe.
 			}
@@ -186,14 +214,15 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 
 int	main(int argc, char **argv, char **envp)
 {
-	t_cmdnode	data[4];
-	char		*cmd0 = "/usr/bin/echo";
-	char		*cmd1 = "echo";
-	char		*cmd2 = "ls";
-	char		phrase0[] = "Hola Mundo";
-	char		phrase1[] = "6";
-	char		phrase2[] = "-a -l";
-	
+	t_cmdnode	data[5];
+	char		*cmd0 = "/usr/bin/ls";
+	char		*cmd1 = "cmd1";
+	char		*cmd2 = "sort";
+	char		*cmd3 = "wc";
+	char		phrase0[] = "-l";
+	char		phrase1[] = ".c";
+	char		phrase2[] = " ";
+	char		phrase3[] = "-l";
 	
 	(void)argc;
 	(void)argv;
@@ -204,15 +233,15 @@ int	main(int argc, char **argv, char **envp)
 	data[1].cmd = cmd1;
 	data[1].phrase = phrase1;
 	data[1].next = &data[2];
-	data[2].cmd = NULL;
-	data[2].phrase = NULL;
-	data[2].next = NULL;
 	data[2].cmd = cmd2;
 	data[2].phrase = phrase2;
 	data[2].next = &data[3];
-	data[3].cmd = NULL;
-	data[3].phrase = NULL;
-	data[3].next = NULL;
+	data[3].cmd = cmd3;
+	data[3].phrase = phrase3;
+	data[3].next = &data[4];
+	data[4].cmd = NULL;
+	data[4].phrase = NULL;
+	data[4].next = NULL;
 	return (WEXITSTATUS(execute_cmds(data, envp)));
 } 
 

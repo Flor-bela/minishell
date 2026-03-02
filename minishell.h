@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/02 15:43:36 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/02 17:56:30 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,6 @@ typedef struct s_cmdnode // tokens
 	char				*phrase;
 	t_list				*infiles;
 	t_list				*outfiles;
-	//int					append; //??? Como sé cuando aparece y donde ??
 	struct s_cmdnode	*next;
 }						t_cmdnode;
 
@@ -86,9 +85,11 @@ char	*strchr_modif(const char *s, int c);
 char	*ft_strjoin(char const *s1, char const *s2);
 int		ft_strncmp(const char *s1, const char *s2, size_t n);
 
-char	*get_cmd_path(char **envp, char *cmd_name);
+char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len);
 
 int		execute_cmds(t_cmdnode *data, char **envp);
+
+void	close_fds(int **arr_fds, int len_cmds);
 
 //int		main (int argc, char **argv, char **envp);
 

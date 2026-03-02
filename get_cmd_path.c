@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_cmd_path.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/02 11:54:33 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/02 17:55:11 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,7 @@ static char	*find_path(char **paths, char *cmd_name)
 
 //char	*ft_get_cmd_path(char **envp, char *argv, int *fds, int fd_file)
 // ft_strjoin tiene malloc real!!! ver esto! 
-char	*get_cmd_path(char **envp, char *cmd_name) // cmd_name = data[i].cmd
+char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len) // cmd_name = data[i].cmd
 {
 	char	**paths;
 	char	*cmd_path;
@@ -104,6 +104,7 @@ char	*get_cmd_path(char **envp, char *cmd_name) // cmd_name = data[i].cmd
 		//free_paths(paths); // ver esto!!! tengo ft_split con ft_malloc que es lo que crea este paths...
 		error = ft_strjoin(cmd_name, ": command not found\n");
 		write(2, error, ft_strlen(error));
+		close_fds(arr_fds, len); // cerrarlos todos aquí también
 		//free(error);
 		//close(fds[0]);
 		//close(fds[1]);

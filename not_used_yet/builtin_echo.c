@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/03 17:47:05 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/25 12:56:31 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/02 18:20:57 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ int	builtin_echo(char *phrase)
 		return (0); // escribir echo sin nada más devulve salto de línea y salida de 0
 	}
 	words = ft_split(phrase, ' ');
-	if (words[0][0] == '-' && words[0][1] == 'n')
+	if (words[0][0] == '-' && words[0][1] == 'n') /// -nnnnnnnnn (funciona) pero -nasdasd (no funciona)
 	{
 		while (words[i] != NULL)
 		{
