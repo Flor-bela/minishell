@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/27 18:07:43 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/02 14:34:59 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,19 @@ static void	error_pipe(void)
 	perror("pipe");
 	ft_free_malloc();
 	exit(EXIT_FAILURE);
+}
+
+static void	close_fds(int **arr_fds, int len_cmds)
+{
+	int	j;
+
+	j = 0;
+	while (j < len_cmds - 1) // close all fds from all pipes created (also here in the parent process)
+	{
+		close(arr_fds[j][0]); //  to read
+		close(arr_fds[j][1]); // cierro ya?? (creo)
+		j++;
+	}
 }
 
 static	char **split_phrase(char *cmd_phrase)
@@ -92,6 +105,8 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 	int		i;
 	int		status;
 	int		**arr_fds;
+
+		
 		
 	len = 1;
 	i = 0;
@@ -127,7 +142,38 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
 			cmd_path = check_cmd_name_path(args, envp, data[i].cmd);
 			
-			// 3rd: executes the command:
+			// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
+			
+			if (i == 0) // first command
+			{
+				// faltan redirecciones
+				dup2(arr_fds[i][1], STDOUT_FILENO); // std_outfile is now the write end of pipe
+				//close(arr_fds[i][1]); // cierro ya?? (creo)
+				
+			}
+			else if (i == (len - 1)) // last command
+			{
+				dup2(arr_fds[i - 1][0], STDIN_FILENO); // lee del pipe
+				//close(arr_fds[i - 1][0]);
+				//close(arr_fds[i - 1][1]); // cierra escribir en el pipe
+				// escribe directamente en STDOUT
+				
+			}
+			else // in the middle
+			{
+				// faltan redirecciones y cerrar fds originales?
+				dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the read part of pipe as standard input
+				//close(arr_fds[i - 1][0]);
+							
+				//close(arr_fds[i][0]); // we close the reading part of the next pipe since we are not going to use it for this command.
+				dup2(arr_fds[i][1], STDOUT_FILENO);
+				//close(arr_fds[i][1]);
+			}
+			close_fds(arr_fds, len);
+			
+
+			
+			// 4th: executes the command:
 			if (execve(cmd_path, args, envp) < 0)
 			{
 				perror(cmd_path);
@@ -137,6 +183,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 		}
 		i++;
 	}
+	close_fds(arr_fds, len);
 	
 	i = 0;
 	while (i < len)
