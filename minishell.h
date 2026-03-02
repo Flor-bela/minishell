@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/10 10:49:28 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/02 11:26:51 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,10 +42,6 @@ typedef struct s_intvec {
 
 #endif
 
-                //acabar los demas comandos
-                                                    //poner los mensajes de error y devolber el numero del error
-//pasar directorios como comandos
-                //modificar codigo para que no revise el numero de argumentos
-                //pasar todos los argumentos a frase
-//   /usr/bin/ls
+//cambiar programa para que meta las reedirecciones como parametro del nodo
+
 
