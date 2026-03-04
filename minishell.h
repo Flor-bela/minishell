@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/02 17:56:30 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/04 14:21:23 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,12 +40,12 @@ typedef struct s_list
 	struct s_list	*next;
 }					t_list;
 
-typedef struct s_cmdnode // tokens
+typedef struct s_cmdnode
 {
 	char				*cmd;
-	char				*phrase;
-	t_list				*infiles;
-	t_list				*outfiles;
+	t_list				*phrase;
+	t_list				*infiles; // < (redirecciones)
+	t_list				*outfiles; // > (redirecciones)
 	struct s_cmdnode	*next;
 }						t_cmdnode;
 
