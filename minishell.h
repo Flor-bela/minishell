@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/04 14:21:23 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/04 16:06:57 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,25 +40,26 @@ typedef struct s_list
 	struct s_list	*next;
 }					t_list;
 
+// Antigua: pero la voy a continuar a usar por ahora para poder hacer las redirecciones
 typedef struct s_cmdnode
 {
 	char				*cmd;
-	t_list				*phrase;
+	char				*phrase; 
 	t_list				*infiles; // < (redirecciones)
 	t_list				*outfiles; // > (redirecciones)
 	struct s_cmdnode	*next;
 }						t_cmdnode;
 
-/* typedef struct s_cmdnode // esta estructura sería mejor...
+// Ultima version:
+/* typedef struct s_cmdnode
 {
-	int			pid; // opcional
-	char		*cmd;
-	char		**params; // ya separados en un array seria mejor, pero yo tambien lo puedo hacer en execucion
-	t_list		*infiles;
-	t_list		*outfiles;
-	int			append;
-	struct name	*next;
-}				t_cmdnode; */
+	char				*cmd;
+	t_list				*phrase; // Oscar me va a hacer split de todos los argumentos
+	t_list				*infiles; // < (redirecciones)
+	t_list				*outfiles; // > (redirecciones)
+	struct s_cmdnode	*next;
+}						t_cmdnode; */
+
 
 typedef struct s_intvec
 {

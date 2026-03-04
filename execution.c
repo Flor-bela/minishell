@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/04 11:37:23 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/04 17:57:33 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,13 +26,13 @@ static void	error_pipe(void)
 	exit(EXIT_FAILURE);
 }
 
-/* 
+ 
 static void	error_fd_file(char *name_infile)
 {
 	perror(name_infile);
 	ft_free_malloc();
 	exit(1);
-} */
+}
 
 
 
@@ -123,6 +123,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 
 	pids = ft_malloc(sizeof(pid_t) * len);
 	i = 0;
+	printf("len %d\n", len);
 	while (i < len) // ir executando este loop para crear los procesos y ejecutar los comandos
 	{
 		pids[i] = fork();
@@ -137,17 +138,21 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			
 			// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
 			cmd_path = check_cmd_name_path(args, envp, data[i].cmd, arr_fds, len);
-			
+			printf("args[0] %s\n", args[0]);
+			printf("cmd path %s\n", cmd_path);
 			// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
 			
-			if (i == 0) // first command
+			if (i == 0) // first command and only one command
 			{
 				// redirection <
-				/* int		fd_file;
+				int		fd_file;
+
+				fd_file = 0; // mejor iniciarlo
 				if (data[i].infiles != NULL)
 				{
-					while (data[i].infiles->next != NULL)
+					while (data[i].infiles->content != NULL)
 					{
+						printf("infile is %s\n", (char *)data[i].infiles->content);
 						fd_file = open(data[i].infiles->content, O_RDONLY);
 						if (fd_file == -1)
 						{
@@ -157,13 +162,19 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 						dup2(fd_file, STDIN_FILENO);
 						close (fd_file);
 						data[i].infiles = data[i].infiles->next; // moverme hasta que no tenga más ningun infile
-					} 
-				} */
-				dup2(arr_fds[i][1], STDOUT_FILENO); // std_outfile is now the write end of pipe
+					}
+				}
+				if (arr_fds[i] != NULL) // ??? si existe pipe escribe en el pipe, si no que escriba en el terminal....????
+				{
+					printf("aqui??\n");
+					dup2(arr_fds[i][1], STDOUT_FILENO); // std_outfile is now the write end of pipe
+				}
 			}
-			else if (i == (len - 1)) // last command
+			else if (i != 0 && i == (len - 1)) // last command (i no puede ser 0 si no va a repetirse con el primero comando)
 			{
-				/* int		fd_file;
+				int		fd_file;
+				
+				fd_file = 0;
 				if (data[i].infiles != NULL)
 				{
 					while (data[i].infiles->next != NULL)
@@ -178,19 +189,38 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 						close (fd_file);
 						data[i].infiles = data[i].infiles->next; // moverme hasta que no tenga más ningun infile
 					} 
-				} */
+				}
 				dup2(arr_fds[i - 1][0], STDIN_FILENO); // lee del pipe
 				// escribe directamente en STDOUT -> o sea la terminal
 			}
 			else // in the middle
 			{
-				// faltan redirecciones
+				int		fd_file;
+				
+				fd_file = 0;
+				if (data[i].infiles != NULL)
+				{
+					while (data[i].infiles->next != NULL)
+					{
+						fd_file = open(data[i].infiles->content, O_RDONLY);
+						if (fd_file == -1)
+						{
+							close_fds(arr_fds, len);
+							error_fd_file(data[i].infiles->content);
+						}
+						dup2(fd_file, STDIN_FILENO);
+						close (fd_file);
+						data[i].infiles = data[i].infiles->next; // moverme hasta que no tenga más ningun infile
+					}
+				}
 				dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the reading part of the previous pipe as standard input
 				dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe.
 			}
 			close_fds(arr_fds, len); // cierra todos los fds
 			
 			// 4th: executes the command:
+			printf("hereeeeeeeeeeeeeeeeeeeeee\n"); // PK NO ENTRA AQUI???
+			printf("error?\n");
 			if (execve(cmd_path, args, envp) < 0)
 			{
 				perror(cmd_path);
@@ -214,21 +244,30 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 
 int	main(int argc, char **argv, char **envp)
 {
-	t_cmdnode	data[5];
-	char		*cmd0 = "/usr/bin/ls";
+	// crear variable infiles (t_list)
+	/* t_cmdnode	data[5];
+	char		*cmd0 = "cat";
 	char		*cmd1 = "grep";
 	char		*cmd2 = "sort";
 	char		*cmd3 = "wc";
-	char		phrase0[] = "-l";
+	char		phrase0[] = "";
 	char		phrase1[] = ".c";
-	char		phrase2[] = " ";
+	char		phrase2[] = "";
 	char		phrase3[] = "-l";
+	t_list		list[2];
+	
+	
 	
 	(void)argc;
 	(void)argv;
+	list[0].content = (char *)"hello";
+	list[0].next  = &list[1];
+	list[1].content = (char *)"world";
+	list[1].next = NULL;
 	
 	data[0].cmd = cmd0;
 	data[0].phrase = phrase0;
+	data[0].infiles = list;
 	data[0].next = &data[1];
 	data[1].cmd = cmd1;
 	data[1].phrase = phrase1;
@@ -242,6 +281,33 @@ int	main(int argc, char **argv, char **envp)
 	data[4].cmd = NULL;
 	data[4].phrase = NULL;
 	data[4].next = NULL;
+ */
+
+
+	t_cmdnode	data[2];
+	char		*cmd0 = "/usr/bin/cat";
+	char		phrase0[] = " ";
+	t_list		list[2];
+	
+	(void)argc;
+	(void)argv;
+	list[0].content = (char *)"hello";
+	list[0].next  = &list[1];
+	list[1].content = (char *)"world";
+	list[1].next = NULL;
+	
+	data[0].cmd = cmd0;
+	data[0].phrase = phrase0;
+	data[0].infiles = list;
+	data[0].outfiles = NULL;
+	data[0].next = &data[1];
+	data[1].cmd = NULL;
+	data[1].phrase = NULL;
+	data[1].infiles = NULL;
+	data[1].outfiles = NULL;
+	data[1].next = NULL;
+
+	
 	return (WEXITSTATUS(execute_cmds(data, envp)));
 } 
 
