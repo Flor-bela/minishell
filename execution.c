@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/04 17:57:33 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/05 18:33:05 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,6 @@ static	char **split_phrase(char *cmd_phrase)
 	split = ft_split(cmd_phrase, ' ');
 	while (split[word_count] != NULL)
 		word_count++;
-
 	args = (char **)ft_malloc(sizeof(char *) * (word_count + 2)); // + 2 para añadir el array con nombre del comando (args[0]) y el ultimo array que es el del caracter nulo
 	while (i < word_count)
 	{
@@ -103,27 +102,31 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 	int		i;
 	int		status;
 	int		**arr_fds;
+	t_cmdnode *tmp;
 
-	len = 1;
+	len = 0;
 	i = 0;
 	status = 0;
-	while (data[len].next != NULL)
+	tmp = data;
+	while (tmp && tmp->cmd != NULL)
+	{
 		len++; // si tengo todos estos comandos, entonces tengo que crear el numero de cmds - 1 para crear todos los pipes
-	
+		tmp = tmp->next;
+	}
 	arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
 	while (i < len - 1)
 	{
 		arr_fds[i] = (int *)ft_malloc(sizeof(int) * 2); 
 		if (pipe(arr_fds[i]) == -1)
 			error_pipe();
-		printf("created pipe nº %d\n", i);
-		printf("arr_fds [i][0] %d y arr_fds [i][1] %d\n", arr_fds[i][0], arr_fds[i][1]);
+		//printf("created pipe nº %d\n", i);
+		//printf("arr_fds [i][0] %d y arr_fds [i][1] %d\n", arr_fds[i][0], arr_fds[i][1]);
 		i++;
 	}
 
 	pids = ft_malloc(sizeof(pid_t) * len);
 	i = 0;
-	printf("len %d\n", len);
+	
 	while (i < len) // ir executando este loop para crear los procesos y ejecutar los comandos
 	{
 		pids[i] = fork();
@@ -131,17 +134,18 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			error_fork();
 		else if (pids[i] == 0) // in child process
 		{
-			printf("Executing command %d\n", i);
+			//printf("Executing command %d\n", i);
 			
 			//1st split phrase into words to create an array of words to send to execve (we still miss args[0]):
 			args = split_phrase(data[i].phrase);
 			
 			// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
 			cmd_path = check_cmd_name_path(args, envp, data[i].cmd, arr_fds, len);
-			printf("args[0] %s\n", args[0]);
-			printf("cmd path %s\n", cmd_path);
+			//printf("args[0] %s\n", args[0]);
+			//printf("cmd path %s\n", cmd_path);
 			// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
-			
+			//printf(" cmd path is %s\n", cmd_path);
+			//printf(" args is %s\n", args[0]);
 			if (i == 0) // first command and only one command
 			{
 				// redirection <
@@ -150,9 +154,9 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				fd_file = 0; // mejor iniciarlo
 				if (data[i].infiles != NULL)
 				{
-					while (data[i].infiles->content != NULL)
+					while (data[i].infiles != NULL)
 					{
-						printf("infile is %s\n", (char *)data[i].infiles->content);
+						//printf("infile is %s\n", (char *)data[i].infiles->content);
 						fd_file = open(data[i].infiles->content, O_RDONLY);
 						if (fd_file == -1)
 						{
@@ -164,11 +168,8 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 						data[i].infiles = data[i].infiles->next; // moverme hasta que no tenga más ningun infile
 					}
 				}
-				if (arr_fds[i] != NULL) // ??? si existe pipe escribe en el pipe, si no que escriba en el terminal....????
-				{
-					printf("aqui??\n");
-					dup2(arr_fds[i][1], STDOUT_FILENO); // std_outfile is now the write end of pipe
-				}
+				if (len > 1) // si existe pipe escribe en el pipe, si no que escriba en el terminal
+					dup2(arr_fds[0][1], STDOUT_FILENO); // std_outfile is now the write end of pipe
 			}
 			else if (i != 0 && i == (len - 1)) // last command (i no puede ser 0 si no va a repetirse con el primero comando)
 			{
@@ -177,7 +178,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				fd_file = 0;
 				if (data[i].infiles != NULL)
 				{
-					while (data[i].infiles->next != NULL)
+					while (data[i].infiles != NULL)
 					{
 						fd_file = open(data[i].infiles->content, O_RDONLY);
 						if (fd_file == -1)
@@ -190,7 +191,8 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 						data[i].infiles = data[i].infiles->next; // moverme hasta que no tenga más ningun infile
 					} 
 				}
-				dup2(arr_fds[i - 1][0], STDIN_FILENO); // lee del pipe
+				else // only reads from pipe if there are no infiles
+					dup2(arr_fds[i - 1][0], STDIN_FILENO); // lee del pipe
 				// escribe directamente en STDOUT -> o sea la terminal
 			}
 			else // in the middle
@@ -200,7 +202,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				fd_file = 0;
 				if (data[i].infiles != NULL)
 				{
-					while (data[i].infiles->next != NULL)
+					while (data[i].infiles != NULL)
 					{
 						fd_file = open(data[i].infiles->content, O_RDONLY);
 						if (fd_file == -1)
@@ -213,14 +215,16 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 						data[i].infiles = data[i].infiles->next; // moverme hasta que no tenga más ningun infile
 					}
 				}
-				dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the reading part of the previous pipe as standard input
-				dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe.
+				else
+				{
+					dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the reading part of the previous pipe as standard input
+					dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe.
+				}
 			}
 			close_fds(arr_fds, len); // cierra todos los fds
 			
 			// 4th: executes the command:
-			printf("hereeeeeeeeeeeeeeeeeeeeee\n"); // PK NO ENTRA AQUI???
-			printf("error?\n");
+			//printf("execute args %s\n", args[0]);
 			if (execve(cmd_path, args, envp) < 0)
 			{
 				perror(cmd_path);
@@ -244,8 +248,9 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 
 int	main(int argc, char **argv, char **envp)
 {
-	// crear variable infiles (t_list)
-	/* t_cmdnode	data[5];
+	
+	// 1st // cat < hello < world | grep .c | sort | wc -l
+	/* t_cmdnode	data[4];
 	char		*cmd0 = "cat";
 	char		*cmd1 = "grep";
 	char		*cmd2 = "sort";
@@ -256,8 +261,6 @@ int	main(int argc, char **argv, char **envp)
 	char		phrase3[] = "-l";
 	t_list		list[2];
 	
-	
-	
 	(void)argc;
 	(void)argv;
 	list[0].content = (char *)"hello";
@@ -267,27 +270,36 @@ int	main(int argc, char **argv, char **envp)
 	
 	data[0].cmd = cmd0;
 	data[0].phrase = phrase0;
-	data[0].infiles = list;
+	data[0].infiles = &list[0];
+	data[0].outfiles = NULL;
 	data[0].next = &data[1];
 	data[1].cmd = cmd1;
 	data[1].phrase = phrase1;
+	data[1].infiles = NULL;
+	data[1].outfiles = NULL;
 	data[1].next = &data[2];
 	data[2].cmd = cmd2;
 	data[2].phrase = phrase2;
+	data[2].infiles = NULL;
+	data[2].outfiles = NULL;
 	data[2].next = &data[3];
 	data[3].cmd = cmd3;
 	data[3].phrase = phrase3;
-	data[3].next = &data[4];
-	data[4].cmd = NULL;
-	data[4].phrase = NULL;
-	data[4].next = NULL;
- */
+	data[3].infiles = NULL;
+	data[3].outfiles = NULL;
+	data[3].next = NULL; */
+ 
+ 
+	//////////////////////////////////////////////////////////////////////
+	//2nd // cat < hello < world | grep world < otherfile (grep ignores pipe)
 
-
-	t_cmdnode	data[2];
-	char		*cmd0 = "/usr/bin/cat";
-	char		phrase0[] = " ";
+	/* t_cmdnode	data[3];
+	char		*cmd0 = "cat";
+	char		*cmd1 = "grep";
+	char		phrase0[] = "";
+	char		phrase1[] = "world";
 	t_list		list[2];
+	t_list		list2[1];
 	
 	(void)argc;
 	(void)argv;
@@ -295,18 +307,112 @@ int	main(int argc, char **argv, char **envp)
 	list[0].next  = &list[1];
 	list[1].content = (char *)"world";
 	list[1].next = NULL;
+
+	list2[0].content = (char *)"otherfile";
+	list2[0].next = NULL;
 	
 	data[0].cmd = cmd0;
 	data[0].phrase = phrase0;
 	data[0].infiles = list;
 	data[0].outfiles = NULL;
 	data[0].next = &data[1];
-	data[1].cmd = NULL;
-	data[1].phrase = NULL;
+	data[1].cmd = cmd1;
+	data[1].phrase = phrase1;
+	data[1].infiles = list2;
+	data[1].outfiles = NULL;
+	data[1].next = NULL; */
+
+
+
+	/////////////////////////////////////
+	// 3rd // cat hello | grep abc
+	/* t_cmdnode	data[3];
+	char		*cmd0 = "cat";
+	char		*cmd1 = "grep";
+	char		phrase0[] = "hello";
+	char		phrase1[] = "abc";
+	
+	(void)argc;
+	(void)argv;
+
+	data[0].cmd = cmd0;
+	data[0].phrase = phrase0;
+	data[0].infiles = NULL;
+	data[0].outfiles = NULL;
+	data[0].next = &data[1];
+	data[1].cmd = cmd1;
+	data[1].phrase = phrase1;
 	data[1].infiles = NULL;
 	data[1].outfiles = NULL;
-	data[1].next = NULL;
+	data[1].next = NULL; */
 
+	
+	////////////////////////////////////////////
+	// 4th // cat hello | grep world | wc -l
+	/* t_cmdnode	data[4];
+	char		*cmd0 = "cat";
+	char		*cmd1 = "grep";
+	char		*cmd2 = "wc";
+	char		phrase0[] = "hello";
+	char		phrase1[] = "world";
+	char		phrase2[] = "-l";
+	
+	(void)argc;
+	(void)argv;
+
+	data[0].cmd = cmd0;
+	data[0].phrase = phrase0;
+	data[0].infiles = NULL;
+	data[0].outfiles = NULL;
+	data[0].next = &data[1];
+	data[1].cmd = cmd1;
+	data[1].phrase = phrase1;
+	data[1].infiles = NULL;
+	data[1].outfiles = NULL;
+	data[1].next = &data[2];
+	data[2].cmd = cmd2;
+	data[2].phrase = phrase2;
+	data[2].infiles = NULL;
+	data[2].outfiles = NULL;
+	data[2].next = NULL; */
+
+	/////////////////////////////////////////////////
+
+	//5th // yes | yes | yes | head -n 5 // yes prints yes in an infinite loop and head reads only the first 5 rows so it stops yes -> when head exits the pipe closed and yes receives SIGPIPE so it also stops
+	t_cmdnode	data[4];
+	char		*cmd0 = "yes";
+	char		*cmd1 = "yes";
+	char		*cmd2 = "yes";
+	char		*cmd3 = "head";
+	char		phrase0[] = "";
+	char		phrase1[] = "";
+	char		phrase2[] = "";
+	char		phrase3[] = "-n 5";
+	
+	(void)argc;
+	(void)argv;
+	
+	data[0].cmd = cmd0;
+	data[0].phrase = phrase0;
+	data[0].infiles = NULL;
+	data[0].outfiles = NULL;
+	data[0].next = &data[1];
+	data[1].cmd = cmd1;
+	data[1].phrase = phrase1;
+	data[1].infiles = NULL;
+	data[1].outfiles = NULL;
+	data[1].next = &data[2];
+	data[2].cmd = cmd2;
+	data[2].phrase = phrase2;
+	data[2].infiles = NULL;
+	data[2].outfiles = NULL;
+	data[2].next = &data[3];
+	data[3].cmd = cmd3;
+	data[3].phrase = phrase3;
+	data[3].infiles = NULL;
+	data[3].outfiles = NULL;
+	data[3].next = NULL;
+	
 	
 	return (WEXITSTATUS(execute_cmds(data, envp)));
 } 
