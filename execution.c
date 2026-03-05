@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/05 18:33:05 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/05 18:44:55 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -379,7 +379,7 @@ int	main(int argc, char **argv, char **envp)
 	/////////////////////////////////////////////////
 
 	//5th // yes | yes | yes | head -n 5 // yes prints yes in an infinite loop and head reads only the first 5 rows so it stops yes -> when head exits the pipe closed and yes receives SIGPIPE so it also stops
-	t_cmdnode	data[4];
+	/* t_cmdnode	data[4];
 	char		*cmd0 = "yes";
 	char		*cmd1 = "yes";
 	char		*cmd2 = "yes";
@@ -411,7 +411,73 @@ int	main(int argc, char **argv, char **envp)
 	data[3].phrase = phrase3;
 	data[3].infiles = NULL;
 	data[3].outfiles = NULL;
-	data[3].next = NULL;
+	data[3].next = NULL; */
+
+	////////////////////////////////////////////////////////
+	
+	// 6th // cat < hello < world | grep pie | sort | uniq | grep pie | wc -l | cat
+	
+	t_cmdnode	data[7];
+	char		*cmd0 = "cat";
+	char		*cmd1 = "grep";
+	char		*cmd2 = "sort";
+	char		*cmd3 = "uniq";
+	char		*cmd4 = "grep";
+	char		*cmd5 = "wc";
+	char		*cmd6 = "cat";
+	char		phrase0[] = "";
+	char		phrase1[] = "apple";
+	char		phrase2[] = "";
+	char		phrase3[] = "";
+	char		phrase4[] = "apple";
+	char		phrase5[] = "-l";
+	char		phrase6[] = "";
+	t_list		list[2];
+
+	(void)argc;
+	(void)argv;
+
+	list[0].content = (char *)"hello";
+	list[0].next  = &list[1];
+	list[1].content = (char *)"world";
+	list[1].next = NULL;
+	
+	data[0].cmd = cmd0;
+	data[0].phrase = phrase0;
+	data[0].infiles = list;
+	data[0].outfiles = NULL;
+	data[0].next = &data[1];
+	data[1].cmd = cmd1;
+	data[1].phrase = phrase1;
+	data[1].infiles = NULL;
+	data[1].outfiles = NULL;
+	data[1].next = &data[2];
+	data[2].cmd = cmd2;
+	data[2].phrase = phrase2;
+	data[2].infiles = NULL;
+	data[2].outfiles = NULL;
+	data[2].next = &data[3];
+	data[3].cmd = cmd3;
+	data[3].phrase = phrase3;
+	data[3].infiles = NULL;
+	data[3].outfiles = NULL;
+	data[3].next = &data[4];
+	data[4].cmd = cmd4;
+	data[4].phrase = phrase4;
+	data[4].infiles = NULL;
+	data[4].outfiles = NULL;
+	data[4].next = &data[5];
+	data[5].cmd = cmd5;
+	data[5].phrase = phrase5;
+	data[5].infiles = NULL;
+	data[5].outfiles = NULL;
+	data[5].next = &data[6];
+	data[6].cmd = cmd6;
+	data[6].phrase = phrase6;
+	data[6].infiles = NULL;
+	data[6].outfiles = NULL;
+	data[6].next = NULL;
+
 	
 	
 	return (WEXITSTATUS(execute_cmds(data, envp)));
