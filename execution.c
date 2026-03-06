@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/06 12:49:45 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/06 13:10:17 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -198,26 +198,49 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			else if (i != 0 && i == (len - 1)) // last command (i no puede ser 0 si no va a repetirse con el primero comando)
 			{
 				int		fd_file;
-				
-				fd_file = 0;
-				if (data[i].infiles != NULL)
+				t_list	*tmp_infiles;
+
+				tmp_infiles = data[i].infiles;
+				if (tmp_infiles != NULL)
 				{
-					while (data[i].infiles != NULL)
+					while (tmp_infiles != NULL)
 					{
-						fd_file = open(data[i].infiles->content, O_RDONLY);
+						fd_file = open(tmp_infiles->content, O_RDONLY);
 						if (fd_file == -1)
 						{
 							close_fds(arr_fds, len);
-							error_fd_file(data[i].infiles->content);
+							error_fd_file(tmp_infiles->content);
 						}
 						dup2(fd_file, STDIN_FILENO);
 						close (fd_file);
-						data[i].infiles = data[i].infiles->next; // moverme hasta que no tenga más ningun infile
+						tmp_infiles = tmp_infiles->next; // moverme hasta que no tenga más ningun infile
 					} 
 				}
 				else // only reads from pipe if there are no infiles
 					dup2(arr_fds[i - 1][0], STDIN_FILENO); // lee del pipe
 				// escribe directamente en STDOUT -> o sea la terminal
+				
+				//outfiles
+				t_list	*tmp_outfiles;
+
+				tmp_outfiles = data[i].outfiles;
+				if (tmp_outfiles != NULL)
+				{
+					while (tmp_outfiles != NULL)
+					{
+						//printf("infile is %s\n", (char *)data[i].infiles->content);
+						fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
+						if (fd_file == -1)
+						{
+							close_fds(arr_fds, len);
+							error_fd_file(tmp_outfiles->content);
+						}
+						dup2(fd_file, STDOUT_FILENO);
+						close (fd_file);
+						tmp_outfiles= tmp_outfiles->next; // moverme hasta que no tenga más ningun infile
+					}
+				}
+
 			}
 			else // in the middle
 			{
@@ -507,11 +530,12 @@ int	main(int argc, char **argv, char **envp)
 	//cat < hello > aqui > abc | grep apple -> apple no existe en el pipe por eso da codigo 1 (echo $? = 1)
 	t_cmdnode	data[2];
 	char		*cmd0 = "cat";
-	char		*cmd1 = "grep";
+	char		*cmd1 = "wc";
 	char		phrase0[] = "";
-	char		phrase1[] = "apple";
+	char		phrase1[] = "-l";
 	t_list		list[1];
 	t_list		list2[2];
+	t_list		list3[2];
 	
 	(void)argc;
 	(void)argv;
@@ -524,6 +548,12 @@ int	main(int argc, char **argv, char **envp)
 	list2[1].content = (char *)"abc";
 	list2[1].next = NULL;
 	
+	
+	list3[0].content = (char *)"outfile1";
+	list3[0].next = &list3[1];
+	list3[1].content = (char *)"outfile2";
+	list3[1].next = NULL;
+
 	data[0].cmd = cmd0;
 	data[0].phrase = phrase0;
 	data[0].infiles = list;
@@ -532,7 +562,7 @@ int	main(int argc, char **argv, char **envp)
 	data[1].cmd = cmd1;
 	data[1].phrase = phrase1;
 	data[1].infiles = NULL;
-	data[1].outfiles = NULL;
+	data[1].outfiles = list3;
 	data[1].next = NULL;
 	
 	
