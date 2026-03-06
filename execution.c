@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/05 18:44:55 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/05 18:46:40 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -478,8 +478,6 @@ int	main(int argc, char **argv, char **envp)
 	data[6].outfiles = NULL;
 	data[6].next = NULL;
 
-	
-	
 	return (WEXITSTATUS(execute_cmds(data, envp)));
 } 
 
