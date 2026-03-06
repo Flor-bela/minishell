@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/06 13:39:29 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/06 19:29:24 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,7 +158,6 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				{
 					while (tmp_infiles != NULL)
 					{
-						//printf("infile is %s\n", (char *)data[i].infiles->content);
 						fd_file = open(tmp_infiles->content, O_RDONLY);
 						if (fd_file == -1)
 						{
@@ -178,7 +177,6 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				{
 					while (tmp_outfiles != NULL)
 					{
-						//printf("infile is %s\n", (char *)data[i].infiles->content);
 						fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
 						if (fd_file == -1)
 						{
@@ -228,7 +226,6 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				{
 					while (tmp_outfiles != NULL)
 					{
-						//printf("infile is %s\n", (char *)data[i].infiles->content);
 						fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
 						if (fd_file == -1)
 						{
@@ -276,7 +273,6 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				{
 					while (tmp_outfiles != NULL)
 					{
-						//printf("infile is %s\n", (char *)data[i].infiles->content);
 						fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
 						if (fd_file == -1)
 						{
@@ -288,11 +284,12 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 						tmp_outfiles= tmp_outfiles->next; // moverme hasta que no tenga más ningun infile
 					}
 				}
+				else
+					dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe.
 			}
 			close_fds(arr_fds, len); // cierra todos los fds
 			
 			// 4th: executes the command:
-			//printf("execute args %s\n", args[0]);
 			if (execve(cmd_path, args, envp) < 0)
 			{
 				perror(cmd_path);
@@ -588,7 +585,7 @@ int	main(int argc, char **argv, char **envp)
 
 	//////////////////////////////////////////////////////////
 	//2nd echo "hello from cmd1" > out1.txt | echo "hello from cmd2" > out2.txt | echo "hello from cmd3" > out3.txt
-	t_cmdnode	data[3];
+	/* t_cmdnode	data[3];
 	char		*cmd0 = "echo";
 	char		*cmd1 = "echo";
 	char		*cmd2 = "echo";
@@ -624,12 +621,118 @@ int	main(int argc, char **argv, char **envp)
 	data[2].phrase = phrase2;
 	data[2].infiles = NULL;
 	data[2].outfiles = list2;
-	data[2].next = NULL;
+	data[2].next = NULL; */
 
 
 	//////////////////////////////////////////////
-	// Mixing infiles and outfiles together with many commands
+	// Mixing things
+
+	//paste names.txt ages.txt | awk '$2 > 28' | sort > final.txt
+	// PROBLEM here!!!
+	/* t_cmdnode	data[3];
+	char		*cmd0 = "paste";
+	char		*cmd1 = "awk";
+	char		*cmd2 = "sort";
+	char		phrase0[] = "names.txt ages.txt";
+	char		phrase1[] = "'$2 > 28'"; // problem with single quotes!!! If it is single, I need to treat it as a whole argument and do not separate it...
+	char		phrase2[] = "";
+	t_list		list0[1];
+
+ */
+	// 1st paste names.txt ages.txt | grep 30 | sort > final.txt
+	/* t_cmdnode	data[3];
+	char		*cmd0 = "paste";
+	char		*cmd1 = "grep";
+	char		*cmd2 = "sort";
+	char		phrase0[] = "names.txt ages.txt";
+	char		phrase1[] = "30"; 
+	char		phrase2[] = "";
+	t_list		list0[1];
 	
+	(void)argc;
+	(void)argv;
+	list0[0].content = (char *)"final.txt";
+	list0[0].next  = NULL;
+	
+	data[0].cmd = cmd0;
+	data[0].phrase = phrase0;
+	data[0].infiles = NULL;
+	data[0].outfiles = NULL;
+	data[0].next = &data[1];
+	data[1].cmd = cmd1;
+	data[1].phrase = phrase1;
+	data[1].infiles = NULL;
+	data[1].outfiles = NULL;
+	data[1].next = &data[2];
+	data[2].cmd = cmd2;
+	data[2].phrase = phrase2;
+	data[2].infiles = NULL;
+	data[2].outfiles = list0;
+	data[2].next = NULL; */
+	
+	///////////////////////////////////////////
+	//2nd: cat < txt1.txt < txt2.txt > txt3.txt | grep "abc" < txt4.txt > txt5.txt | sort < txt6.txt | uniq > txt7.txt
+	t_cmdnode	data[4];
+	char		*cmd0 = "cat";
+	char		*cmd1 = "grep";
+	char		*cmd2 = "sort";
+	char		*cmd3 = "uniq";
+	char		phrase0[] = "";
+	char		phrase1[] = "abc";
+	char		phrase2[] = "";
+	char		phrase3[] = "";
+	t_list		list0_in[2];
+	t_list		list0_out[1];
+	t_list		list1_in[1];
+	t_list		list1_out[1];
+	t_list		list2_in[1];
+	t_list		list3_out[1];
+	
+	(void)argc;
+	(void)argv;
+	list0_in[0].content = (char *)"txt1.txt";
+	list0_in[0].next = &list0_in[1];
+	list0_in[1].content = (char *)"txt2.txt";
+	list0_in[1].next = NULL;
+	
+	list0_out[0].content = (char *)"txt3.txt";
+	list0_out[0].next = NULL;
+	
+
+	list1_in[0].content = (char *)"txt4.txt";
+	list1_in[0].next = NULL;
+	
+	list1_out[0].content = (char *)"txt5.txt";
+	list1_out[0].next = NULL;
+
+	
+	list2_in[0].content = (char *)"txt6.txt";
+	list2_in[0].next = NULL;
+
+	
+	list3_out[0].content = (char *)"txt7.txt";
+	list3_out[0].next = NULL;
+	
+	data[0].cmd = cmd0;
+	data[0].phrase = phrase0;
+	data[0].infiles = list0_in;
+	data[0].outfiles = list0_out;
+	data[0].next = &data[1];
+	data[1].cmd = cmd1;
+	data[1].phrase = phrase1;
+	data[1].infiles = list1_in;
+	data[1].outfiles = list1_out;
+	data[1].next = &data[2];
+	data[2].cmd = cmd2;
+	data[2].phrase = phrase2;
+	data[2].infiles = list2_in;
+	data[2].outfiles = NULL;
+	data[2].next = &data[3];
+	data[3].cmd = cmd3;
+	data[3].phrase = phrase3;
+	data[3].infiles = NULL;
+	data[3].outfiles = list3_out;
+	data[3].next = NULL;
 	
 	return (WEXITSTATUS(execute_cmds(data, envp)));
 } 
