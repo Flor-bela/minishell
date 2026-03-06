@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/05 18:46:40 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/06 12:49:45 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,6 +113,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 		len++; // si tengo todos estos comandos, entonces tengo que crear el numero de cmds - 1 para crear todos los pipes
 		tmp = tmp->next;
 	}
+	//printf("len is %d\n", len);
 	arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
 	while (i < len - 1)
 	{
@@ -150,26 +151,49 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			{
 				// redirection <
 				int		fd_file;
-
-				fd_file = 0; // mejor iniciarlo
-				if (data[i].infiles != NULL)
+				t_list	*tmp_infiles;
+				
+				tmp_infiles = data[i].infiles;
+				if (tmp_infiles != NULL)
 				{
-					while (data[i].infiles != NULL)
+					while (tmp_infiles != NULL)
 					{
 						//printf("infile is %s\n", (char *)data[i].infiles->content);
-						fd_file = open(data[i].infiles->content, O_RDONLY);
+						fd_file = open(tmp_infiles->content, O_RDONLY);
 						if (fd_file == -1)
 						{
 							close_fds(arr_fds, len);
-							error_fd_file(data[i].infiles->content);
+							error_fd_file(tmp_infiles->content);
 						}
 						dup2(fd_file, STDIN_FILENO);
 						close (fd_file);
-						data[i].infiles = data[i].infiles->next; // moverme hasta que no tenga más ningun infile
+						tmp_infiles = tmp_infiles->next; // moverme hasta que no tenga más ningun infile
 					}
 				}
-				if (len > 1) // si existe pipe escribe en el pipe, si no que escriba en el terminal
-					dup2(arr_fds[0][1], STDOUT_FILENO); // std_outfile is now the write end of pipe
+				// outfiles
+				t_list	*tmp_outfiles;
+
+				tmp_outfiles = data[i].outfiles;
+				if (tmp_outfiles != NULL)
+				{
+					while (tmp_outfiles != NULL)
+					{
+						//printf("infile is %s\n", (char *)data[i].infiles->content);
+						fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
+						if (fd_file == -1)
+						{
+							close_fds(arr_fds, len);
+							error_fd_file(tmp_outfiles->content);
+						}
+						dup2(fd_file, STDOUT_FILENO);
+						close (fd_file);
+						tmp_outfiles= tmp_outfiles->next; // moverme hasta que no tenga más ningun infile
+					}
+				}
+				// if (len > 1 && data[i].outfiles == NULL) // solo escribe en pipe si no tiene outfiles
+				
+				if (len > 1 && data[i].outfiles == NULL) // si existe pipe escribe en el pipe, si no que escriba en el terminal
+					dup2(arr_fds[0][1], STDOUT_FILENO);
 			}
 			else if (i != 0 && i == (len - 1)) // last command (i no puede ser 0 si no va a repetirse con el primero comando)
 			{
@@ -416,7 +440,7 @@ int	main(int argc, char **argv, char **envp)
 	////////////////////////////////////////////////////////
 	
 	// 6th // cat < hello < world | grep pie | sort | uniq | grep pie | wc -l | cat
-	
+	/* 
 	t_cmdnode	data[7];
 	char		*cmd0 = "cat";
 	char		*cmd1 = "grep";
@@ -477,7 +501,41 @@ int	main(int argc, char **argv, char **envp)
 	data[6].infiles = NULL;
 	data[6].outfiles = NULL;
 	data[6].next = NULL;
+ */
 
+	// para los outfiles:
+	//cat < hello > aqui > abc | grep apple -> apple no existe en el pipe por eso da codigo 1 (echo $? = 1)
+	t_cmdnode	data[2];
+	char		*cmd0 = "cat";
+	char		*cmd1 = "grep";
+	char		phrase0[] = "";
+	char		phrase1[] = "apple";
+	t_list		list[1];
+	t_list		list2[2];
+	
+	(void)argc;
+	(void)argv;
+	list[0].content = (char *)"hello";
+	list[0].next  = NULL;
+	
+
+	list2[0].content = (char *)"aqui";
+	list2[0].next = &list2[1];
+	list2[1].content = (char *)"abc";
+	list2[1].next = NULL;
+	
+	data[0].cmd = cmd0;
+	data[0].phrase = phrase0;
+	data[0].infiles = list;
+	data[0].outfiles = list2;
+	data[0].next = &data[1];
+	data[1].cmd = cmd1;
+	data[1].phrase = phrase1;
+	data[1].infiles = NULL;
+	data[1].outfiles = NULL;
+	data[1].next = NULL;
+	
+	
 	return (WEXITSTATUS(execute_cmds(data, envp)));
 } 
 
