@@ -3,7 +3,7 @@ NAME = minishell
 SOURCES = ft_lstnew.c ft_lstadd_back.c ft_mallocs_list.c\
 		ft_split.c ft_strlen.c ft_strlcpy.c execution.c\
 		find_chr.c strchr_modif.c ft_strjoin.c ft_strncmp.c\
-		get_cmd_path.c close_fds.c\
+		get_cmd_path.c close_fds.c minishell_main.c parseo.c
 
 
 OBJECTS = $(SOURCES:.c=.o)
