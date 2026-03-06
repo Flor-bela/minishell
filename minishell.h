@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/06 12:46:10 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/06 13:00:15 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,22 +95,3 @@ void	close_fds(int **arr_fds, int len_cmds);
 //int		main (int argc, char **argv, char **envp);
 
 #endif
-
-                            //cambiar programa para que meta las reedirecciones como parametro del nodo
-                            //camiar *phrase a lista para pasar          hola "que tal" estas
-                            //hacer que en las phrase se añadan las comillas        phrase=""hola como estas""
-//juntar las ramas
-                            //hacer que al haber <<< salga error
-                            //hacer que al haber || o mas salga error
-                            //hacer que compruebe que acabe las comillas simples o dobles
-
-
-//(1 t_cmdnode)
-
-
-//hacer que se pueda leer los .txt
-
-
-
-
-//distincion con variables locales $
