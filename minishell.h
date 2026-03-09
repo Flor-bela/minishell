@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/04 16:06:57 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/09 18:10:43 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ typedef struct s_list
 typedef struct s_cmdnode
 {
 	char				*cmd;
-	char				*phrase; 
+	t_list				*phrase;
 	t_list				*infiles; // < (redirecciones)
 	t_list				*outfiles; // > (redirecciones)
 	struct s_cmdnode	*next;
@@ -59,7 +59,6 @@ typedef struct s_cmdnode
 	t_list				*outfiles; // > (redirecciones)
 	struct s_cmdnode	*next;
 }						t_cmdnode; */
-
 
 typedef struct s_intvec
 {
