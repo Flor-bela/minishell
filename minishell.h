@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/09 18:10:43 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/09 22:38:17 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,6 +90,7 @@ char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len);
 int		execute_cmds(t_cmdnode *data, char **envp);
 
 void	close_fds(int **arr_fds, int len_cmds);
+
 
 //int		main (int argc, char **argv, char **envp);
 
