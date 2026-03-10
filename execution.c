@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/09 22:40:45 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/10 13:29:45 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,7 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 			write(2, error, ft_strlen(error));
 			close_fds(arr_fds, len);
 			ft_free_malloc();
+			// guardar el codigo
 			exit(127);
 		}
 	}
@@ -303,6 +304,8 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 	
 	i = 0;
 	while (i < len)
+
+	
 	{
 		waitpid(pids[i], &status, 0);
 		i++;
@@ -366,7 +369,7 @@ int	main(int argc, char **argv, char **envp)
 	data[3].infiles = NULL;
 	data[3].outfiles = NULL;
 	data[3].next = NULL;
- 
+  // ver como guardar el exitstatus y donde para después hacer echo $? y que lo lea
 	return (WEXITSTATUS(execute_cmds(data, envp)));
 } 
 

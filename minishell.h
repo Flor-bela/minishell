@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/09 22:38:17 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/10 13:31:08 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,13 +40,20 @@ typedef struct s_list
 	struct s_list	*next;
 }					t_list;
 
-// Antigua: pero la voy a continuar a usar por ahora para poder hacer las redirecciones
+typedef struct s_list_red
+{
+	void				*content;
+	int					doble; // si es doble << o >> entonces es == a 1; simples == 0;
+	struct s_list_red	*prev;
+	struct s_list_red	*next;
+}					t_list_red;
+
 typedef struct s_cmdnode
 {
 	char				*cmd;
 	t_list				*phrase;
-	t_list				*infiles; // < (redirecciones)
-	t_list				*outfiles; // > (redirecciones)
+	t_list_red			*infiles; // < o << (redirecciones) -> pero yo no veo el <<
+	t_list_red			*outfiles; // > o >> (redirecciones)
 	struct s_cmdnode	*next;
 }						t_cmdnode;
 
