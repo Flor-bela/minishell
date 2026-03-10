@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/10 13:29:45 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/10 17:07:29 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,7 +153,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			{
 				// redirection <
 				int		fd_file;
-				t_list	*tmp_infiles;
+				t_list_red	*tmp_infiles;
 				
 				tmp_infiles = data[i].infiles;
 				if (tmp_infiles != NULL)
@@ -172,14 +172,17 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 					}
 				}
 				// outfiles >
-				t_list	*tmp_outfiles;
+				t_list_red	*tmp_outfiles;
 
 				tmp_outfiles = data[i].outfiles;
 				if (tmp_outfiles != NULL)
 				{
 					while (tmp_outfiles != NULL)
 					{
-						fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
+						if (tmp_outfiles->doble == 0)
+							fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
+						if (tmp_outfiles->doble == 1)
+							fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_APPEND, 0666); //changed flags from pipex here
 						if (fd_file == -1)
 						{
 							close_fds(arr_fds, len);
@@ -197,7 +200,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			else if (i != 0 && i == (len - 1)) // last command (i no puede ser 0 si no va a repetirse con el primero comando)
 			{
 				int		fd_file;
-				t_list	*tmp_infiles;
+				t_list_red	*tmp_infiles;
 
 				tmp_infiles = data[i].infiles;
 				if (tmp_infiles != NULL) //redirections <
@@ -220,14 +223,17 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				// escribe directamente en STDOUT -> o sea la terminal
 				
 				//outfiles >
-				t_list	*tmp_outfiles;
+				t_list_red	*tmp_outfiles;
 
 				tmp_outfiles = data[i].outfiles;
 				if (tmp_outfiles != NULL)
 				{
 					while (tmp_outfiles != NULL)
 					{
-						fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
+						if (tmp_outfiles->doble == 0)
+							fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
+						if (tmp_outfiles->doble == 1)
+							fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_APPEND, 0666); //changed flags from pipex here						
 						if (fd_file == -1)
 						{
 							close_fds(arr_fds, len);
@@ -242,7 +248,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			else // in the middle
 			{
 				int		fd_file;
-				t_list	*tmp_infiles;
+				t_list_red	*tmp_infiles;
 				
 				tmp_infiles = data[i].infiles;
 				if (tmp_infiles != NULL)
@@ -267,14 +273,17 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 						dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe.
 				}
 				//outfiles
-				t_list	*tmp_outfiles;
+				t_list_red	*tmp_outfiles;
 
 				tmp_outfiles = data[i].outfiles;
 				if (tmp_outfiles != NULL)
 				{
 					while (tmp_outfiles != NULL)
 					{
-						fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
+						if (tmp_outfiles->doble == 0)
+							fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
+						if (tmp_outfiles->doble == 1)
+							fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_APPEND, 0666); //changed flags from pipex here
 						if (fd_file == -1)
 						{
 							close_fds(arr_fds, len);
@@ -317,8 +326,8 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 int	main(int argc, char **argv, char **envp)
 {
 	
-	// 1st // cat < hello < world | grep .c | sort | wc -l
-	 t_cmdnode	data[4];
+	// 1st // cat < hello < world > outfile >> outfile2 | grep .c | sort | wc -l
+	t_cmdnode	data[4];
 	char		*cmd0 = "cat";
 	char		*cmd1 = "grep";
 	char		*cmd2 = "sort";
@@ -327,7 +336,9 @@ int	main(int argc, char **argv, char **envp)
 	t_list		phrase1[1];
 	t_list		phrase2[1];
 	t_list		phrase3[1];
-	t_list		list[2];
+	t_list_red		list[2];
+	t_list_red		list_out[2];
+	
 	
 	(void)argc;
 	(void)argv;
@@ -345,14 +356,23 @@ int	main(int argc, char **argv, char **envp)
 
 	
 	list[0].content = (char *)"hello";
+	list[0].doble = 0;
 	list[0].next  = &list[1];
 	list[1].content = (char *)"world";
+	list[1].doble = 0;
 	list[1].next = NULL;
+
+	list_out[0].content = (char *)"outfile";
+	list_out[0].doble = 0;
+	list_out[0].next  = &list_out[1];
+	list_out[1].content = (char *)"outfile2";
+	list_out[1].doble = 1;
+	list_out[1].next = NULL;
 	
 	data[0].cmd = cmd0;
 	data[0].phrase = phrase0;
 	data[0].infiles = &list[0];
-	data[0].outfiles = NULL;
+	data[0].outfiles = &list_out[0];
 	data[0].next = &data[1];
 	data[1].cmd = cmd1;
 	data[1].phrase = phrase1;
