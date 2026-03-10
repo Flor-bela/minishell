@@ -6,7 +6,7 @@
 /*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/10 17:07:29 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/10 17:31:56 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,6 +132,11 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 	while (i < len) // ir executando este loop para crear los procesos y ejecutar los comandos
 	{
 		// SOMEWHERE HERE -> IF LEN == 1 and IS_BUILT_IN == 1 -> then do not fork
+		if (len == 1 && (is_built_in(data[i].cmd) == 1))
+		// executar aqui directamente sin forks!!!!
+		
+		
+		//else -> seria lo demás -> hmmm pero no me gusta así, es raro
 		pids[i] = fork();
 		if (pids[i] == -1)
 			error_fork();
