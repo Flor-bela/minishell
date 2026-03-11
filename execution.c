@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/10 17:31:56 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/11 12:26:34 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,13 +126,13 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 		i++;
 	}
 
-	pids = ft_malloc(sizeof(pid_t) * len);
+	pids = ft_malloc(sizeof(pid_t) * len); // si es solo un y built-in no deberia crear pids....(quizás esto lo pongo dentro del loop???)
 	i = 0;
 	
 	while (i < len) // ir executando este loop para crear los procesos y ejecutar los comandos
 	{
 		// SOMEWHERE HERE -> IF LEN == 1 and IS_BUILT_IN == 1 -> then do not fork
-		if (len == 1 && (is_built_in(data[i].cmd) == 1))
+		//if (len == 1 && (is_built_in(data[i].cmd) == 1))
 		// executar aqui directamente sin forks!!!!
 		
 		
@@ -350,7 +350,7 @@ int	main(int argc, char **argv, char **envp)
 	phrase0->content = NULL;
 	phrase0->next = NULL;
 
-	phrase1->content = (char *)".c";
+	phrase1->content = (char *)"world";
 	phrase1->next = NULL;
 
 	phrase2->content = NULL;
@@ -360,17 +360,17 @@ int	main(int argc, char **argv, char **envp)
 	phrase3->next = NULL;
 
 	
-	list[0].content = (char *)"hello";
+	list[0].content = (char *)"world";
 	list[0].doble = 0;
 	list[0].next  = &list[1];
-	list[1].content = (char *)"world";
+	list[1].content = (char *)"../hello";
 	list[1].doble = 0;
 	list[1].next = NULL;
 
-	list_out[0].content = (char *)"outfile";
+	list_out[0].content = (char *)"./outfile";
 	list_out[0].doble = 0;
 	list_out[0].next  = &list_out[1];
-	list_out[1].content = (char *)"outfile2";
+	list_out[1].content = (char *)"../outfile2";
 	list_out[1].doble = 1;
 	list_out[1].next = NULL;
 	
