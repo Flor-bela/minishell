@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   is_built_in.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/03 18:56:12 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/10 16:47:17 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/13 14:02:48 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../minishell.h"
 
 int	is_built_in(char *cmd_name)
 {

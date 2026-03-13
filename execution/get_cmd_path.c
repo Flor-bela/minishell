@@ -6,11 +6,11 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/09 17:37:32 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/13 14:02:44 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../minishell.h"
 
 static char	**get_all_paths(char **envp) // in the variable PATH= we have many different paths there, we need to split them all here to then later try them all and see if the command we are looking for is in one of them
 {
