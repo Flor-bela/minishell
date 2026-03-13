@@ -1,6 +1,36 @@
 #include "minishell.h"
 
-int	parse_line(const char *line, t_intvec *out_codes, t_cmdnode **out_list);
+int	parse_line(const char *line, t_intvec *out_codes,
+		t_cmdnode **out_list, char **shell_env);
+
+volatile sig_atomic_t	g_sigint_received = 0;
+
+static void	handle_sigint(int sig)
+{
+	(void)sig;
+	g_sigint_received = 1;
+	write(STDOUT_FILENO, "\n", 1);
+	rl_on_new_line();
+	rl_replace_line("", 0);
+	rl_redisplay();
+}
+
+static void	setup_signals(void)
+{
+	struct sigaction	sa_int;
+	struct sigaction	sa_quit;
+
+	memset(&sa_int, 0, sizeof(sa_int));
+	sa_int.sa_handler = handle_sigint;
+	sigemptyset(&sa_int.sa_mask);
+	sa_int.sa_flags = 0;
+	sigaction(SIGINT, &sa_int, NULL);
+	memset(&sa_quit, 0, sizeof(sa_quit));
+	sa_quit.sa_handler = SIG_IGN;
+	sigemptyset(&sa_quit.sa_mask);
+	sa_quit.sa_flags = 0;
+	sigaction(SIGQUIT, &sa_quit, NULL);
+}
 
 static void	intvec_reset(t_intvec *v)
 {
@@ -30,6 +60,19 @@ static void	str_list_destroy(t_list *lst)
 	}
 }
 
+static void	red_list_destroy(t_list_red *lst)
+{
+	t_list_red	*next;
+
+	while (lst)
+	{
+		next = lst->next;
+		free(lst->content);
+		free(lst);
+		lst = next;
+	}
+}
+
 static void	cmd_list_destroy(t_cmdnode *h)
 {
 	t_cmdnode	*nx;
@@ -39,8 +82,8 @@ static void	cmd_list_destroy(t_cmdnode *h)
 		nx = h->next;
 		free(h->cmd);
 		str_list_destroy(h->phrase);
-		str_list_destroy(h->infiles);
-		str_list_destroy(h->outfiles);
+		red_list_destroy(h->infiles);
+		red_list_destroy(h->outfiles);
 		free(h);
 		h = nx;
 	}
@@ -62,7 +105,7 @@ static void	print_int_array(const t_intvec *v)
 	printf("\n");
 }
 
-static void	print_phrase_list(const t_list *lst)
+static void	print_str_list(const t_list *lst)
 {
 	printf("[");
 	while (lst)
@@ -74,12 +117,15 @@ static void	print_phrase_list(const t_list *lst)
 	}
 	printf("]");
 }
-static void	print_str_list(const t_list *lst)
+
+static void	print_red_list(const t_list_red *lst)
 {
 	printf("[");
 	while (lst)
 	{
-		printf("\"%s\"", lst->content ? (char *)lst->content : "");
+		printf("{\"%s\", doble=%d}",
+			lst->content ? (char *)lst->content : "",
+			lst->doble);
 		if (lst->next)
 			printf(", ");
 		lst = lst->next;
@@ -98,12 +144,10 @@ static void	print_nodes(const t_cmdnode *h)
 			idx, h->cmd ? h->cmd : "");
 		print_str_list(h->phrase);
 		printf(" infiles=");
-		print_str_list(h->infiles);
+		print_red_list(h->infiles);
 		printf(" outfiles=");
-		print_str_list(h->outfiles);
-		printf(" prev=%s next=%s\n",
-			h->prev ? "SI" : "NULL",
-			h->next ? "SI" : "NULL");
+		print_red_list(h->outfiles);
+		printf(" next=%s\n", h->next ? "SI" : "NULL");
 		h = h->next;
 		idx++;
 	}
@@ -154,34 +198,55 @@ static char	*join_lines(char *base, const char *extra)
 	return (res);
 }
 
+static int	read_prompt_line(const char *prompt, char **out_line)
+{
+	char	*line;
+
+	g_sigint_received = 0;
+	line = readline(prompt);
+	if (!line)
+	{
+		*out_line = NULL;
+		if (g_sigint_received)
+			return (-1);
+		return (0);
+	}
+	if (g_sigint_received)
+	{
+		free(line);
+		*out_line = NULL;
+		return (-1);
+	}
+	*out_line = line;
+	return (1);
+}
+
 static char	*read_full_command(void)
 {
 	char	*line;
 	char	*full_line;
-	size_t	cap;
-	ssize_t	n;
 	char	quote_state;
+	int		status;
 
 	full_line = NULL;
 	quote_state = 0;
 	while (1)
 	{
-		line = NULL;
-		cap = 0;
 		if (!full_line)
-			printf("minishell$ ");
+			status = read_prompt_line("minishell$ ", &line);
 		else
-			printf("> ");
-		fflush(stdout);
-		n = getline(&line, &cap, stdin);
-		if (n <= 0)
+			status = read_prompt_line("> ", &line);
+		if (status == -1)
 		{
-			free(line);
 			free(full_line);
-			return (NULL);
+			return (strdup(""));
 		}
-		if (n > 0 && line[n - 1] == '\n')
-			line[n - 1] = '\0';
+		if (status == 0)
+		{
+			if (!full_line)
+				return (NULL);
+			continue ;
+		}
 		update_quote_state_line(line, &quote_state);
 		full_line = join_lines(full_line, line);
 		free(line);
@@ -193,34 +258,82 @@ static char	*read_full_command(void)
 	return (full_line);
 }
 
-int	main(void)
+static int	is_only_spaces(const char *s)
+{
+	size_t	i;
+
+	i = 0;
+	while (s[i])
+	{
+		if (!isspace((unsigned char)s[i]))
+			return (0);
+		i++;
+	}
+	return (1);
+}
+
+int	main(int argc, char **argv, char **envp)
 {
 	char		*line;
 	t_intvec	codes;
 	t_cmdnode	*list;
+	char		**shell_env;
+	int			should_exit;
 
+	if ((argc = 0) && (argv == NULL))
+	{
+	}
+	shell_env = dup_envp(envp);
+	if (!shell_env)
+		return (1);
+	setup_signals();
+	using_history();
+	should_exit = 0;
 	while (1)
 	{
 		line = read_full_command();
 		if (!line)
-			break ;
-		if (strcmp(line, "exit") == 0)
 		{
-			free(line);
+			printf("exit\n");
 			break ;
 		}
+		if (line[0] == '\0' || is_only_spaces(line))
+		{
+			free(line);
+			continue ;
+		}
+		add_history(line);
 		intvec_reset(&codes);
 		list = NULL;
-		if (parse_line(line, &codes, &list) == 0)
+		if (parse_line(line, &codes, &list, shell_env) == 0)
 		{
 			print_int_array(&codes);
 			print_nodes(list);
+			if (list && strcmp(list->cmd, "echo") == 0)
+				builtin_echo_remake(list->phrase);
+			if (list && strcmp(list->cmd, "pwd") == 0)
+				builtin_pwd();
+			if (list && strcmp(list->cmd, "export") == 0)
+				builtin_export(list->phrase, &shell_env);
+			if (list && strcmp(list->cmd, "unset") == 0)
+				builtin_unset(list->phrase, &shell_env);
+			if (list && strcmp(list->cmd, "env") == 0)
+				builtin_env(shell_env);
+			if (list && strcmp(list->cmd, "exit") == 0)
+				should_exit = builtin_exit(list->phrase);
 		}
 		else
 			fprintf(stderr, "(parse error)\n");
 		cmd_list_destroy(list);
 		intvec_destroy(&codes);
 		free(line);
+		if (should_exit)
+		{
+			printf("exit\n");
+			break ;
+		}
 	}
+	rl_clear_history();
+	free_envp_copy(shell_env);
 	return (0);
 }
