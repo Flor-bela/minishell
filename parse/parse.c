@@ -1,4 +1,4 @@
-#include "minishell.h"
+#include "../minishell.h"
 
 static void	intvec_push(t_intvec *v, int x)
 {

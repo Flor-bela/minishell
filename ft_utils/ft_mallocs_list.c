@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   ft_mallocs_list.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/03 18:00:32 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/11 11:31:49 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/13 11:46:09 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../minishell.h"
 
 // quizás tengo que añadir un flag a la lista para hacer free solamente hasta ciertos puntos
 static void	ft_free(t_list *mallocs_list)

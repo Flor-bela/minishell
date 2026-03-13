@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/11 12:26:34 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/13 11:54:06 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../minishell.h"
 
 static void	error_fork(void)
 {
@@ -327,74 +327,4 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 	ft_free_malloc();
 	return (status);
 }
-
-int	main(int argc, char **argv, char **envp)
-{
-	
-	// 1st // cat < hello < world > outfile >> outfile2 | grep .c | sort | wc -l
-	t_cmdnode	data[4];
-	char		*cmd0 = "cat";
-	char		*cmd1 = "grep";
-	char		*cmd2 = "sort";
-	char		*cmd3 = "wc";
-	t_list		phrase0[1];
-	t_list		phrase1[1];
-	t_list		phrase2[1];
-	t_list		phrase3[1];
-	t_list_red		list[2];
-	t_list_red		list_out[2];
-	
-	
-	(void)argc;
-	(void)argv;
-	phrase0->content = NULL;
-	phrase0->next = NULL;
-
-	phrase1->content = (char *)"world";
-	phrase1->next = NULL;
-
-	phrase2->content = NULL;
-	phrase2->next = NULL;
-
-	phrase3->content = (char *)"-l";
-	phrase3->next = NULL;
-
-	
-	list[0].content = (char *)"world";
-	list[0].doble = 0;
-	list[0].next  = &list[1];
-	list[1].content = (char *)"../hello";
-	list[1].doble = 0;
-	list[1].next = NULL;
-
-	list_out[0].content = (char *)"./outfile";
-	list_out[0].doble = 0;
-	list_out[0].next  = &list_out[1];
-	list_out[1].content = (char *)"../outfile2";
-	list_out[1].doble = 1;
-	list_out[1].next = NULL;
-	
-	data[0].cmd = cmd0;
-	data[0].phrase = phrase0;
-	data[0].infiles = &list[0];
-	data[0].outfiles = &list_out[0];
-	data[0].next = &data[1];
-	data[1].cmd = cmd1;
-	data[1].phrase = phrase1;
-	data[1].infiles = NULL;
-	data[1].outfiles = NULL;
-	data[1].next = &data[2];
-	data[2].cmd = cmd2;
-	data[2].phrase = phrase2;
-	data[2].infiles = NULL;
-	data[2].outfiles = NULL;
-	data[2].next = &data[3];
-	data[3].cmd = cmd3;
-	data[3].phrase = phrase3;
-	data[3].infiles = NULL;
-	data[3].outfiles = NULL;
-	data[3].next = NULL;
-  // ver como guardar el exitstatus y donde para después hacer echo $? y que lo lea
-	return (WEXITSTATUS(execute_cmds(data, envp)));
-} 
 

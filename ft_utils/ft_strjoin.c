@@ -3,15 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   ft_strjoin.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 15:07:38 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/25 12:14:14 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/13 11:46:21 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 // malloc original!!! Ver si es mejor dejarlo así o no....
-#include "minishell.h"
+#include "../minishell.h"
 
 char	*ft_strjoin(char const *s1, char const *s2)
 {
