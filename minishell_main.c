@@ -280,14 +280,17 @@ int	main(int argc, char **argv, char **envp)
 	char		**shell_env;
 	int			should_exit;
 
+
 	if ((argc = 0) && (argv == NULL))
 	{
 	}
+
 	shell_env = dup_envp(envp);
 	if (!shell_env)
 		return (1);
 	setup_signals();
 	using_history();
+	change_exit_value("return_value=0", &shell_env);
 	should_exit = 0;
 	while (1)
 	{
@@ -307,8 +310,8 @@ int	main(int argc, char **argv, char **envp)
 		list = NULL;
 		if (parse_line(line, &codes, &list, shell_env) == 0)
 		{
-			/*print_int_array(&codes);
-			print_nodes(list);
+			//print_int_array(&codes);
+			//print_nodes(list);
 			if (list && strcmp(list->cmd, "echo") == 0)
 				builtin_echo_remake(list->phrase);
 			if (list && strcmp(list->cmd, "pwd") == 0)
@@ -320,8 +323,8 @@ int	main(int argc, char **argv, char **envp)
 			if (list && strcmp(list->cmd, "env") == 0)
 				builtin_env(shell_env);
 			if (list && strcmp(list->cmd, "exit") == 0)
-				should_exit = builtin_exit(list->phrase);*/
-		execute_cmds(list, shell_env);
+				should_exit = builtin_exit(list->phrase);
+	//	execute_cmds(list, shell_env);
 		}
 		else
 			fprintf(stderr, "(parse error)\n");

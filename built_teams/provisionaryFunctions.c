@@ -405,7 +405,7 @@ static char	*expand_heredoc_line(const char *line, char **shell_env)
 			}
 			if (line[i] == '?')
 			{
-				value = get_env_value(shell_env, "cp_envp");
+				value = get_env_value(shell_env, "return_value");
 				if (value)
 					res = append_str_local(res, value);
 				i++;
@@ -537,6 +537,18 @@ int	builtin_pwd(void)
 	printf("%s\n", cwd);
 	free(cwd);
 	return (0);
+}
+
+void	change_exit_value(char *args, char ***envp)
+{
+	int		idx;
+
+	idx = find_env_index(*envp, args);
+	if (idx >= 0)
+		replace_env_value(*envp, idx, args);
+	else
+		append_env_value(envp, args);
+	return ;
 }
 
 int	builtin_export(t_list *args, char ***envp)

@@ -392,7 +392,7 @@ static char	*expand_env_vars(const char *token, char **shell_env)
 			}
 			if (token[i] == '?')
 			{
-				value = get_env_value(shell_env, "cp_envp");
+				value = get_env_value(shell_env, "return_value");
 				if (value)
 					res = append_str_dyn(res, value);
 				i++;
