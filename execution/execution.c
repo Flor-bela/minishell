@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 11:54:06 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/13 12:32:29 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,7 +152,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			
 			// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
 			cmd_path = get_cmd_name_and_path(args, envp, data[i].cmd, arr_fds, len);
-			//printf(" cmd name is %s\n", args[0]);
+			printf(" cmd name is %s\n", args[0]);
 			// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
 			if (i == 0) // first command and only one command
 			{

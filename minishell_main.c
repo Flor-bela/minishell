@@ -89,7 +89,7 @@ static void	cmd_list_destroy(t_cmdnode *h)
 	}
 }
 
-static void	print_int_array(const t_intvec *v)
+/*static void	print_int_array(const t_intvec *v)
 {
 	size_t	i;
 
@@ -103,9 +103,9 @@ static void	print_int_array(const t_intvec *v)
 		i++;
 	}
 	printf("\n");
-}
+}*/
 
-static void	print_str_list(const t_list *lst)
+/*static void	print_str_list(const t_list *lst)
 {
 	printf("[");
 	while (lst)
@@ -116,9 +116,9 @@ static void	print_str_list(const t_list *lst)
 		lst = lst->next;
 	}
 	printf("]");
-}
+}*/
 
-static void	print_red_list(const t_list_red *lst)
+/*static void	print_red_list(const t_list_red *lst)
 {
 	printf("[");
 	while (lst)
@@ -131,9 +131,9 @@ static void	print_red_list(const t_list_red *lst)
 		lst = lst->next;
 	}
 	printf("]");
-}
+}*/
 
-static void	print_nodes(const t_cmdnode *h)
+/*static void	print_nodes(const t_cmdnode *h)
 {
 	int	idx;
 
@@ -151,7 +151,7 @@ static void	print_nodes(const t_cmdnode *h)
 		h = h->next;
 		idx++;
 	}
-}
+}*/
 
 static void	update_quote_state_line(const char *line, char *quote_state)
 {
@@ -307,7 +307,7 @@ int	main(int argc, char **argv, char **envp)
 		list = NULL;
 		if (parse_line(line, &codes, &list, shell_env) == 0)
 		{
-			print_int_array(&codes);
+			/*print_int_array(&codes);
 			print_nodes(list);
 			if (list && strcmp(list->cmd, "echo") == 0)
 				builtin_echo_remake(list->phrase);
@@ -320,7 +320,8 @@ int	main(int argc, char **argv, char **envp)
 			if (list && strcmp(list->cmd, "env") == 0)
 				builtin_env(shell_env);
 			if (list && strcmp(list->cmd, "exit") == 0)
-				should_exit = builtin_exit(list->phrase);
+				should_exit = builtin_exit(list->phrase);*/
+		execute_cmds(list, shell_env);
 		}
 		else
 			fprintf(stderr, "(parse error)\n");
