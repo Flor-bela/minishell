@@ -3,35 +3,38 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 12:32:29 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/13 16:34:32 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-static void	error_fork(void)
+static void	error_fork(char **envp)
 {
-	perror("fork"); // fork is what is written in the manual for fork
+	perror("fork");
 	ft_free_malloc();
+	change_exit_value("return_value=1", &envp);
 	exit(EXIT_FAILURE);
 }
 
-static void	error_pipe(void)
+static void	error_pipe(char **envp)
 {
-	perror("pipe"); // ??
+	perror("pipe");
 	ft_free_malloc();
+	change_exit_value("return_value=1", &envp);
 	exit(EXIT_FAILURE);
 }
 
  
-static void	error_fd_file(char *name_infile)
+static void	error_fd_file(char *name_infile, char **envp)
 {
 	perror(name_infile);
 	ft_free_malloc();
-	exit(1);
+	change_exit_value("return_value=1", &envp);
+	exit(EXIT_FAILURE);
 }
 
 
@@ -83,7 +86,7 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 			write(2, error, ft_strlen(error));
 			close_fds(arr_fds, len);
 			ft_free_malloc();
-			// guardar el codigo
+			change_exit_value("return_value=127", &envp);
 			exit(127);
 		}
 	}
@@ -91,7 +94,6 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 	{
 		cmd_path = get_cmd_path(envp, data_cmd, arr_fds, len);
 		args[0] = data_cmd;
-		// buscar el path ahora (pasar la copia de **envp de main para que la pueda usar aquí)
 	}
 	return (cmd_path);
 }
@@ -116,13 +118,13 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 		len++; // si tengo todos estos comandos, entonces tengo que crear el numero de cmds - 1 para crear todos los pipes
 		tmp = tmp->next;
 	}
-	//printf("len is %d\n", len);
+	printf("len is %d\n", len);
 	arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
 	while (i < len - 1)
 	{
 		arr_fds[i] = (int *)ft_malloc(sizeof(int) * 2); 
 		if (pipe(arr_fds[i]) == -1)
-			error_pipe();
+			error_pipe(envp);
 		i++;
 	}
 
@@ -139,10 +141,10 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 		//else -> seria lo demás -> hmmm pero no me gusta así, es raro
 		pids[i] = fork();
 		if (pids[i] == -1)
-			error_fork();
+			error_fork(envp);
 		else if (pids[i] == 0) // in child process
 		{
-			//printf("Executing command %d\n", i);
+			printf("Executing command %d\n", i);
 			
 			//1st split phrase into words to create an array of words to send to execve (we still miss args[0]):
 			//args = split_phrase(data[i].phrase);
@@ -169,7 +171,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 						if (fd_file == -1)
 						{
 							close_fds(arr_fds, len);
-							error_fd_file(tmp_infiles->content);
+							error_fd_file(tmp_infiles->content, envp);
 						}
 						dup2(fd_file, STDIN_FILENO);
 						close (fd_file);
@@ -191,7 +193,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 						if (fd_file == -1)
 						{
 							close_fds(arr_fds, len);
-							error_fd_file(tmp_outfiles->content);
+							error_fd_file(tmp_outfiles->content, envp);
 						}
 						dup2(fd_file, STDOUT_FILENO);
 						close (fd_file);
@@ -216,7 +218,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 						if (fd_file == -1)
 						{
 							close_fds(arr_fds, len);
-							error_fd_file(tmp_infiles->content);
+							error_fd_file(tmp_infiles->content, envp);
 						}
 						dup2(fd_file, STDIN_FILENO);
 						close (fd_file);
@@ -242,7 +244,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 						if (fd_file == -1)
 						{
 							close_fds(arr_fds, len);
-							error_fd_file(tmp_outfiles->content);
+							error_fd_file(tmp_outfiles->content, envp);
 						}
 						dup2(fd_file, STDOUT_FILENO);
 						close (fd_file);
@@ -264,7 +266,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 						if (fd_file == -1)
 						{
 							close_fds(arr_fds, len);
-							error_fd_file(tmp_infiles->content);
+							error_fd_file(tmp_infiles->content, envp);
 						}
 						dup2(fd_file, STDIN_FILENO);
 						close (fd_file);
@@ -292,7 +294,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 						if (fd_file == -1)
 						{
 							close_fds(arr_fds, len);
-							error_fd_file(tmp_outfiles->content);
+							error_fd_file(tmp_outfiles->content, envp);
 						}
 						dup2(fd_file, STDOUT_FILENO);
 						close (fd_file);
@@ -309,22 +311,24 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			{
 				perror(cmd_path);
 				ft_free_malloc();
+				change_exit_value("return_value=126", &envp);
 				exit(126);
 			}
 		}
 		i++;
 	}
 	close_fds(arr_fds, len);
-	
+	// this basically needs to be in main I think....
+	/// PONER ESTO EN MAIN.....
 	i = 0;
 	while (i < len)
-
-	
 	{
 		waitpid(pids[i], &status, 0);
 		i++;
 	}
+	// aqui??? change_exit_value(return_value=status??? lo que pasa es que necesito saber el value de status....y escribiendo asi tal cual no puedo saberlo)
 	ft_free_malloc();
+	
 	return (status);
 }
 

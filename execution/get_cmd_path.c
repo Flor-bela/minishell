@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_cmd_path.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 14:02:44 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/13 15:50:24 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,6 @@ static char	*find_path(char **paths, char *cmd_name)
 	return (NULL);
 }
 
-
 char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len) // cmd_name = data[i].cmd
 {
 	char	**paths;
@@ -71,7 +70,8 @@ char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len) // cmd_n
 		write(2, error, ft_strlen(error));
 		close_fds(arr_fds, len);
 		ft_free_malloc();
-		exit(127); // command not found
+		change_exit_value("return_value=127", &envp);
+		exit(127);
 	}
 	return (cmd_path);
 }

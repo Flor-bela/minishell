@@ -4,7 +4,7 @@ SOURCES = ft_utils/ft_lstnew.c ft_utils/ft_lstadd_back.c ft_utils/ft_mallocs_lis
 		ft_utils/ft_split.c ft_utils/ft_strlen.c ft_utils/ft_strlcpy.c execution/execution.c\
 		built_ins/provisionaryFunctions.c execution/find_chr.c execution/strchr_modif.c ft_utils/ft_strjoin.c\
 		ft_utils/ft_strncmp.c execution/get_cmd_path.c execution/close_fds.c minishell_main.c parse/parse.c\
-		execution/is_built_in.c
+		execution/is_built_in.c ft_utils/ft_itoa.c
 
 OBJ_DIR = obj
 OBJECTS = $(SOURCES:%.c=$(OBJ_DIR)/%.o)

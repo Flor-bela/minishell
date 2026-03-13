@@ -279,8 +279,9 @@ int	main(int argc, char **argv, char **envp)
 	t_cmdnode	*list;
 	char		**shell_env;
 	int			should_exit;
+	int			return_value;
 
-
+	return_value = 0;
 	if ((argc = 0) && (argv == NULL))
 	{
 	}
@@ -290,7 +291,7 @@ int	main(int argc, char **argv, char **envp)
 		return (1);
 	setup_signals();
 	using_history();
-	change_exit_value("return_value=127", &shell_env);
+	change_exit_value("return_value=0", &shell_env);
 	should_exit = 0;
 	while (1)
 	{
@@ -324,7 +325,8 @@ int	main(int argc, char **argv, char **envp)
 				builtin_env(shell_env);
 			if (list && strcmp(list->cmd, "exit") == 0)
 				should_exit = builtin_exit(list->phrase);
-	//	execute_cmds(list, shell_env);
+			// ?? WEXITSTATUS HERE?
+			WEXITSTATUS(execute_cmds(list, shell_env));
 		}
 		else
 			fprintf(stderr, "(parse error)\n");
@@ -337,6 +339,11 @@ int	main(int argc, char **argv, char **envp)
 			break ;
 		}
 	}
+	// add waitpid here ???
+
+
+
+
 	rl_clear_history();
 	free_envp_copy(shell_env);
 	return (0);

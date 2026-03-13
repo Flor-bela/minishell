@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 14:01:40 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/13 16:17:58 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,16 +52,6 @@ typedef struct s_cmdnode
 	struct s_cmdnode	*next;
 }						t_cmdnode;
 
-// Ultima version:
-/* typedef struct s_cmdnode
-{
-	char				*cmd;
-	t_list				*phrase; // Oscar me va a hacer split de todos los argumentos
-	t_list				*infiles; // < (redirecciones)
-	t_list				*outfiles; // > (redirecciones)
-	struct s_cmdnode	*next;
-}						t_cmdnode; */
-
 typedef struct s_intvec
 {
 	int		*data;
@@ -97,13 +87,12 @@ int		find_chr(const char *s, int c);
 char	*strchr_modif(const char *s, int c);
 char	*ft_strjoin(char const *s1, char const *s2);
 int		ft_strncmp(const char *s1, const char *s2, size_t n);
+char	*ft_itoa(int n);
 
 char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len);
 int		execute_cmds(t_cmdnode *data, char **envp);
 void	close_fds(int **arr_fds, int len_cmds);
 
 int		is_built_in(char *cmd_name);
-
-//int		main (int argc, char **argv, char **envp);
 
 #endif
