@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/03 18:00:32 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/03 18:09:17 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/11 11:31:49 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,8 @@ static void	*ft_malloc_core(size_t size, int flag)
 		{
 			free(result);
 			ft_free(mallocs_list);
-			exit(1);
+			exit(
+				1);
 		}
 		ft_lstadd_back(&mallocs_list, new_malloc);
 	}
