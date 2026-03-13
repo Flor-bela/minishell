@@ -2,7 +2,7 @@ NAME = minishell
 
 SOURCES = ft_utils/ft_lstnew.c ft_utils/ft_lstadd_back.c ft_utils/ft_mallocs_list.c\
 		ft_utils/ft_split.c ft_utils/ft_strlen.c ft_utils/ft_strlcpy.c execution/execution.c\
-		built_teams/provisionaryFunctions.c find_chr.c strchr_modif.c ft_utils/ft_strjoin.c\
+		built_ins/provisionaryFunctions.c find_chr.c strchr_modif.c ft_utils/ft_strjoin.c\
 		ft_utils/ft_strncmp.c get_cmd_path.c close_fds.c minishell_main.c parse/parse.c is_built_in.c
 
 OBJ_DIR = obj
