@@ -313,7 +313,7 @@ int	main(int argc, char **argv, char **envp)
 			//print_int_array(&codes);
 			//print_nodes(list);
 			if (list && strcmp(list->cmd, "echo") == 0)
-				builtin_echo_remake(list->phrase);
+				builtin_echo(list->phrase);
 			if (list && strcmp(list->cmd, "pwd") == 0)
 				builtin_pwd();
 			if (list && strcmp(list->cmd, "export") == 0)

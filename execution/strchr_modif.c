@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   strchr_modif.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/07 12:13:32 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/02/24 13:42:08 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/13 14:04:41 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minishell.h"
+#include "../minishell.h"
 
 char	*strchr_modif(const char *s, int c)
 {
