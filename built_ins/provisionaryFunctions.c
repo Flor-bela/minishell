@@ -490,7 +490,7 @@ char	*read_heredoc_input(const char *delimiter, int expand_vars, char **shell_en
 	return (content);
 }
 
-int	builtin_echo_remake(t_list *args)
+int	builtin_echo(t_list *args)
 {
 	t_list	*curr;
 	int		newline;
