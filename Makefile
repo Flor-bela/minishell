@@ -1,10 +1,31 @@
 NAME = minishell
 
-SOURCES = ft_utils/ft_lstnew.c ft_utils/ft_lstadd_back.c ft_utils/ft_mallocs_list.c\
-		ft_utils/ft_split.c ft_utils/ft_strlen.c ft_utils/ft_strlcpy.c execution/execution.c\
-		built_ins/provisionaryFunctions.c execution/find_chr.c execution/strchr_modif.c ft_utils/ft_strjoin.c\
-		ft_utils/ft_strncmp.c execution/get_cmd_path.c execution/close_fds.c minishell_main.c parse/parse.c\
-		execution/is_built_in.c ft_utils/ft_itoa.c
+SOURCES = \
+	built_ins/provisionaryFunctions.c \
+	\
+	execution/execution.c \
+	execution/find_chr.c \
+	execution/strchr_modif.c \
+	execution/get_cmd_path.c \
+	execution/close_fds.c \
+	execution/is_built_in.c \
+	\
+	parse/parse.c \
+	\
+	ft_utils/ft_lstnew.c \
+	ft_utils/ft_lstadd_back.c \
+	ft_utils/ft_mallocs_list.c \
+	ft_utils/ft_split.c \
+	ft_utils/ft_strlen.c \
+	ft_utils/ft_strlcpy.c \
+	ft_utils/ft_strjoin.c \
+	ft_utils/ft_strncmp.c \
+	ft_utils/ft_itoa.c \
+	ft_utils/ft_memset.c\
+	ft_utils/ft_strdup.c\
+	ft_utils/ft_memcpy.c\
+	\
+	minishell_main.c
 
 OBJ_DIR = obj
 OBJECTS = $(SOURCES:%.c=$(OBJ_DIR)/%.o)

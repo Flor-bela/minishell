@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/15 11:27:55 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/16 00:22:50 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,6 @@ char	**get_args(t_list	*phrase)
 	}
 	args = (char **)ft_malloc(sizeof(char *) * (args_count + 2)); // + 2 para añadir el array con nombre del comando (args[0]) y el ultimo array que es el del caracter nulo
 	tmp = phrase;
-	//printf("phrase is %s\n", (char *)phrase->content);
 	while (i < args_count)
 	{
 		args[i + 1] = tmp->content;
@@ -67,7 +66,6 @@ char	**get_args(t_list	*phrase)
 	args[args_count + 1] = NULL;
 	return (args);
 }
-
 
 static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int **arr_fds, int len) // adds args[0] has the name of the command and gets command path
 {
@@ -99,6 +97,46 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 	return (cmd_path);
 }
 
+static void	handle_infile_redirections(t_list_red **tmp_infiles, int **arr_fds, int len, char **envp)
+{
+	int			fd_file;
+
+	while (*tmp_infiles != NULL)
+	{
+		fd_file = open((*tmp_infiles)->content, O_RDONLY);
+		if (fd_file == -1)
+		{
+			close_fds(arr_fds, len);
+			error_fd_file((*tmp_infiles)->content, envp);
+		}
+		dup2(fd_file, STDIN_FILENO);
+		close (fd_file);
+		*tmp_infiles = (*tmp_infiles)->next;
+	}
+}
+
+static void	handle_outfile_redirections(t_list_red **tmp_outfiles, int **arr_fds, int len, char **envp)
+{
+	int	fd_file;
+	
+	while (*tmp_outfiles != NULL)
+	{
+		if ((*tmp_outfiles)->doble == 0)
+			fd_file = open((*tmp_outfiles)->content, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		if ((*tmp_outfiles)->doble == 1)
+			fd_file = open((*tmp_outfiles)->content, O_WRONLY | O_CREAT | O_APPEND, 0666);
+		if (fd_file == -1)
+		{
+			close_fds(arr_fds, len);
+			error_fd_file((*tmp_outfiles)->content, envp);
+		}
+		dup2(fd_file, STDOUT_FILENO);
+		close (fd_file);
+		*tmp_outfiles= (*tmp_outfiles)->next;
+	}
+}
+
+
 int	execute_cmds(t_cmdnode **data, char **envp)
 {
 	pid_t	*pids;
@@ -108,18 +146,17 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	int		i;
 	int		last_exit_status;
 	int		**arr_fds;
-	t_cmdnode *tmp;
+	t_cmdnode *data_tmp;
 
 	len = 0;
 	i = 0;
 	last_exit_status = 0;
-	tmp = *data;
-	while (tmp && tmp->cmd != NULL)
+	data_tmp = *data;
+	while (data_tmp && data_tmp->cmd != NULL)
 	{
-		len++; // si tengo todos estos comandos, entonces tengo que crear el numero de cmds - 1 para crear todos los pipes
-		tmp = tmp->next;
+		len++;
+		data_tmp = data_tmp->next;
 	}
-	//printf("len is %d\n", len);
 	
 	arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
 	while (i < len - 1)
@@ -129,104 +166,55 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 			error_pipe(envp);
 		i++;
 	}
-
-	pids = ft_malloc(sizeof(pid_t) * len); // si es solo un y built-in no deberia crear pids....(quizás esto lo pongo dentro del loop???)
 	
+	pids = ft_malloc(sizeof(pid_t) * len); // si es solo un y built-in no deberia crear pids....(quizás esto lo pongo dentro del loop???)
 	i = 0;
-	tmp = *data;
+	data_tmp = *data;
 	while (i < len) // ir executando este loop para crear los procesos y ejecutar los comandos
 	{
 		// SOMEWHERE HERE -> IF LEN == 1 and IS_BUILT_IN == 1 -> then do not fork
 		//if (len == 1 && (is_built_in(data[i].cmd) == 1))
 		// executar aqui directamente sin forks!!!!
-		
-		
 		//else -> seria lo demás -> hmmm pero no me gusta así, es raro
+		
 		pids[i] = fork();
 		if (pids[i] == -1)
 			error_fork(envp);
 		else if (pids[i] == 0) // in child process
 		{
-			//printf("Executing command %d\n", i);
-			//1st split phrase into words to create an array of words to send to execve (we still miss args[0]):
-			//args = split_phrase(data[i].phrase);
-			
 			// 1st count how many arguments we have:
-			args = get_args(tmp->phrase);
+			args = get_args(data_tmp->phrase);
 			
 			// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
-			cmd_path = get_cmd_name_and_path(args, envp, tmp->cmd, arr_fds, len);
-			//printf(" cmd name is %s\n", args[0]);
+			cmd_path = get_cmd_name_and_path(args, envp, data_tmp->cmd, arr_fds, len);
+			
 			// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
 			if (i == 0) // first command and only one command
 			{
-				// redirection <
-				int		fd_file;
+				// infiles <
 				t_list_red	*tmp_infiles;
-				
-				tmp_infiles = tmp->infiles;
+
+				tmp_infiles = data_tmp->infiles;
 				if (tmp_infiles != NULL)
-				{
-					while (tmp_infiles != NULL)
-					{
-						fd_file = open(tmp_infiles->content, O_RDONLY);
-						if (fd_file == -1)
-						{
-							close_fds(arr_fds, len);
-							error_fd_file(tmp_infiles->content, envp);
-						}
-						dup2(fd_file, STDIN_FILENO);
-						close (fd_file);
-						tmp_infiles = tmp_infiles->next; // moverme hasta que no tenga más ningun infile
-					}
-				}
+					handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
+
 				// outfiles >
 				t_list_red	*tmp_outfiles;
 
-				tmp_outfiles = tmp->outfiles;
+				tmp_outfiles = data_tmp->outfiles;
 				if (tmp_outfiles != NULL)
-				{
-					while (tmp_outfiles != NULL)
-					{
-						if (tmp_outfiles->doble == 0)
-							fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
-						if (tmp_outfiles->doble == 1)
-							fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_APPEND, 0666); //changed flags from pipex here
-						if (fd_file == -1)
-						{
-							close_fds(arr_fds, len);
-							error_fd_file(tmp_outfiles->content, envp);
-						}
-						dup2(fd_file, STDOUT_FILENO);
-						close (fd_file);
-						tmp_outfiles= tmp_outfiles->next; // moverme hasta que no tenga más ningun infile
-					}
-				}
-				// if (len > 1 && data[i].outfiles == NULL) // solo escribe en pipe si no tiene outfiles
-				if (len > 1 && tmp->outfiles == NULL) // si existe pipe escribe en el pipe, si no que escriba en el terminal
+					handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
+				if (len > 1 && data_tmp->outfiles == NULL) // si existe pipe escribe en el pipe, si no que escriba en el terminal
 					dup2(arr_fds[0][1], STDOUT_FILENO);
 			}
 			else if (i != 0 && i == (len - 1)) // last command (i no puede ser 0 si no va a repetirse con el primero comando)
 			{
-				int		fd_file;
+				// infiles <
 				t_list_red	*tmp_infiles;
 
-				tmp_infiles = tmp->infiles;
-				if (tmp_infiles != NULL) //redirections <
-				{
-					while (tmp_infiles != NULL)
-					{
-						fd_file = open(tmp_infiles->content, O_RDONLY);
-						if (fd_file == -1)
-						{
-							close_fds(arr_fds, len);
-							error_fd_file(tmp_infiles->content, envp);
-						}
-						dup2(fd_file, STDIN_FILENO);
-						close (fd_file);
-						tmp_infiles = tmp_infiles->next; // moverme hasta que no tenga más ningun infile
-					} 
-				}
+				tmp_infiles = data_tmp->infiles;
+				if (tmp_infiles != NULL)
+					handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
 				else // only reads from pipe if there are no infiles
 					dup2(arr_fds[i - 1][0], STDIN_FILENO); // lee del pipe
 				// escribe directamente en STDOUT -> o sea la terminal
@@ -234,79 +222,33 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				//outfiles >
 				t_list_red	*tmp_outfiles;
 
-				tmp_outfiles = tmp->outfiles;
+				tmp_outfiles = data_tmp->outfiles;
 				if (tmp_outfiles != NULL)
-				{
-					while (tmp_outfiles != NULL)
-					{
-						if (tmp_outfiles->doble == 0)
-							fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
-						if (tmp_outfiles->doble == 1)
-							fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_APPEND, 0666); //changed flags from pipex here						
-						if (fd_file == -1)
-						{
-							close_fds(arr_fds, len);
-							error_fd_file(tmp_outfiles->content, envp);
-						}
-						dup2(fd_file, STDOUT_FILENO);
-						close (fd_file);
-						tmp_outfiles= tmp_outfiles->next; // moverme hasta que no tenga más ningun infile
-					}
-				}
+					handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
 			}
 			else // in the middle
 			{
-				int		fd_file;
 				t_list_red	*tmp_infiles;
-				
-				tmp_infiles = tmp->infiles;
+
+				tmp_infiles = data_tmp->infiles;
 				if (tmp_infiles != NULL)
-				{
-					while (tmp_infiles != NULL)
-					{
-						fd_file = open(tmp_infiles->content, O_RDONLY);
-						if (fd_file == -1)
-						{
-							close_fds(arr_fds, len);
-							error_fd_file(tmp_infiles->content, envp);
-						}
-						dup2(fd_file, STDIN_FILENO);
-						close (fd_file);
-						tmp_infiles = tmp_infiles->next; // moverme hasta que no tenga más ningun infile
-					}
-				}
+					handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
 				else
 				{
 					dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the reading part of the previous pipe as standard input
-					if (tmp->outfiles == NULL) // writes to pipe only if outfile doesn´t exist
+					if (data_tmp->outfiles == NULL) // writes to pipe only if outfile doesn´t exist
 						dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe.
 				}
-				//outfiles
+				//outfiles >
 				t_list_red	*tmp_outfiles;
 
-				tmp_outfiles = tmp->outfiles;
+				tmp_outfiles = data_tmp->outfiles;
 				if (tmp_outfiles != NULL)
-				{
-					while (tmp_outfiles != NULL)
-					{
-						if (tmp_outfiles->doble == 0)
-							fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666); //changed flags from pipex here
-						if (tmp_outfiles->doble == 1)
-							fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_APPEND, 0666); //changed flags from pipex here
-						if (fd_file == -1)
-						{
-							close_fds(arr_fds, len);
-							error_fd_file(tmp_outfiles->content, envp);
-						}
-						dup2(fd_file, STDOUT_FILENO);
-						close (fd_file);
-						tmp_outfiles= tmp_outfiles->next; // moverme hasta que no tenga más ningun infile
-					}
-				}
+					handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
 				else
-					dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe.
+					dup2(arr_fds[i][1], STDOUT_FILENO);
 			}
-			close_fds(arr_fds, len); // cierra todos los fds
+			close_fds(arr_fds, len);
 			
 			// 4th: executes the command:
 			if (execve(cmd_path, args, envp) < 0)
@@ -318,7 +260,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 			}
 		}
 		i++;
-		tmp = tmp->next;
+		data_tmp = data_tmp->next;
 	}
 	
 	// Main:
