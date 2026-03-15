@@ -88,8 +88,8 @@ static void	cmd_list_destroy(t_cmdnode *h)
 		h = nx;
 	}
 }
-
-/*static void	print_int_array(const t_intvec *v)
+/* 
+static void	print_int_array(const t_intvec *v)
 {
 	size_t	i;
 
@@ -103,9 +103,9 @@ static void	cmd_list_destroy(t_cmdnode *h)
 		i++;
 	}
 	printf("\n");
-}*/
+} */
 
-/*static void	print_str_list(const t_list *lst)
+/* static void	print_str_list(const t_list *lst)
 {
 	printf("[");
 	while (lst)
@@ -116,9 +116,9 @@ static void	cmd_list_destroy(t_cmdnode *h)
 		lst = lst->next;
 	}
 	printf("]");
-}*/
+} */
 
-/*static void	print_red_list(const t_list_red *lst)
+/* static void	print_red_list(const t_list_red *lst)
 {
 	printf("[");
 	while (lst)
@@ -131,9 +131,9 @@ static void	cmd_list_destroy(t_cmdnode *h)
 		lst = lst->next;
 	}
 	printf("]");
-}*/
+} */
 
-/*static void	print_nodes(const t_cmdnode *h)
+/* static void	print_nodes(const t_cmdnode *h)
 {
 	int	idx;
 
@@ -151,7 +151,7 @@ static void	cmd_list_destroy(t_cmdnode *h)
 		h = h->next;
 		idx++;
 	}
-}*/
+} */
 
 static void	update_quote_state_line(const char *line, char *quote_state)
 {
@@ -279,9 +279,9 @@ int	main(int argc, char **argv, char **envp)
 	t_cmdnode	*list;
 	char		**shell_env;
 	int			should_exit;
-	int			return_value;
+	int			exit_code;
 
-	return_value = 0;
+	exit_code = 0;
 	if ((argc = 0) && (argv == NULL))
 	{
 	}
@@ -325,8 +325,9 @@ int	main(int argc, char **argv, char **envp)
 				builtin_env(shell_env);
 			if (list && strcmp(list->cmd, "exit") == 0)
 				should_exit = builtin_exit(list->phrase);
-			// ?? WEXITSTATUS HERE?
-			WEXITSTATUS(execute_cmds(list, shell_env));
+			
+			exit_code = execute_cmds(&list, shell_env);
+			// change exit code here -> change_exit_status() // problem: I should update it directly with the variable status and not return_value=number
 		}
 		else
 			fprintf(stderr, "(parse error)\n");
@@ -339,12 +340,7 @@ int	main(int argc, char **argv, char **envp)
 			break ;
 		}
 	}
-	// add waitpid here ???
-
-
-
-
 	rl_clear_history();
 	free_envp_copy(shell_env);
-	return (0);
+	return (exit_code); // solo para evitar lo de no usarlo
 }

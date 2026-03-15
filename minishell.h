@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 16:17:58 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/15 11:17:52 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,7 +90,7 @@ int		ft_strncmp(const char *s1, const char *s2, size_t n);
 char	*ft_itoa(int n);
 
 char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len);
-int		execute_cmds(t_cmdnode *data, char **envp);
+int		execute_cmds(t_cmdnode **data, char **envp);
 void	close_fds(int **arr_fds, int len_cmds);
 
 int		is_built_in(char *cmd_name);

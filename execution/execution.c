@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 16:34:32 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/15 11:27:55 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,7 @@ char	**get_args(t_list	*phrase)
 	}
 	args = (char **)ft_malloc(sizeof(char *) * (args_count + 2)); // + 2 para añadir el array con nombre del comando (args[0]) y el ultimo array que es el del caracter nulo
 	tmp = phrase;
+	//printf("phrase is %s\n", (char *)phrase->content);
 	while (i < args_count)
 	{
 		args[i + 1] = tmp->content;
@@ -98,27 +99,28 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 	return (cmd_path);
 }
 
-int	execute_cmds(t_cmdnode *data, char **envp)
+int	execute_cmds(t_cmdnode **data, char **envp)
 {
 	pid_t	*pids;
 	char	**args;
 	char	*cmd_path;
 	int		len;
 	int		i;
-	int		status;
+	int		last_exit_status;
 	int		**arr_fds;
 	t_cmdnode *tmp;
 
 	len = 0;
 	i = 0;
-	status = 0;
-	tmp = data;
+	last_exit_status = 0;
+	tmp = *data;
 	while (tmp && tmp->cmd != NULL)
 	{
 		len++; // si tengo todos estos comandos, entonces tengo que crear el numero de cmds - 1 para crear todos los pipes
 		tmp = tmp->next;
 	}
-	printf("len is %d\n", len);
+	//printf("len is %d\n", len);
+	
 	arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
 	while (i < len - 1)
 	{
@@ -129,8 +131,9 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 	}
 
 	pids = ft_malloc(sizeof(pid_t) * len); // si es solo un y built-in no deberia crear pids....(quizás esto lo pongo dentro del loop???)
-	i = 0;
 	
+	i = 0;
+	tmp = *data;
 	while (i < len) // ir executando este loop para crear los procesos y ejecutar los comandos
 	{
 		// SOMEWHERE HERE -> IF LEN == 1 and IS_BUILT_IN == 1 -> then do not fork
@@ -144,17 +147,16 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			error_fork(envp);
 		else if (pids[i] == 0) // in child process
 		{
-			printf("Executing command %d\n", i);
-			
+			//printf("Executing command %d\n", i);
 			//1st split phrase into words to create an array of words to send to execve (we still miss args[0]):
 			//args = split_phrase(data[i].phrase);
 			
 			// 1st count how many arguments we have:
-			args = get_args(data[i].phrase);
+			args = get_args(tmp->phrase);
 			
 			// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
-			cmd_path = get_cmd_name_and_path(args, envp, data[i].cmd, arr_fds, len);
-			printf(" cmd name is %s\n", args[0]);
+			cmd_path = get_cmd_name_and_path(args, envp, tmp->cmd, arr_fds, len);
+			//printf(" cmd name is %s\n", args[0]);
 			// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
 			if (i == 0) // first command and only one command
 			{
@@ -162,7 +164,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				int		fd_file;
 				t_list_red	*tmp_infiles;
 				
-				tmp_infiles = data[i].infiles;
+				tmp_infiles = tmp->infiles;
 				if (tmp_infiles != NULL)
 				{
 					while (tmp_infiles != NULL)
@@ -181,7 +183,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				// outfiles >
 				t_list_red	*tmp_outfiles;
 
-				tmp_outfiles = data[i].outfiles;
+				tmp_outfiles = tmp->outfiles;
 				if (tmp_outfiles != NULL)
 				{
 					while (tmp_outfiles != NULL)
@@ -201,7 +203,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 					}
 				}
 				// if (len > 1 && data[i].outfiles == NULL) // solo escribe en pipe si no tiene outfiles
-				if (len > 1 && data[i].outfiles == NULL) // si existe pipe escribe en el pipe, si no que escriba en el terminal
+				if (len > 1 && tmp->outfiles == NULL) // si existe pipe escribe en el pipe, si no que escriba en el terminal
 					dup2(arr_fds[0][1], STDOUT_FILENO);
 			}
 			else if (i != 0 && i == (len - 1)) // last command (i no puede ser 0 si no va a repetirse con el primero comando)
@@ -209,7 +211,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				int		fd_file;
 				t_list_red	*tmp_infiles;
 
-				tmp_infiles = data[i].infiles;
+				tmp_infiles = tmp->infiles;
 				if (tmp_infiles != NULL) //redirections <
 				{
 					while (tmp_infiles != NULL)
@@ -232,7 +234,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				//outfiles >
 				t_list_red	*tmp_outfiles;
 
-				tmp_outfiles = data[i].outfiles;
+				tmp_outfiles = tmp->outfiles;
 				if (tmp_outfiles != NULL)
 				{
 					while (tmp_outfiles != NULL)
@@ -257,7 +259,7 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				int		fd_file;
 				t_list_red	*tmp_infiles;
 				
-				tmp_infiles = data[i].infiles;
+				tmp_infiles = tmp->infiles;
 				if (tmp_infiles != NULL)
 				{
 					while (tmp_infiles != NULL)
@@ -276,13 +278,13 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 				else
 				{
 					dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the reading part of the previous pipe as standard input
-					if (data[i].outfiles == NULL) // writes to pipe only if outfile doesn´t exist
+					if (tmp->outfiles == NULL) // writes to pipe only if outfile doesn´t exist
 						dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe.
 				}
 				//outfiles
 				t_list_red	*tmp_outfiles;
 
-				tmp_outfiles = data[i].outfiles;
+				tmp_outfiles = tmp->outfiles;
 				if (tmp_outfiles != NULL)
 				{
 					while (tmp_outfiles != NULL)
@@ -316,19 +318,18 @@ int	execute_cmds(t_cmdnode *data, char **envp)
 			}
 		}
 		i++;
+		tmp = tmp->next;
 	}
+	
+	// Main:
 	close_fds(arr_fds, len);
-	// this basically needs to be in main I think....
-	/// PONER ESTO EN MAIN.....
 	i = 0;
 	while (i < len)
 	{
-		waitpid(pids[i], &status, 0);
+		waitpid(pids[i], &last_exit_status, 0);
 		i++;
 	}
-	// aqui??? change_exit_value(return_value=status??? lo que pasa es que necesito saber el value de status....y escribiendo asi tal cual no puedo saberlo)
 	ft_free_malloc();
-	
-	return (status);
+	return (WEXITSTATUS(last_exit_status));
 }
 
