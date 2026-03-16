@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:03 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 10:26:42 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/16 16:53:04 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ static int	add_command_token(const char *line, t_parser *p, char **env)
 	int		grouped;
 	char	*tok;
 	char	*expanded;
+	char	*clean;
 
 	grouped = 0;
 	tok = read_token_grouped(line, &p->i, &grouped);
@@ -24,8 +25,10 @@ static int	add_command_token(const char *line, t_parser *p, char **env)
 		return (1);
 	expanded = expand_env_vars(tok, env);
 	free(tok);
-	str_list_push_back(&p->current_cmd->phrase, expanded);
+	clean = remove_quotes_str(expanded);
 	free(expanded);
+	str_list_push_back(&p->current_cmd->phrase, clean);
+	free(clean);
 	return (0);
 }
 
@@ -80,7 +83,8 @@ int	handle_command(const char *line, t_parser *p,
 		return (0);
 	expanded = expand_env_vars(cmd, env);
 	free(cmd);
-	cmd = expanded;
+	cmd = remove_quotes_str(expanded);
+	free(expanded);
 	intvec_push(codes, 0);
 	p->current_cmd = node_new(cmd);
 	move_red_list_to_back(&p->current_cmd->infiles, &p->pending_in);
