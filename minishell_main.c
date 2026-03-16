@@ -278,7 +278,7 @@ int	main(int argc, char **argv, char **envp)
 	t_intvec	codes;
 	t_cmdnode	*list;
 	char		**shell_env;
-	int			should_exit;
+	//int			should_exit;
 	int			exit_code;
 
 	exit_code = 0;
@@ -292,7 +292,7 @@ int	main(int argc, char **argv, char **envp)
 	setup_signals();
 	using_history();
 	change_exit_value("return_value=0", &shell_env);
-	should_exit = 0;
+	//should_exit = 0;
 	while (1)
 	{
 		line = read_full_command();
@@ -314,7 +314,7 @@ int	main(int argc, char **argv, char **envp)
 			//print_int_array(&codes);
 			//print_nodes(list);
 			// poner esto en execution!!!
-			if (list && strcmp(list->cmd, "echo") == 0)
+			/* if (list && strcmp(list->cmd, "echo") == 0)
 				builtin_echo(list->phrase);
 			if (list && strcmp(list->cmd, "pwd") == 0)
 				builtin_pwd();
@@ -325,7 +325,7 @@ int	main(int argc, char **argv, char **envp)
 			if (list && strcmp(list->cmd, "env") == 0)
 				builtin_env(shell_env);
 			if (list && strcmp(list->cmd, "exit") == 0)
-				should_exit = builtin_exit(list->phrase);
+				should_exit = builtin_exit(list->phrase); */
 			
 			exit_code = execute_cmds(&list, shell_env);
 			// change exit code here -> change_exit_status() // problem: I should update it directly with the variable status and not return_value=number
@@ -335,7 +335,12 @@ int	main(int argc, char **argv, char **envp)
 		cmd_list_destroy(list);
 		intvec_destroy(&codes);
 		free(line);
-		if (should_exit)
+		/* if (should_exit)
+		{
+			printf("exit\n");
+			break ;
+		} */
+		if (exit_code == 1)
 		{
 			printf("exit\n");
 			break ;
@@ -343,5 +348,5 @@ int	main(int argc, char **argv, char **envp)
 	}
 	rl_clear_history();
 	free_envp_copy(shell_env);
-	return (exit_code); // solo para evitar lo de no usarlo
+	return (exit_code); ///
 }

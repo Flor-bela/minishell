@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/16 00:22:50 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/16 12:55:22 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,6 +152,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	i = 0;
 	last_exit_status = 0;
 	data_tmp = *data;
+	pids = NULL;
 	while (data_tmp && data_tmp->cmd != NULL)
 	{
 		len++;
@@ -167,111 +168,139 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		i++;
 	}
 	
-	pids = ft_malloc(sizeof(pid_t) * len); // si es solo un y built-in no deberia crear pids....(quizás esto lo pongo dentro del loop???)
 	i = 0;
 	data_tmp = *data;
-	while (i < len) // ir executando este loop para crear los procesos y ejecutar los comandos
+	if (len == 1 && (is_built_in(data_tmp->cmd) == 1))
 	{
-		// SOMEWHERE HERE -> IF LEN == 1 and IS_BUILT_IN == 1 -> then do not fork
-		//if (len == 1 && (is_built_in(data[i].cmd) == 1))
-		// executar aqui directamente sin forks!!!!
-		//else -> seria lo demás -> hmmm pero no me gusta así, es raro
-		
-		pids[i] = fork();
-		if (pids[i] == -1)
-			error_fork(envp);
-		else if (pids[i] == 0) // in child process
+		t_list_red	*tmp_infiles;
+
+		tmp_infiles = data_tmp->infiles;
+		if (tmp_infiles != NULL)
+			handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
+		t_list_red	*tmp_outfiles;
+
+		tmp_outfiles = data_tmp->outfiles;
+		if (tmp_outfiles != NULL)
+			handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
+
+		//executar
+		if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
+			builtin_echo(data_tmp->phrase);
+		if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
+			builtin_pwd();
+		if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
+			builtin_export(data_tmp->phrase, &envp);
+		if (data_tmp && (ft_strncmp (data_tmp->cmd, "unset", 5) == 0 && data_tmp->cmd[5] == '\0'))
+			builtin_unset(data_tmp->phrase, &envp);
+		if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
+			builtin_env(envp);
+		if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
+			//should_exit = builtin_exit(data_tmp->phrase);
+			return(builtin_exit(data_tmp->phrase)); // not sure about this....
+		//close_fds(arr_fds, len); // I think there is no need
+	}
+	else
+	{
+		pids = ft_malloc(sizeof(pid_t) * len); // si es solo un y built-in no deberia crear pids....(quizás esto lo pongo dentro del loop???)
+
+		while (i < len) // ir executando este loop para crear los procesos y ejecutar los comandos
 		{
-			// 1st count how many arguments we have:
-			args = get_args(data_tmp->phrase);
-			
-			// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
-			cmd_path = get_cmd_name_and_path(args, envp, data_tmp->cmd, arr_fds, len);
-			
-			// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
-			if (i == 0) // first command and only one command
+			pids[i] = fork();
+			if (pids[i] == -1)
+				error_fork(envp);
+			else if (pids[i] == 0) // in child process
 			{
-				// infiles <
-				t_list_red	*tmp_infiles;
-
-				tmp_infiles = data_tmp->infiles;
-				if (tmp_infiles != NULL)
-					handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
-
-				// outfiles >
-				t_list_red	*tmp_outfiles;
-
-				tmp_outfiles = data_tmp->outfiles;
-				if (tmp_outfiles != NULL)
-					handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
-				if (len > 1 && data_tmp->outfiles == NULL) // si existe pipe escribe en el pipe, si no que escriba en el terminal
-					dup2(arr_fds[0][1], STDOUT_FILENO);
-			}
-			else if (i != 0 && i == (len - 1)) // last command (i no puede ser 0 si no va a repetirse con el primero comando)
-			{
-				// infiles <
-				t_list_red	*tmp_infiles;
-
-				tmp_infiles = data_tmp->infiles;
-				if (tmp_infiles != NULL)
-					handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
-				else // only reads from pipe if there are no infiles
-					dup2(arr_fds[i - 1][0], STDIN_FILENO); // lee del pipe
-				// escribe directamente en STDOUT -> o sea la terminal
+				// 1st count how many arguments we have:
+				args = get_args(data_tmp->phrase);
 				
-				//outfiles >
-				t_list_red	*tmp_outfiles;
-
-				tmp_outfiles = data_tmp->outfiles;
-				if (tmp_outfiles != NULL)
-					handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
-			}
-			else // in the middle
-			{
-				t_list_red	*tmp_infiles;
-
-				tmp_infiles = data_tmp->infiles;
-				if (tmp_infiles != NULL)
-					handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
-				else
+				// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
+				cmd_path = get_cmd_name_and_path(args, envp, data_tmp->cmd, arr_fds, len);
+				
+				// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
+				if (i == 0) // first command and only one command
 				{
-					dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the reading part of the previous pipe as standard input
-					if (data_tmp->outfiles == NULL) // writes to pipe only if outfile doesn´t exist
-						dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe.
-				}
-				//outfiles >
-				t_list_red	*tmp_outfiles;
+					// infiles <
+					t_list_red	*tmp_infiles;
 
-				tmp_outfiles = data_tmp->outfiles;
-				if (tmp_outfiles != NULL)
-					handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
-				else
-					dup2(arr_fds[i][1], STDOUT_FILENO);
+					tmp_infiles = data_tmp->infiles;
+					if (tmp_infiles != NULL)
+						handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
+
+					// outfiles >
+					t_list_red	*tmp_outfiles;
+
+					tmp_outfiles = data_tmp->outfiles;
+					if (tmp_outfiles != NULL)
+						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
+					if (len > 1 && data_tmp->outfiles == NULL) // si existe pipe escribe en el pipe, si no que escriba en el terminal
+						dup2(arr_fds[0][1], STDOUT_FILENO);
+				}
+				else if (i != 0 && i == (len - 1)) // last command (i no puede ser 0 si no va a repetirse con el primero comando)
+				{
+					// infiles <
+					t_list_red	*tmp_infiles;
+
+					tmp_infiles = data_tmp->infiles;
+					if (tmp_infiles != NULL)
+						handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
+					else // only reads from pipe if there are no infiles
+						dup2(arr_fds[i - 1][0], STDIN_FILENO); // lee del pipe
+					// escribe directamente en STDOUT -> o sea la terminal
+					
+					//outfiles >
+					t_list_red	*tmp_outfiles;
+
+					tmp_outfiles = data_tmp->outfiles;
+					if (tmp_outfiles != NULL)
+						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
+				}
+				else // in the middle
+				{
+					t_list_red	*tmp_infiles;
+
+					tmp_infiles = data_tmp->infiles;
+					if (tmp_infiles != NULL)
+						handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
+					else
+					{
+						dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the reading part of the previous pipe as standard input
+						if (data_tmp->outfiles == NULL) // writes to pipe only if outfile doesn´t exist
+							dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe.
+					}
+					//outfiles >
+					t_list_red	*tmp_outfiles;
+
+					tmp_outfiles = data_tmp->outfiles;
+					if (tmp_outfiles != NULL)
+						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
+					else
+						dup2(arr_fds[i][1], STDOUT_FILENO);
+				}
+				close_fds(arr_fds, len);
+				
+				// 4th: executes the command:
+				if (execve(cmd_path, args, envp) < 0)
+				{
+					perror(cmd_path);
+					ft_free_malloc();
+					change_exit_value("return_value=126", &envp);
+					exit(126);
+				}
 			}
-			close_fds(arr_fds, len);
-			
-			// 4th: executes the command:
-			if (execve(cmd_path, args, envp) < 0)
-			{
-				perror(cmd_path);
-				ft_free_malloc();
-				change_exit_value("return_value=126", &envp);
-				exit(126);
-			}
+			i++;
+			data_tmp = data_tmp->next;
 		}
-		i++;
-		data_tmp = data_tmp->next;
+		
+		// Main:
+		close_fds(arr_fds, len);
+		i = 0;
+		while (i < len)
+		{
+			waitpid(pids[i], &last_exit_status, 0);
+			i++;
+		}
+		ft_free_malloc();
 	}
-	
-	// Main:
-	close_fds(arr_fds, len);
-	i = 0;
-	while (i < len)
-	{
-		waitpid(pids[i], &last_exit_status, 0);
-		i++;
-	}
-	ft_free_malloc();
 	return (WEXITSTATUS(last_exit_status));
 }
 
