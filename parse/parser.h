@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:28:12 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 10:32:10 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/16 12:43:44 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,20 @@
 # define PARSER_H
 
 # include "../minishell.h"
+
+typedef struct s_parser
+{
+	size_t		i;
+	size_t		j;
+	size_t		op_len;
+	int			op_code;
+	int			op_match;
+	t_cmdnode	*head;
+	t_cmdnode	*tail;
+	t_cmdnode	*current_cmd;
+	t_list_red	*pending_in;
+	t_list_red	*pending_out;
+}	t_parser;
 
 /* list utils */
 void		intvec_push(t_intvec *v, int x);

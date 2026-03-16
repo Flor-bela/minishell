@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/16 09:56:03 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/16 12:43:30 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,19 +63,6 @@ typedef struct s_intvec
 	size_t	cap;
 }			t_intvec;
 
-typedef struct s_parser
-{
-	size_t		i;
-	size_t		j;
-	size_t		op_len;
-	int			op_code;
-	int			op_match;
-	t_cmdnode	*head;
-	t_cmdnode	*tail;
-	t_cmdnode	*current_cmd;
-	t_list_red	*pending_in;
-	t_list_red	*pending_out;
-}	t_parser;
 
 int		builtin_echo(t_list *args);
 int		builtin_pwd(void);
@@ -111,6 +98,8 @@ int		execute_cmds(t_cmdnode *data, char **envp);
 void	close_fds(int **arr_fds, int len_cmds);
 
 int		is_built_in(char *cmd_name);
+
+void	change_exit_value(char *args, char ***envp);
 
 //int		main (int argc, char **argv, char **envp);
 

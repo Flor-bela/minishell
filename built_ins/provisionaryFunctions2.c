@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 11:30:48 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/16 12:50:22 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -292,18 +292,6 @@ static char	*join_and_free(char *s1, const char *s2)
 	res[len1 + len2] = '\0';
 	free(s1);
 	return (res);
-}
-
-static char	update_quote(char quote, char c)
-{
-	if ((c == '"' || c == '\''))
-	{
-		if (quote == 0)
-			return (c);
-		if (quote == c)
-			return (0);
-	}
-	return (quote);
 }
 
 static void	handle_quote_char(const char *str, size_t *j,
@@ -670,14 +658,27 @@ int	builtin_exit(t_list *args)
 	return (1);
 }
 
-void	change_exit_value(char *args, char ***envp)
+void	change_exit_value(char *value, char ***envp)
 {
 	int		idx;
+	char	*entry;
+	size_t	len;
 
-	idx = find_env_index(*envp, args);
+	if (!value)
+		return ;
+
+	len = strlen(value) + strlen("return_value=") + 1;
+	entry = malloc(len);
+	if (!entry)
+		return ;
+
+	sprintf(entry, "return_value=%s", value);
+
+	idx = find_env_index(*envp, "return_value");
 	if (idx >= 0)
-		replace_env_value(*envp, idx, args);
+		replace_env_value(*envp, idx, entry);
 	else
-		append_env_value(envp, args);
-	return ;
+		append_env_value(envp, entry);
+
+	free(entry);
 }

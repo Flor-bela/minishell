@@ -290,7 +290,7 @@ int	main(int argc, char **argv, char **envp)
 		return (1);
 	setup_signals();
 	using_history();
-	change_exit_value("return_value=127", &shell_env);
+	change_exit_value("127", &shell_env);
 	should_exit = 0;
 	while (1)
 	{

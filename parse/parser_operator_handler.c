@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 10:39:17 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/16 12:51:37 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ static char	*get_redir_target(const char *line, size_t *i, char **env)
 	if (!target)
 	{
 		fprintf(stderr, "bash: error sintáctico cerca del elemento inesperado `newline'\n");
-		change_exit_value("return_value=2", &env);
+		change_exit_value("2", &env);
 		return (NULL);
 	}
 	expanded = expand_env_vars(target, env);
