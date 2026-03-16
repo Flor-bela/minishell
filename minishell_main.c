@@ -88,6 +88,7 @@ static void	cmd_list_destroy(t_cmdnode *h)
 		h = nx;
 	}
 }
+/* 
 static void	print_int_array(const t_intvec *v)
 {
 	size_t	i;
@@ -102,8 +103,8 @@ static void	print_int_array(const t_intvec *v)
 		i++;
 	}
 	printf("\n");
-}
-
+} */
+/* 
 static void	print_str_list(const t_list *lst)
 {
 	printf("[");
@@ -115,8 +116,8 @@ static void	print_str_list(const t_list *lst)
 		lst = lst->next;
 	}
 	printf("]");
-}
-
+} */
+/* 
 static void	print_red_list(const t_list_red *lst)
 {
 	printf("[");
@@ -130,8 +131,8 @@ static void	print_red_list(const t_list_red *lst)
 		lst = lst->next;
 	}
 	printf("]");
-}
-
+} */
+/* 
 static void	print_nodes(const t_cmdnode *h)
 {
 	int	idx;
@@ -150,7 +151,7 @@ static void	print_nodes(const t_cmdnode *h)
 		h = h->next;
 		idx++;
 	}
-}
+} */
 
 static void	update_quote_state_line(const char *line, char *quote_state)
 {
@@ -291,7 +292,7 @@ int	main(int argc, char **argv, char **envp)
 	setup_signals();
 	using_history();
 	change_exit_value("127", &shell_env);
-	should_exit = 0;
+	//should_exit = 0;
 	while (1)
 	{
 		line = read_full_command();
@@ -310,7 +311,7 @@ int	main(int argc, char **argv, char **envp)
 		list = NULL;
 		if (parse_line(line, &codes, &list, shell_env) == 0)
 		{
-			print_int_array(&codes);
+			/* print_int_array(&codes);
 			print_nodes(list);
 			if (list && list->cmd && strcmp(list->cmd, "echo") == 0)
 				builtin_echo(list->phrase);
@@ -328,19 +329,15 @@ int	main(int argc, char **argv, char **envp)
 				builtin_env(shell_env);
 
 			if (list && list->cmd && strcmp(list->cmd, "exit") == 0)
-				should_exit = builtin_exit(list->phrase);
-	//	execute_cmds(list, shell_env);
+				should_exit = builtin_exit(list->phrase); */
+			exit_code = execute_cmds(&list, shell_env);
+			change_exit_value(ft_itoa(exit_code), &shell_env);
 		}
 		else
 			fprintf(stderr, "(parse error)\n");
 		cmd_list_destroy(list);
 		intvec_destroy(&codes);
 		free(line);
-		/* if (should_exit)
-		{
-			printf("exit\n");
-			break ;
-		} */
 		if (exit_code == 1)
 		{
 			printf("exit\n");
@@ -349,5 +346,5 @@ int	main(int argc, char **argv, char **envp)
 	}
 	rl_clear_history();
 	free_envp_copy(shell_env);
-	return (exit_code); ///
+	return (0);
 }
