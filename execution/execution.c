@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/16 17:06:33 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/16 17:54:59 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@ static void	error_fork(char **envp)
 {
 	perror("fork");
 	ft_free_malloc();
-	change_exit_value("return_value=1", &envp);
+	change_exit_value("1", &envp);
 	exit(EXIT_FAILURE);
 }
 
@@ -24,7 +24,7 @@ static void	error_pipe(char **envp)
 {
 	perror("pipe");
 	ft_free_malloc();
-	change_exit_value("return_value=1", &envp);
+	change_exit_value("1", &envp);
 	exit(EXIT_FAILURE);
 }
 
@@ -33,7 +33,7 @@ static void	error_fd_file(char *name_infile, char **envp)
 {
 	perror(name_infile);
 	ft_free_malloc();
-	change_exit_value("return_value=1", &envp);
+	change_exit_value("1", &envp);
 	exit(EXIT_FAILURE);
 }
 
@@ -85,7 +85,7 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 			write(2, error, ft_strlen(error));
 			close_fds(arr_fds, len);
 			ft_free_malloc();
-			change_exit_value("return_value=127", &envp);
+			change_exit_value("127", &envp);
 			exit(127);
 		}
 	}
@@ -99,7 +99,7 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 
 static void	handle_infile_redirections(t_list_red **tmp_infiles, int **arr_fds, int len, char **envp)
 {
-	int			fd_file;
+	int	fd_file;
 
 	while (*tmp_infiles != NULL)
 	{
@@ -170,6 +170,13 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	
 	i = 0;
 	data_tmp = *data;
+	// Only one command -> built-in!!!
+	printf("len is %d\n", len);
+	if (len == 0)
+	{
+		printf("hola\n");
+	}
+	
 	if (len == 1 && (is_built_in(data_tmp->cmd) == 1))
 	{
 		// infiles <
@@ -192,7 +199,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 					error_fd_file(tmp_infiles->content, envp);
 				}
 				dup2(fd_file, STDIN_FILENO);
-				close (fd_file);
+				close(fd_file);
 				tmp_infiles = tmp_infiles->next;
 			}
 		}
@@ -338,7 +345,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				{
 					perror(cmd_path);
 					//ft_free_malloc();
-					change_exit_value("return_value=126", &envp);
+					change_exit_value("126", &envp);
 					exit(126);
 				}
 			}
