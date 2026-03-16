@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:59 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 10:43:34 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/16 17:55:07 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,14 +24,24 @@ static int	read_token_loop(const char *s, size_t *i,
 		{
 			if (match_op(s, *i, &op_len, &op_code) != 0
 				|| isspace((unsigned char)s[*i]))
-				break ;
+				break;
+
 			if (s[*i] == '\'' || s[*i] == '"')
-				update_token_quote(s, i, quote, grouped_out);
+			{
+				*quote = s[*i];
+				if (grouped_out)
+					*grouped_out = 1;
+				(*i)++;
+			}
 			else
 				(*i)++;
 		}
 		else
-			update_token_quote(s, i, quote, grouped_out);
+		{
+			if (s[*i] == *quote)
+				*quote = 0;
+			(*i)++;
+		}
 	}
 	return (0);
 }
