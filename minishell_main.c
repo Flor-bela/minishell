@@ -88,7 +88,6 @@ static void	cmd_list_destroy(t_cmdnode *h)
 		h = nx;
 	}
 }
-
 static void	print_int_array(const t_intvec *v)
 {
 	size_t	i;
@@ -278,9 +277,10 @@ int	main(int argc, char **argv, char **envp)
 	t_intvec	codes;
 	t_cmdnode	*list;
 	char		**shell_env;
-	int			should_exit;
+	//int			should_exit;
+	int			exit_code;
 
-
+	exit_code = 0;
 	if ((argc = 0) && (argv == NULL))
 	{
 	}
@@ -336,7 +336,12 @@ int	main(int argc, char **argv, char **envp)
 		cmd_list_destroy(list);
 		intvec_destroy(&codes);
 		free(line);
-		if (should_exit)
+		/* if (should_exit)
+		{
+			printf("exit\n");
+			break ;
+		} */
+		if (exit_code == 1)
 		{
 			printf("exit\n");
 			break ;
@@ -344,5 +349,5 @@ int	main(int argc, char **argv, char **envp)
 	}
 	rl_clear_history();
 	free_envp_copy(shell_env);
-	return (0);
+	return (exit_code); ///
 }
