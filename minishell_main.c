@@ -330,6 +330,11 @@ int	main(int argc, char **argv, char **envp)
 
 			if (list && list->cmd && strcmp(list->cmd, "exit") == 0)
 				should_exit = builtin_exit(list->phrase); */
+			
+			// VER AQUI LOS COMANDOS VACIOS SOLO CON INFILE Y OUTFILE
+			//printf("list->infile: %s\n", (char *)list->infiles->content);
+			//if (list->cmd == NULL)
+			//	printf("cmd: %s\n", list->cmd);
 			exit_code = execute_cmds(&list, shell_env);
 			change_exit_value(ft_itoa(exit_code), &shell_env);
 		}
@@ -338,13 +343,14 @@ int	main(int argc, char **argv, char **envp)
 		cmd_list_destroy(list);
 		intvec_destroy(&codes);
 		free(line);
-		if (exit_code == 1)
+		if (exit_code == -11)
 		{
 			printf("exit\n");
 			break ;
 		}
 	}
 	rl_clear_history();
+	ft_free_malloc();
 	free_envp_copy(shell_env);
 	return (0);
 }

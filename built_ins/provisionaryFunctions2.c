@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 14:45:58 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/16 17:03:43 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -657,7 +657,7 @@ int	builtin_env(char **envp)
 int	builtin_exit(t_list *args)
 {
 	(void)args;
-	return (1);
+	return (-11);
 }
 
 void	change_exit_value(char *value, char ***envp)

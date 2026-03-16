@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/16 15:50:04 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/16 17:06:33 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -337,7 +337,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				if (execve(cmd_path, args, envp) < 0)
 				{
 					perror(cmd_path);
-					ft_free_malloc();
+					//ft_free_malloc();
 					change_exit_value("return_value=126", &envp);
 					exit(126);
 				}
@@ -354,7 +354,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 			waitpid(pids[i], &last_exit_status, 0);
 			i++;
 		}
-		ft_free_malloc();
+		//ft_free_malloc();
 	}
 	return (WEXITSTATUS(last_exit_status));
 }
