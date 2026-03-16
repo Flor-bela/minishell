@@ -3,19 +3,12 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2026/03/16 12:43:30 by oscar            ###   ########.fr       */
-=======
-/*   Updated: 2026/03/16 00:19:28 by fda-roch         ###   ########.fr       */
->>>>>>> main
+/*   Updated: 2026/03/16 13:09:27 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-
-
 
 #ifndef MINISHELL_H
 # define MINISHELL_H
@@ -59,10 +52,6 @@ typedef struct s_cmdnode
 	struct s_cmdnode	*next;
 }						t_cmdnode;
 
-<<<<<<< HEAD
-
-=======
->>>>>>> main
 typedef struct s_intvec
 {
 	int		*data;

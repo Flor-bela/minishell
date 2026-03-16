@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/16 12:55:22 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/16 15:50:04 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,33 +172,88 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	data_tmp = *data;
 	if (len == 1 && (is_built_in(data_tmp->cmd) == 1))
 	{
+		// infiles <
 		t_list_red	*tmp_infiles;
+		int 		saved_stdin;
+		saved_stdin = -1;
 
 		tmp_infiles = data_tmp->infiles;
 		if (tmp_infiles != NULL)
-			handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
+		{
+			int			fd_file;
+			
+			saved_stdin = dup(STDIN_FILENO);
+			while (tmp_infiles != NULL)
+			{
+				fd_file = open(tmp_infiles->content, O_RDONLY);
+				if (fd_file == -1)
+				{
+					close_fds(arr_fds, len);
+					error_fd_file(tmp_infiles->content, envp);
+				}
+				dup2(fd_file, STDIN_FILENO);
+				close (fd_file);
+				tmp_infiles = tmp_infiles->next;
+			}
+		}
+		// outfiles >
 		t_list_red	*tmp_outfiles;
+		int	saved_stdout;
 
+		saved_stdout = -1;
 		tmp_outfiles = data_tmp->outfiles;
 		if (tmp_outfiles != NULL)
-			handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
-
-		//executar
+		{
+			int	fd_file;
+			
+			saved_stdout = dup(STDOUT_FILENO);
+			while (tmp_outfiles != NULL)
+			{
+				if (tmp_outfiles->doble == 0)
+					fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+				if (tmp_outfiles->doble == 1)
+					fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_APPEND, 0666);
+				if (fd_file == -1)
+				{
+					close_fds(arr_fds, len);
+					error_fd_file(tmp_outfiles->content, envp);
+				}
+				dup2(fd_file, STDOUT_FILENO);
+				close (fd_file);
+				tmp_outfiles= tmp_outfiles->next;
+			}
+		}
+		
+		//ejecutar
+		int	return_value;
+		
+		return_value = 0;
 		if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
-			builtin_echo(data_tmp->phrase);
-		if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
-			builtin_pwd();
-		if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
-			builtin_export(data_tmp->phrase, &envp);
-		if (data_tmp && (ft_strncmp (data_tmp->cmd, "unset", 5) == 0 && data_tmp->cmd[5] == '\0'))
-			builtin_unset(data_tmp->phrase, &envp);
-		if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
-			builtin_env(envp);
-		if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
-			//should_exit = builtin_exit(data_tmp->phrase);
-			return(builtin_exit(data_tmp->phrase)); // not sure about this....
-		//close_fds(arr_fds, len); // I think there is no need
+			return_value = builtin_echo(data_tmp->phrase);
+		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
+			return_value = builtin_pwd();
+		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
+			return_value = builtin_export(data_tmp->phrase, &envp);
+		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "unset", 5) == 0 && data_tmp->cmd[5] == '\0'))
+			return_value = builtin_unset(data_tmp->phrase, &envp);
+		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
+			return_value = builtin_env(envp);
+		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
+			return_value = builtin_exit(data_tmp->phrase);
+		
+		if (saved_stdin != -1)
+		{
+			dup2(saved_stdin, STDIN_FILENO);
+			close(saved_stdin);
+		}
+		if (saved_stdout != -1)
+		{
+			dup2(saved_stdout, STDOUT_FILENO);
+			close(saved_stdout);
+		}
+		return(return_value);
 	}
+
 	else
 	{
 		pids = ft_malloc(sizeof(pid_t) * len); // si es solo un y built-in no deberia crear pids....(quizás esto lo pongo dentro del loop???)
@@ -303,4 +358,3 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	}
 	return (WEXITSTATUS(last_exit_status));
 }
-

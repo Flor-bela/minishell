@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/03 18:56:12 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 14:02:48 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/16 15:42:50 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,17 +19,17 @@ int	is_built_in(char *cmd_name)
 	built_in = 0;
 	if (ft_strncmp (cmd_name, "echo", 4) == 0 && cmd_name[4] == '\0')
 		built_in = 1;
-	if (ft_strncmp (cmd_name, "cd", 2) == 0 && cmd_name[2] == '\0')
+	else if (ft_strncmp (cmd_name, "cd", 2) == 0 && cmd_name[2] == '\0')
 		built_in = 1;
-	if (ft_strncmp (cmd_name, "pwd", 3) == 0 && cmd_name[3] == '\0')
+	else if (ft_strncmp (cmd_name, "pwd", 3) == 0 && cmd_name[3] == '\0')
 		built_in = 1;
-	if (ft_strncmp (cmd_name, "export", 6) == 0 && cmd_name[6] == '\0')
+	else if (ft_strncmp (cmd_name, "export", 6) == 0 && cmd_name[6] == '\0')
 		built_in = 1;
-	if (ft_strncmp (cmd_name, "unset", 5) == 0 && cmd_name[5] == '\0')
+	else if (ft_strncmp (cmd_name, "unset", 5) == 0 && cmd_name[5] == '\0')
 		built_in = 1;
-	if (ft_strncmp (cmd_name, "env", 3) == 0 && cmd_name[3] == '\0')
+	else if (ft_strncmp (cmd_name, "env", 3) == 0 && cmd_name[3] == '\0')
 		built_in = 1;
-	if (ft_strncmp (cmd_name, "exit", 4) == 0 && cmd_name[4] == '\0')
+	else if (ft_strncmp (cmd_name, "exit", 4) == 0 && cmd_name[4] == '\0')
 		built_in = 1;
 	return (built_in);
 }
