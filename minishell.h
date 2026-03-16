@@ -6,9 +6,12 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 14:07:46 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/16 09:56:03 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+
+
 
 #ifndef MINISHELL_H
 # define MINISHELL_H
@@ -52,15 +55,6 @@ typedef struct s_cmdnode
 	struct s_cmdnode	*next;
 }						t_cmdnode;
 
-// Ultima version:
-/* typedef struct s_cmdnode
-{
-	char				*cmd;
-	t_list				*phrase; // Oscar me va a hacer split de todos los argumentos
-	t_list				*infiles; // < (redirecciones)
-	t_list				*outfiles; // > (redirecciones)
-	struct s_cmdnode	*next;
-}						t_cmdnode; */
 
 typedef struct s_intvec
 {
@@ -68,6 +62,20 @@ typedef struct s_intvec
 	size_t	len;
 	size_t	cap;
 }			t_intvec;
+
+typedef struct s_parser
+{
+	size_t		i;
+	size_t		j;
+	size_t		op_len;
+	int			op_code;
+	int			op_match;
+	t_cmdnode	*head;
+	t_cmdnode	*tail;
+	t_cmdnode	*current_cmd;
+	t_list_red	*pending_in;
+	t_list_red	*pending_out;
+}	t_parser;
 
 int		builtin_echo(t_list *args);
 int		builtin_pwd(void);
