@@ -6,13 +6,13 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/16 17:49:14 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/17 17:11:20 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-static char	**get_all_paths(char **envp) // in the variable PATH= we have many different paths there, we need to split them all here to then later try them all and see if the command we are looking for is in one of them
+static char	**get_all_paths(char **envp)
 {
 	char	**paths;
 	char	*full_path;
@@ -43,10 +43,10 @@ static char	*find_path(char **paths, char *cmd_name)
 	i = 0;
 	cmd_path = NULL;
 	temp = NULL;
-	while (paths != NULL && paths[i] != NULL) // ir probando cual destes path tiene permiso
+	while (paths != NULL && paths[i] != NULL)
 	{
-		temp = ft_strjoin(paths[i], "/");
-		cmd_path = ft_strjoin(temp, cmd_name);
+		temp = ft_strjoin_modif(paths[i], "/");
+		cmd_path = ft_strjoin_modif(temp, cmd_name);
 		
 		if (access(cmd_path, X_OK) == 0)
 			return (cmd_path);
@@ -56,20 +56,22 @@ static char	*find_path(char **paths, char *cmd_name)
 	return (NULL);
 }
 
-char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len) // cmd_name = data[i].cmd
+char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len)
 {
 	char	**paths;
 	char	*cmd_path;
 	char	*error;
-	
+
 	paths = get_all_paths(envp);
 	cmd_path = find_path(paths, cmd_name);
 	if (cmd_path == NULL)
 	{
-		error = ft_strjoin(cmd_name, ": command not found\n");
-		write(2, error, ft_strlen(error));
+		if (find_chr(cmd_name, '/') == 1)
+			error = ft_strjoin_modif("minishell: ", cmd_name);
+		else
+			error = cmd_name;
+		perror(error);
 		close_fds(arr_fds, len);
-		ft_free_malloc();
 		change_exit_value("127", &envp);
 		exit(127);
 	}

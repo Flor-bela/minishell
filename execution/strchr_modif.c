@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/07 12:13:32 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 14:04:41 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/17 17:12:18 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,12 +20,12 @@ char	*strchr_modif(const char *s, int c)
 
 	ch = (unsigned char)c;
 	len = ft_strlen(s);
-	i = len - 1; // empieza justo después del caracter nulo
+	i = len - 1;
 	while (i > 0)
 	{
 		if (s[i] == ch)
-			return ((char *)&s[i + 1]); // +1 para que no me devuelva el / pero justo lo que está a la derecha, o sea el nombre de comando en sí
-		i--; // así va desde el final hasta el inicio de la string
+			return ((char *)&s[i + 1]);
+		i--;
 	}
 	if (ch == '\0')
 		return ((char *)&s[i]);

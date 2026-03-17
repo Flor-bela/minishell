@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_split.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/13 16:18:45 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/17 12:59:42 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 16:07:59 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,20 +55,6 @@ static void	find_start_end(char const **s, char c, char **start, char **end)
 		(*s)++;
 	}
 }
-
-/* static char	**clean(char **arr, int j)
-{
-	int	i;
-
-	i = 0;
-	while (i < j)
-	{
-		free (arr[i]);
-		i++;
-	}
-	free (arr);
-	return (NULL);
-} */
 
 char	**ft_split(char const *s, char c)
 {

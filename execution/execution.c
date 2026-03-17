@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/17 17:03:48 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 17:38:16 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,27 +14,27 @@
 
 static void	error_fork(char **envp)
 {
-	perror("minishell: "); //probar
-	ft_free_malloc();
+	perror("minishell: fork"); // probar
 	change_exit_value("1", &envp);
-	exit(EXIT_FAILURE);
+	exit(1);
 }
 
 static void	error_pipe(char **envp)
 {
-	perror("minishell: "); // probar
-	ft_free_malloc();
+	perror("minishell: pipe"); // probar
 	change_exit_value("1", &envp);
-	exit(EXIT_FAILURE);
+	exit(1);
 }
 
  
 static void	error_fd_file(char *name_infile, char **envp)
 {
-	perror(name_infile); //minishell: (strjoin name_infile) -> cambiar esto!!!!
-	ft_free_malloc();
+	char *error;
+	
+	error = ft_strjoin_modif("minishell: ", name_infile);
+	perror(error);
 	change_exit_value("1", &envp);
-	exit(EXIT_FAILURE);
+	exit(1);
 }
 
 
@@ -50,7 +50,7 @@ char	**get_args(t_list	*phrase)
 	i = 0;
 	args = NULL;
 	tmp = phrase;
-	while (tmp != NULL) // count arguments
+	while (tmp != NULL)
 	{
 		args_count++;
 		tmp = tmp->next;
@@ -71,7 +71,7 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 {
 	char	*cmd_name;
 	char	*cmd_path;
-	char	*error;
+	
 
 	if (find_chr(data_cmd, '/') == 1) // if it has / in the name of the command...
 	{
@@ -81,10 +81,11 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 			args[0] = cmd_name;
 		else // when there is no access to this path -> error
 		{
-			error = ft_strjoin(cmd_name, ": command not found\n");
-			write(2, error, ft_strlen(error));
+			char	*error;
+			
+			error = ft_strjoin_modif("minishell: ", data_cmd);
+			perror(error);
 			close_fds(arr_fds, len);
-			ft_free_malloc();
 			change_exit_value("127", &envp);
 			exit(127);
 		}
@@ -153,12 +154,13 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	last_exit_status = 0;
 	data_tmp = *data;
 	pids = NULL;
-	while (data_tmp && data_tmp->cmd != NULL)
+	//while (data_tmp != NULL)
+	while (data_tmp && data_tmp->cmd != NULL) // data && data_tmp->cmd anterior
 	{
 		len++;
 		data_tmp = data_tmp->next;
 	}
-
+	printf("len is %d\n", len);
 	if (len > 0) // added this...in those cases where cmd is equal == 0
 	{
 		arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
@@ -170,7 +172,6 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 			i++;
 		}
 	}
-		
 	i = 0;
 	data_tmp = *data;
 	// Only redirections without commands!!!
@@ -194,9 +195,10 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				fd_file = open(tmp_infiles->content, O_RDONLY);
 				if (fd_file == -1)
 				{
-					close_fds(arr_fds, len);
-					perror(tmp_infiles->content);
-					ft_free_malloc();
+					char *error;
+					
+					error = ft_strjoin_modif("minishell: ", (char *)tmp_infiles->content);
+					perror(error);
 					return (1);
 				}
 				dup2(fd_file, STDIN_FILENO);
@@ -220,14 +222,15 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 					fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_APPEND, 0666);
 				if (fd_file == -1)
 				{
-					close_fds(arr_fds, len);
-					perror(tmp_outfiles->content);
-					ft_free_malloc();
+					char *error;
+					
+					error = ft_strjoin_modif("minishell: ", (char *)tmp_outfiles->content);
+					perror(error);
 					return (1);
 				}
 				dup2(fd_file, STDOUT_FILENO);
 				close (fd_file);
-				tmp_outfiles= tmp_outfiles->next;
+				tmp_outfiles = tmp_outfiles->next;
 			}
 		}
 		///// 
@@ -330,7 +333,6 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		}
 		return(return_value);
 	}
-
 	else
 	{
 		pids = ft_malloc(sizeof(pid_t) * len); // si es solo un y built-in no deberia crear pids....(quizás esto lo pongo dentro del loop???)
@@ -413,8 +415,10 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				// 4th: executes the command:
 				if (execve(cmd_path, args, envp) < 0)
 				{
-					perror(cmd_path);
-					//ft_free_malloc();
+					char *error;
+					
+					error = ft_strjoin_modif("minishell: ", cmd_path);
+					perror(error);
 					change_exit_value("126", &envp);
 					exit(126);
 				}
