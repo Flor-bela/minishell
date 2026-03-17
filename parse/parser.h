@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:28:12 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 12:43:44 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 18:13:27 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ typedef struct s_parser
 	size_t		op_len;
 	int			op_code;
 	int			op_match;
+	int			last_pipe;
 	t_cmdnode	*head;
 	t_cmdnode	*tail;
 	t_cmdnode	*current_cmd;
@@ -75,5 +76,11 @@ int			handle_command(const char *line, t_parser *p,
 /* parser entry */
 int			parse_line(const char *line, t_intvec *codes,
 				t_cmdnode **out_list, char **env);
+
+void		parser_init(t_parser *p, t_cmdnode **out_list);
+int			parser_error(t_parser *p, t_intvec *codes);
+void		finalize_pending(t_parser *p);
+int			parse_loop(const char *line, t_parser *p,
+				t_intvec *codes, char **env);
 
 #endif

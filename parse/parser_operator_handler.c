@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/17 17:16:36 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 18:06:32 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,48 +31,30 @@ static char	*get_redir_target(const char *line, size_t *i, char **env)
 	return (expanded);
 }
 
-static int	store_operator_target(t_parser *p, char *target, char **env)
+static int	handle_pipe(t_parser *p)
 {
-	if (p->current_cmd)
-		return (add_redir_target(p->current_cmd, p->op_code, target, env));
-	return (store_pending_redir(p, p->op_code, target, env));
+	if (p->pending_in || p->pending_out)
+	{
+		if (!p->current_cmd)
+		{
+			p->current_cmd = node_new(NULL);
+			cmd_list_append(&p->head, &p->tail, p->current_cmd);
+		}
+		move_red_list_to_back(&p->current_cmd->infiles, &p->pending_in);
+		move_red_list_to_back(&p->current_cmd->outfiles, &p->pending_out);
+	}
+	p->current_cmd = node_new(NULL);
+	cmd_list_append(&p->head, &p->tail, p->current_cmd);
+	return (0);
 }
 
-int	handle_operator(const char *line, t_parser *p,
-	t_intvec *codes, char **env)
+static int	handle_redirection(const char *line, t_parser *p, char **env)
 {
 	char	*target;
 
-	intvec_push(codes, p->op_code);
-	p->i += p->op_len;
-
-	// 🔥 CASO PIPE
-	if (p->op_code == 5)
-	{
-		// mover redirecciones pendientes al nodo actual
-		if (p->pending_in || p->pending_out)
-		{
-			if (!p->current_cmd)
-			{
-				p->current_cmd = node_new(NULL);
-				cmd_list_append(&p->head, &p->tail, p->current_cmd);
-			}
-			move_red_list_to_back(&p->current_cmd->infiles, &p->pending_in);
-			move_red_list_to_back(&p->current_cmd->outfiles, &p->pending_out);
-		}
-
-		// 🔥 CREAR NUEVO NODO SIEMPRE
-		p->current_cmd = node_new(NULL);
-		cmd_list_append(&p->head, &p->tail, p->current_cmd);
-
-		return (0);
-	}
-
-	// 🔥 REDIRECCIONES
 	target = get_redir_target(line, &p->i, env);
 	if (!target)
 		return (-1);
-
 	if (p->current_cmd)
 	{
 		if (add_redir_target(p->current_cmd, p->op_code, target, env))
@@ -89,7 +71,16 @@ int	handle_operator(const char *line, t_parser *p,
 			return (-1);
 		}
 	}
-
 	free(target);
 	return (0);
+}
+
+int	handle_operator(const char *line, t_parser *p,
+	t_intvec *codes, char **env)
+{
+	intvec_push(codes, p->op_code);
+	p->i += p->op_len;
+	if (p->op_code == 5)
+		return (handle_pipe(p));
+	return (handle_redirection(line, p, env));
 }

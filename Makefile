@@ -13,6 +13,7 @@ SOURCES = \
 	parse/parser_list_redir.c \
 	parse/parser_cmd_utils.c \
 	parse/parser_core.c \
+	parse/parser_core2.c \
 	parse/parser_command.c \
 	parse/parser_operator_handler.c \
 	parse/parser_operator.c \
@@ -45,7 +46,7 @@ SOURCES = \
 OBJ_DIR = obj
 OBJECTS = $(SOURCES:%.c=$(OBJ_DIR)/%.o)
 
-#FLAGS = -Wall -Werror -Wextra -g
+FLAGS = -Wall -Werror -Wextra -g
 LDFLAGS = -lreadline -lhistory
 CC = cc
 
