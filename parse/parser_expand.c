@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:20 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 10:27:10 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 12:25:20 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,10 +76,10 @@ char	*expand_env_vars(const char *token, char **env)
 	char	quote;
 
 	i = 0;
-	res = strdup("");
+	res = ft_strdup("");
 	if (!res)
 	{
-		perror("strdup");
+		perror("ft_strdup");
 		exit(1);
 	}
 	quote = 0;

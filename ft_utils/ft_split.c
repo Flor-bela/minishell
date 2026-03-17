@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/13 16:18:45 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 11:46:15 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 12:59:42 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,15 +85,11 @@ char	**ft_split(char const *s, char c)
 	end = NULL;
 	words = count_words(s, c);
 	arr = (char **)ft_malloc(sizeof(char *) * (words + 1));
-	/* if (arr == NULL) // I think I don´t need to protect this with mallocs_list
-		return (NULL); */
 	arr[words] = NULL;
 	while (++j < words)
 	{
 		find_start_end(&s, c, &start, &end);
 		arr[j] = (char *)ft_malloc(end - start + 1);
-		/* if (arr[j] == NULL)
-			return (clean (arr, j)); */
 		ft_strlcpy(&arr[j][0], start, (int)(end - start + 1));
 	}
 	return ((char **)arr);

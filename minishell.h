@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/16 13:09:27 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/17 13:03:26 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,6 @@ typedef struct s_intvec
 	size_t	cap;
 }			t_intvec;
 
-
 int		builtin_echo(t_list *args);
 int		builtin_pwd(void);
 int		builtin_export(t_list *args, char ***envp);
@@ -92,6 +91,9 @@ char	*ft_itoa(int n);
 void	*ft_memset(void *s, int c, size_t n);
 char	*ft_strdup(const char *s);
 void	*ft_memcpy(void *dest, const void *src, size_t n);
+void	*ft_realloc(void *ptr, size_t old_size, size_t new_size);
+int		ft_strcmp(const char *s1, const char *s2);
+char	*ft_strndup(const char *s, size_t n);
 
 char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len);
 int		execute_cmds(t_cmdnode **data, char **envp);

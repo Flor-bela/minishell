@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:25 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 10:27:17 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 12:25:40 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,12 +36,12 @@ static t_list_red	*red_node_new(const char *s, int doble)
 		exit(1);
 	}
 	if (s)
-		node->content = strdup(s);
+		node->content = ft_strdup(s);
 	else
 		node->content = NULL;
 	if (s && !node->content)
 	{
-		perror("strdup");
+		perror("ft_strdup");
 		exit(1);
 	}
 	node->doble = doble;

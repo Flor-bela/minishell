@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:54 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 10:27:57 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 12:30:39 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ char	*dup_range(const char *s, size_t a, size_t b)
 		perror("malloc");
 		exit(1);
 	}
-	memcpy(out, s + a, n);
+	ft_memcpy(out, s + a, n);
 	out[n] = 0;
 	return (out);
 }

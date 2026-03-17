@@ -180,9 +180,9 @@ static char	*join_lines(char *base, const char *extra)
 	char	*res;
 
 	if (!base)
-		return (strdup(extra));
-	len1 = strlen(base);
-	len2 = strlen(extra);
+		return (ft_strdup(extra));
+	len1 = ft_strlen(base);
+	len2 = ft_strlen(extra);
 	res = (char *)malloc(len1 + 1 + len2 + 1);
 	if (!res)
 	{
@@ -190,9 +190,9 @@ static char	*join_lines(char *base, const char *extra)
 		free(base);
 		return (NULL);
 	}
-	memcpy(res, base, len1);
+	ft_memcpy(res, base, len1);
 	res[len1] = '\n';
-	memcpy(res + len1 + 1, extra, len2);
+	ft_memcpy(res + len1 + 1, extra, len2);
 	res[len1 + 1 + len2] = '\0';
 	free(base);
 	return (res);
@@ -239,7 +239,7 @@ static char	*read_full_command(void)
 		if (status == -1)
 		{
 			free(full_line);
-			return (strdup(""));
+			return (ft_strdup(""));
 		}
 		if (status == 0)
 		{
@@ -313,22 +313,22 @@ int	main(int argc, char **argv, char **envp)
 		{
 			print_int_array(&codes);
 			print_nodes(list);
-			/*if (list && list->cmd && strcmp(list->cmd, "echo") == 0)
+			/*if (list && list->cmd && ft_strcmp(list->cmd, "echo") == 0)
 				builtin_echo(list->phrase);
 
-			if (list && list->cmd && strcmp(list->cmd, "pwd") == 0)
+			if (list && list->cmd && ft_strcmp(list->cmd, "pwd") == 0)
 				builtin_pwd();
 
-			if (list && list->cmd && strcmp(list->cmd, "export") == 0)
+			if (list && list->cmd && ft_strcmp(list->cmd, "export") == 0)
 				builtin_export(list->phrase, &shell_env);
 
-			if (list && list->cmd && strcmp(list->cmd, "unset") == 0)
+			if (list && list->cmd && ft_strcmp(list->cmd, "unset") == 0)
 				builtin_unset(list->phrase, &shell_env);
 
-			if (list && list->cmd && strcmp(list->cmd, "env") == 0)
+			if (list && list->cmd && ft_strcmp(list->cmd, "env") == 0)
 				builtin_env(shell_env);
 
-			if (list && list->cmd && strcmp(list->cmd, "exit") == 0)
+			if (list && list->cmd && ft_strcmp(list->cmd, "exit") == 0)
 				should_exit = builtin_exit(list->phrase); */
 			
 			// VER AQUI LOS COMANDOS VACIOS SOLO CON INFILE Y OUTFILE

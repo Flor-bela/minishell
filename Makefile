@@ -34,6 +34,9 @@ SOURCES = \
 	ft_utils/ft_memset.c \
 	ft_utils/ft_strdup.c \
 	ft_utils/ft_memcpy.c \
+	ft_utils/ft_strndup.c \
+	ft_utils/ft_strcmp.c \
+	ft_utils/ft_realloc.c \
 	\
 	minishell_main.c
 	

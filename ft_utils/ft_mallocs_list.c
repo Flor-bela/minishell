@@ -6,17 +6,16 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/03 18:00:32 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 11:46:09 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 12:58:37 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-// quizás tengo que añadir un flag a la lista para hacer free solamente hasta ciertos puntos
 static void	ft_free(t_list *mallocs_list)
 {
 	t_list	*temp;
-	
+
 	while (mallocs_list != NULL)
 	{
 		temp = mallocs_list->next;
@@ -26,30 +25,36 @@ static void	ft_free(t_list *mallocs_list)
 	}
 }
 
+static void	*register_malloc(void *ptr, t_list **lst)
+{
+	t_list	*node;
+
+	node = ft_lstnew(ptr);
+	if (!node)
+	{
+		free(ptr);
+		ft_free(*lst);
+		exit(1);
+	}
+	ft_lstadd_back(lst, node);
+	return (ptr);
+}
+
 static void	*ft_malloc_core(size_t size, int flag)
 {
 	static t_list	*mallocs_list;
-	t_list			*new_malloc;
 	void			*result;
 
 	result = NULL;
 	if (flag == 1)
 	{
 		result = malloc(size);
-		if (result == NULL)
+		if (!result)
 		{
 			ft_free(mallocs_list);
 			exit(1);
 		}
-		new_malloc = ft_lstnew(result);
-		if (new_malloc == NULL)
-		{
-			free(result);
-			ft_free(mallocs_list);
-			exit(
-				1);
-		}
-		ft_lstadd_back(&mallocs_list, new_malloc);
+		result = register_malloc(result, &mallocs_list);
 	}
 	else if (flag == 2)
 		ft_free(mallocs_list);
