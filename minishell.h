@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/16 13:09:27 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/17 13:11:04 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,13 +59,13 @@ typedef struct s_intvec
 	size_t	cap;
 }			t_intvec;
 
-
 int		builtin_echo(t_list *args);
 int		builtin_pwd(void);
 int		builtin_export(t_list *args, char ***envp);
 int		builtin_unset(t_list *args, char ***envp);
 int		builtin_env(char **envp);
 int		builtin_exit(t_list *args);
+int		builtin_cd(char *path);
 void	change_exit_value(char *args, char ***envp);
 
 char	*read_heredoc_input(const char *delimiter, int expand_vars, char **shell_env);

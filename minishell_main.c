@@ -278,7 +278,6 @@ int	main(int argc, char **argv, char **envp)
 	t_intvec	codes;
 	t_cmdnode	*list;
 	char		**shell_env;
-	//int			should_exit;
 	int			exit_code;
 
 	exit_code = 0;
@@ -292,7 +291,6 @@ int	main(int argc, char **argv, char **envp)
 	setup_signals();
 	using_history();
 	change_exit_value("127", &shell_env);
-	//should_exit = 0;
 	while (1)
 	{
 		line = read_full_command();
@@ -313,11 +311,7 @@ int	main(int argc, char **argv, char **envp)
 		{
 			//print_int_array(&codes);
 			//print_nodes(list);
-			
-			// VER AQUI LOS COMANDOS VACIOS SOLO CON INFILE Y OUTFILE
-			printf("list->infile: %s\n", (char *)list->infiles->content);
-			if (list->cmd == NULL)
-				printf("cmd: %s\n", list->cmd);
+
 			exit_code = execute_cmds(&list, shell_env);
 			change_exit_value(ft_itoa(exit_code), &shell_env);
 		}

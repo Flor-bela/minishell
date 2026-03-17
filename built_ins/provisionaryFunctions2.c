@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 17:03:43 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/17 12:44:01 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -561,8 +561,6 @@ int	builtin_pwd(void)
 			return (1);
 		size *= 2;
 	}
-	// put str fd if fd exist usar esto
-	
 	printf("%s\n", cwd);
 	free(cwd);
 	return (0);
