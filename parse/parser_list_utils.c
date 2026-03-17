@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:30 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 10:27:27 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 12:44:20 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,12 @@ void	intvec_push(t_intvec *v, int x)
 			newcap = 8;
 		else
 			newcap = v->cap * 2;
-		nd = (int *)realloc(v->data, newcap * sizeof(int));
+		nd = (int *)ft_realloc(v->data,
+				v->cap * sizeof(int),
+				newcap * sizeof(int));
 		if (!nd)
 		{
-			perror("realloc");
+			perror("ft_realloc");
 			exit(1);
 		}
 		v->data = nd;
@@ -54,12 +56,12 @@ static t_list	*str_node_new(const char *s)
 		exit(1);
 	}
 	if (s)
-		node->content = strdup(s);
+		node->content = ft_strdup(s);
 	else
 		node->content = NULL;
 	if (s && !node->content)
 	{
-		perror("strdup");
+		perror("ft_strdup");
 		exit(1);
 	}
 	node->prev = NULL;

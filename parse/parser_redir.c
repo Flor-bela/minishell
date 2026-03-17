@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 10:42:18 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 12:53:08 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,11 +59,6 @@ static int	handle_pending_heredoc(t_parser *p,
 int	add_redir_target(t_cmdnode *cmd, int op_code,
 	const char *target, char **env)
 {
-	/*if (!cmd)
-	{
-		fprintf(stderr, "Error: redirección sin comando asociado.\n");
-		return (-1);
-	}*/
 	if (op_code == 1)
 		red_list_push_back(&cmd->infiles, target, 0);
 	else if (op_code == 3)

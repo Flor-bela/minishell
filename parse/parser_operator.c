@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:42 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 10:27:42 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 13:26:13 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,9 @@ static int	handle_less(const char *s, size_t i, size_t *len, int *code)
 	{
 		if (s[i + 2] == '<')
 		{
-			fprintf(stderr,
-				"Error: no se permiten mas de 2 redirecciones '<' seguidas.\n");
+			write(2,
+				"Error: no se permiten mas de 2 redirecciones '<' seguidas.\n",
+				ft_strlen("Error: no se permiten mas de 2 redirecciones '<' seguidas.\n"));
 			return (-1);
 		}
 		*len = 2;
@@ -37,8 +38,9 @@ static int	handle_greater(const char *s, size_t i, size_t *len, int *code)
 	{
 		if (s[i + 2] == '>')
 		{
-			fprintf(stderr,
-				"Error: no se permiten mas de 2 redirecciones '>' seguidas.\n");
+			write(2,
+				"Error: no se permiten mas de 2 redirecciones '>' seguidas.\n",
+				ft_strlen("Error: no se permiten mas de 2 redirecciones '>' seguidas.\n"));
 			return (-1);
 		}
 		*len = 2;
@@ -54,7 +56,7 @@ static int	handle_pipe(const char *s, size_t i, size_t *len, int *code)
 {
 	if (s[i + 1] == '|')
 	{
-		fprintf(stderr, "Error: no se permiten 2 o mas pipes seguidos.\n");
+		write(2, "Error: no se permiten 2 o mas pipes seguidos.\n", 47);
 		return (-1);
 	}
 	*len = 1;

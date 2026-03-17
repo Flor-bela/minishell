@@ -180,9 +180,9 @@ static char	*join_lines(char *base, const char *extra)
 	char	*res;
 
 	if (!base)
-		return (strdup(extra));
-	len1 = strlen(base);
-	len2 = strlen(extra);
+		return (ft_strdup(extra));
+	len1 = ft_strlen(base);
+	len2 = ft_strlen(extra);
 	res = (char *)malloc(len1 + 1 + len2 + 1);
 	if (!res)
 	{
@@ -190,9 +190,9 @@ static char	*join_lines(char *base, const char *extra)
 		free(base);
 		return (NULL);
 	}
-	memcpy(res, base, len1);
+	ft_memcpy(res, base, len1);
 	res[len1] = '\n';
-	memcpy(res + len1 + 1, extra, len2);
+	ft_memcpy(res + len1 + 1, extra, len2);
 	res[len1 + 1 + len2] = '\0';
 	free(base);
 	return (res);
@@ -239,7 +239,7 @@ static char	*read_full_command(void)
 		if (status == -1)
 		{
 			free(full_line);
-			return (strdup(""));
+			return (ft_strdup(""));
 		}
 		if (status == 0)
 		{
@@ -316,7 +316,7 @@ int	main(int argc, char **argv, char **envp)
 			change_exit_value(ft_itoa(exit_code), &shell_env);
 		}
 		else
-			fprintf(stderr, "(parse error)\n");
+			write(2, "(parse error)\n", ft_strlen("(parse error)\n"));
 		cmd_list_destroy(list);
 		intvec_destroy(&codes);
 		free(line);

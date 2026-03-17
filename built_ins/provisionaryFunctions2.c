@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   provisionaryFunctions2.c                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/17 12:44:01 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/17 13:46:25 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,11 @@ static char	*ms_strdup(const char *s)
 
 	if (!s)
 		return (NULL);
-	len = strlen(s);
+	len = ft_strlen(s);
 	dup = (char *)malloc(len + 1);
 	if (!dup)
 		return (NULL);
-	memcpy(dup, s, len);
+	ft_memcpy(dup, s, len);
 	dup[len] = '\0';
 	return (dup);
 }
@@ -77,7 +77,7 @@ static int	find_env_index(char **envp, const char *key)
 	i = 0;
 	while (envp[i])
 	{
-		if (strncmp(envp[i], key, klen) == 0
+		if (ft_strncmp(envp[i], key, klen) == 0
 			&& (envp[i][klen] == '=' || envp[i][klen] == '\0'))
 			return ((int)i);
 		i++;
@@ -200,11 +200,11 @@ char	*get_env_value(char **envp, const char *key)
 
 	if (!envp || !key)
 		return (NULL);
-	len = strlen(key);
+	len = ft_strlen(key);
 	i = 0;
 	while (envp[i])
 	{
-		if (strncmp(envp[i], key, len) == 0 && envp[i][len] == '=')
+		if (ft_strncmp(envp[i], key, len) == 0 && envp[i][len] == '=')
 			return (envp[i] + len + 1);
 		i++;
 	}
@@ -274,21 +274,21 @@ static char	*join_and_free(char *s1, const char *s2)
 
 	if (!s1)
 	{
-		res = strdup(s2);
+		res = ft_strdup(s2);
 		if (!res)
 			return (NULL);
 		return (res);
 	}
-	len1 = strlen(s1);
-	len2 = strlen(s2);
+	len1 = ft_strlen(s1);
+	len2 = ft_strlen(s2);
 	res = malloc(len1 + len2 + 1);
 	if (!res)
 	{
 		free(s1);
 		return (NULL);
 	}
-	memcpy(res, s1, len1);
-	memcpy(res + len1, s2, len2);
+	ft_memcpy(res, s1, len1);
+	ft_memcpy(res + len1, s2, len2);
 	res[len1 + len2] = '\0';
 	free(s1);
 	return (res);
@@ -314,7 +314,7 @@ char	*remove_quotes_str(const char *str)
 
 	if (!str)
 		return (NULL);
-	res = malloc(strlen(str) + 1);
+	res = malloc(ft_strlen(str) + 1);
 	if (!res)
 		return (NULL);
 	i = 0;
@@ -356,14 +356,14 @@ static char	*append_char_local(char *base, char c)
 		res[1] = '\0';
 		return (res);
 	}
-	len = strlen(base);
+	len = ft_strlen(base);
 	res = malloc(len + 2);
 	if (!res)
 	{
 		free(base);
 		return (NULL);
 	}
-	memcpy(res, base, len);
+	ft_memcpy(res, base, len);
 	res[len] = c;
 	res[len + 1] = '\0';
 	free(base);
@@ -379,17 +379,17 @@ static char	*append_str_local(char *base, const char *add)
 	if (!add)
 		add = "";
 	if (!base)
-		return (strdup(add));
-	len1 = strlen(base);
-	len2 = strlen(add);
+		return (ft_strdup(add));
+	len1 = ft_strlen(base);
+	len2 = ft_strlen(add);
 	res = malloc(len1 + len2 + 1);
 	if (!res)
 	{
 		free(base);
 		return (NULL);
 	}
-	memcpy(res, base, len1);
-	memcpy(res + len1, add, len2);
+	ft_memcpy(res, base, len1);
+	ft_memcpy(res + len1, add, len2);
 	res[len1 + len2] = '\0';
 	free(base);
 	return (res);
@@ -404,7 +404,7 @@ static char	*get_var_value(const char *line, size_t *i, char **env)
 	start = *i;
 	while (line[*i] && is_var_char_local(line[*i]))
 		(*i)++;
-	name = strndup(line + start, *i - start);
+	name = ft_strndup(line + start, *i - start);
 	if (!name)
 		return (NULL);
 	value = get_env_value(env, name);
@@ -441,7 +441,7 @@ static char	*expand_heredoc_line(const char *line, char **shell_env)
 	char	*res;
 
 	i = 0;
-	res = strdup("");
+	res = ft_strdup("");
 	if (!res)
 		return (NULL);
 	while (line[i])
@@ -493,7 +493,7 @@ char	*read_heredoc_input(const char *delimiter,
 	char	*line;
 	char	*content;
 
-	content = strdup("");
+	content = ft_strdup("");
 	if (!content)
 		return (NULL);
 	while (1)
@@ -501,7 +501,7 @@ char	*read_heredoc_input(const char *delimiter,
 		line = readline("> ");
 		if (!line)
 			break ;
-		if (strcmp(line, delimiter) == 0)
+		if (ft_strcmp(line, delimiter) == 0)
 		{
 			free(line);
 			break ;
@@ -572,7 +572,9 @@ static int	process_export_arg(char *arg, char ***envp)
 
 	if (!is_valid_identifier(arg))
 	{
-		fprintf(stderr, "export: `%s': not a valid identifier\n", arg);
+		write(2, "export: `", 9);
+		write(2, arg, ft_strlen(arg));
+		write(2, "': not a valid identifier\n", 26);
 		return (0);
 	}
 	if (!strchr(arg, '='))
@@ -624,7 +626,9 @@ int	builtin_unset(t_list *args, char ***envp)
 		arg = (char *)curr->content;
 		if (!is_valid_identifier(arg))
 		{
-			fprintf(stderr, "unset: `%s': not a valid identifier\n", arg);
+			write(2, "unset: `", 8);
+			write(2, arg, ft_strlen(arg));
+			write(2, "': not a valid identifier\n", 26);
 			curr = curr->next;
 			continue ;
 		}
@@ -662,23 +666,16 @@ void	change_exit_value(char *value, char ***envp)
 {
 	int		idx;
 	char	*entry;
-	size_t	len;
 
 	if (!value)
 		return ;
-
-	len = strlen(value) + strlen("return_value=") + 1;
-	entry = malloc(len);
+	entry = ft_strjoin("return_value=", value);
 	if (!entry)
 		return ;
-
-	sprintf(entry, "return_value=%s", value);
-
 	idx = find_env_index(*envp, "return_value");
 	if (idx >= 0)
 		replace_env_value(*envp, idx, entry);
 	else
 		append_env_value(envp, entry);
-
 	free(entry);
 }

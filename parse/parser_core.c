@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:08 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 12:11:19 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 12:51:50 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,18 @@ static int	parser_error(t_parser *p, t_intvec *codes)
 	return (-1);
 }
 
+static void	finalize_pending(t_parser *p)
+{
+	if (p->pending_in || p->pending_out)
+	{
+		p->current_cmd = node_new(NULL);
+		move_red_list_to_back(&p->current_cmd->infiles, &p->pending_in);
+		move_red_list_to_back(&p->current_cmd->outfiles, &p->pending_out);
+		cmd_list_append(&p->head, &p->tail, p->current_cmd);
+	}
+	p->current_cmd = p->head;
+}
+
 static int	parse_loop(const char *line, t_parser *p,
 	t_intvec *codes, char **env)
 {
@@ -58,14 +70,7 @@ static int	parse_loop(const char *line, t_parser *p,
 				return (-1);
 		}
 	}
-	if (p->pending_in || p->pending_out)
-	{
-		p->current_cmd = node_new(NULL);
-		move_red_list_to_back(&p->current_cmd->infiles, &p->pending_in);
-		move_red_list_to_back(&p->current_cmd->outfiles, &p->pending_out);
-		cmd_list_append(&p->head, &p->tail, p->current_cmd);
-	}
-	p->current_cmd = p->head;
+	finalize_pending(p);
 	return (0);
 }
 

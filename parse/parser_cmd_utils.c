@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:12:54 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 10:26:34 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 12:24:33 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,10 +44,10 @@ t_cmdnode	*node_new(const char *cmd)
 	}
 	n->cmd = NULL;
 	if (cmd)
-		n->cmd = strdup(cmd);
+		n->cmd = ft_strdup(cmd);
 	if (cmd && !n->cmd)
 	{
-		perror("strdup");
+		perror("ft_strdup");
 		exit(1);
 	}
 	n->phrase = NULL;
