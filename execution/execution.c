@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/17 17:38:16 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/18 00:23:53 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,16 +72,14 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 	char	*cmd_name;
 	char	*cmd_path;
 	
-
+	cmd_path = NULL;
 	if (find_chr(data_cmd, '/') == 1) // if it has / in the name of the command...
 	{
 		cmd_name = strchr_modif(data_cmd, '/');
 		cmd_path = data_cmd;
-		if (access(cmd_path, X_OK) == 0)
-			args[0] = cmd_name;
-		else // when there is no access to this path -> error
+		if (access(cmd_path, F_OK) != 0)
 		{
-			char	*error;
+			char *error;
 			
 			error = ft_strjoin_modif("minishell: ", data_cmd);
 			perror(error);
@@ -89,6 +87,19 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 			change_exit_value("127", &envp);
 			exit(127);
 		}
+		if (access(cmd_path, X_OK) != 0)
+		{
+			char *error;
+			
+			error = ft_strjoin_modif("minishell: ", data_cmd);
+			perror(error);
+			close_fds(arr_fds, len);
+			change_exit_value("126", &envp);
+			exit(126);
+		}
+		//if (access(cmd_path, X_OK) == 0)
+		args[0] = cmd_name;
+
 	}
 	else //-> si no tiene / entonces busca el path del comando y añade el nombre directamente a args[0];
 	{
@@ -154,13 +165,13 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	last_exit_status = 0;
 	data_tmp = *data;
 	pids = NULL;
-	//while (data_tmp != NULL)
-	while (data_tmp && data_tmp->cmd != NULL) // data && data_tmp->cmd anterior
+	//while (data_tmp && data_tmp->cmd != NULL) // data && data_tmp->cmd anterior
+	while (data_tmp != NULL)
 	{
 		len++;
 		data_tmp = data_tmp->next;
 	}
-	printf("len is %d\n", len);
+	//printf("len is %d\n", len);
 	if (len > 0) // added this...in those cases where cmd is equal == 0
 	{
 		arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
@@ -174,8 +185,8 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	}
 	i = 0;
 	data_tmp = *data;
-	// Only redirections without commands!!!
-	if (len == 0)
+	// Only redirections without commands and without pipes!
+	if (len == 1 && data_tmp->cmd == NULL) // (if (len == 0)) cambie esto porque solo con infiles o outfiles, len ya va a ser == 1!!!
 	{
 		// infiles < 
 		int	saved_stdin;
@@ -253,8 +264,8 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		// infiles <
 		t_list_red	*tmp_infiles;
 		int 		saved_stdin;
+		
 		saved_stdin = -1;
-
 		tmp_infiles = data_tmp->infiles;
 		if (tmp_infiles != NULL)
 		{
@@ -333,7 +344,8 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		}
 		return(return_value);
 	}
-	else
+	
+	else //// Pipeline!!!! 
 	{
 		pids = ft_malloc(sizeof(pid_t) * len); // si es solo un y built-in no deberia crear pids....(quizás esto lo pongo dentro del loop???)
 
@@ -345,11 +357,15 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 			else if (pids[i] == 0) // in child process
 			{
 				// 1st count how many arguments we have:
-				args = get_args(data_tmp->phrase);
-				
+				if (data_tmp->cmd != NULL)
+					args = get_args(data_tmp->phrase);
+				else
+					args = NULL;
 				// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
-				cmd_path = get_cmd_name_and_path(args, envp, data_tmp->cmd, arr_fds, len);
-				
+				if (data_tmp->cmd != NULL)
+					cmd_path = get_cmd_name_and_path(args, envp, data_tmp->cmd, arr_fds, len);
+				else
+					cmd_path = NULL;
 				// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
 				if (i == 0) // first command and only one command
 				{
@@ -398,8 +414,8 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 					else
 					{
 						dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the reading part of the previous pipe as standard input
-						if (data_tmp->outfiles == NULL) // writes to pipe only if outfile doesn´t exist
-							dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe.
+						/* if (data_tmp->outfiles == NULL) // writes to pipe only if outfile doesn´t exist
+							dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe. */ // creo que esto está duplicado...
 					}
 					//outfiles >
 					t_list_red	*tmp_outfiles;
@@ -413,15 +429,31 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				close_fds(arr_fds, len);
 				
 				// 4th: executes the command:
-				if (execve(cmd_path, args, envp) < 0)
+				if (cmd_path != NULL && args != NULL)
 				{
-					char *error;
-					
-					error = ft_strjoin_modif("minishell: ", cmd_path);
-					perror(error);
-					change_exit_value("126", &envp);
-					exit(126);
+					if (execve(cmd_path, args, envp) < 0)
+					{
+						char *error;
+						
+						error = ft_strjoin_modif("minishell: ", cmd_path);
+						perror(error);
+						if (errno == EACCES)
+						{	
+							change_exit_value("126", &envp);
+							exit(126);
+						}
+						else if (errno == ENOENT)
+						{
+							change_exit_value("127", &envp);
+							exit(127);
+						}
+						else
+						{
+							change_exit_value("126", &envp);
+							exit(126);}
+					}
 				}
+				exit(0);
 			}
 			i++;
 			data_tmp = data_tmp->next;
@@ -435,7 +467,6 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 			waitpid(pids[i], &last_exit_status, 0);
 			i++;
 		}
-		//ft_free_malloc();
 	}
 	return (WEXITSTATUS(last_exit_status));
 }
