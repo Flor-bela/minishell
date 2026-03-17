@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 12:44:37 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/17 13:26:49 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/17 13:44:55 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ int	builtin_cd(char *path)
 		path = getenv("HOME");
 		if (path == NULL)
 		{
-			write(2, "cd: ", 4);
+			write(2, "minishell: cd: ", 16); // minishell
 			perror(path);
 			return (1);
 		}
