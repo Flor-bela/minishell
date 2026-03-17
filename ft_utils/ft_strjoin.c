@@ -3,14 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   ft_strjoin.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 15:07:38 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 11:46:21 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 16:11:19 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// malloc original!!! Ver si es mejor dejarlo así o no....
 #include "../minishell.h"
 
 char	*ft_strjoin(char const *s1, char const *s2)
@@ -27,7 +26,7 @@ char	*ft_strjoin(char const *s1, char const *s2)
 		return (NULL);
 	len_s1 = ft_strlen(s1);
 	len_s2 = ft_strlen(s2);
-	ptr = ft_malloc((len_s1 + len_s2 + 1) * sizeof(char));
+	ptr = malloc((len_s1 + len_s2 + 1) * sizeof(char));
 	if (ptr == NULL)
 		return (NULL);
 	while (++i < len_s1)

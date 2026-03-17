@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/16 17:49:14 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/17 17:05:24 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,8 +45,8 @@ static char	*find_path(char **paths, char *cmd_name)
 	temp = NULL;
 	while (paths != NULL && paths[i] != NULL) // ir probando cual destes path tiene permiso
 	{
-		temp = ft_strjoin(paths[i], "/");
-		cmd_path = ft_strjoin(temp, cmd_name);
+		temp = ft_strjoin_modif(paths[i], "/");
+		cmd_path = ft_strjoin_modif(temp, cmd_name);
 		
 		if (access(cmd_path, X_OK) == 0)
 			return (cmd_path);
@@ -60,16 +60,21 @@ char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len) // cmd_n
 {
 	char	**paths;
 	char	*cmd_path;
-	char	*error;
+	//char	*error;
 	
 	paths = get_all_paths(envp);
 	cmd_path = find_path(paths, cmd_name);
 	if (cmd_path == NULL)
 	{
-		error = ft_strjoin(cmd_name, ": command not found\n");
-		write(2, error, ft_strlen(error));
+		char	*error;
+		
+		if (find_chr(cmd_name, '/') == 1)
+			error = ft_strjoin_modif("minishell: ", cmd_name); // tal como bash!!!
+		else
+			error = cmd_name;
+		perror(error);
 		close_fds(arr_fds, len);
-		ft_free_malloc();
+		//ft_free_malloc();
 		change_exit_value("127", &envp);
 		exit(127);
 	}

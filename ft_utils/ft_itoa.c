@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_itoa.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/13 16:01:35 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 16:17:34 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/17 16:00:54 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,15 +51,13 @@ char	*ft_itoa(int n)
 	sign = 0;
 	if (n == 0)
 	{
-		ptr = (char *)malloc(2);
+		ptr = (char *)ft_malloc(2);
 		if (ptr == NULL)
 			return (NULL);
 		return (ptr[0] = '0', ptr[1] = '\0', ptr);
 	}
 	counter = countdigits_sign(n, &sign, &num);
-	ptr = (char *)malloc(sign + counter + 1);
-	if (ptr == NULL)
-		return (NULL);
+	ptr = (char *)ft_malloc(sign + counter + 1);
 	if (sign == 1)
 		counter++;
 	ptr[counter] = '\0';

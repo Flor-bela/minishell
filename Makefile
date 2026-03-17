@@ -30,6 +30,7 @@ SOURCES = \
 	ft_utils/ft_strlen.c \
 	ft_utils/ft_strlcpy.c \
 	ft_utils/ft_strjoin.c \
+	ft_utils/ft_strjoin_modif.c\
 	ft_utils/ft_strncmp.c \
 	ft_utils/ft_itoa.c \
 	ft_utils/ft_memset.c \
