@@ -88,7 +88,7 @@ static void	cmd_list_destroy(t_cmdnode *h)
 		h = nx;
 	}
 }
-
+/* 
 static void	print_int_array(const t_intvec *v)
 {
 	size_t	i;
@@ -103,8 +103,8 @@ static void	print_int_array(const t_intvec *v)
 		i++;
 	}
 	printf("\n");
-}
- 
+} */
+ /* 
 static void	print_str_list(const t_list *lst)
 {
 	printf("[");
@@ -116,8 +116,8 @@ static void	print_str_list(const t_list *lst)
 		lst = lst->next;
 	}
 	printf("]");
-}
- 
+} */
+ /* 
 static void	print_red_list(const t_list_red *lst)
 {
 	printf("[");
@@ -131,8 +131,8 @@ static void	print_red_list(const t_list_red *lst)
 		lst = lst->next;
 	}
 	printf("]");
-}
- 
+} */
+ /* 
 static void	print_nodes(const t_cmdnode *h)
 {
 	int	idx;
@@ -151,7 +151,7 @@ static void	print_nodes(const t_cmdnode *h)
 		h = h->next;
 		idx++;
 	}
-}
+} */
 
 static void	update_quote_state_line(const char *line, char *quote_state)
 {
@@ -278,7 +278,6 @@ int	main(int argc, char **argv, char **envp)
 	t_intvec	codes;
 	t_cmdnode	*list;
 	char		**shell_env;
-	//int			should_exit;
 	int			exit_code;
 
 	exit_code = 0;
@@ -292,7 +291,6 @@ int	main(int argc, char **argv, char **envp)
 	setup_signals();
 	using_history();
 	change_exit_value("127", &shell_env);
-	//should_exit = 0;
 	while (1)
 	{
 		line = read_full_command();
@@ -311,30 +309,9 @@ int	main(int argc, char **argv, char **envp)
 		list = NULL;
 		if (parse_line(line, &codes, &list, shell_env) == 0)
 		{
-			print_int_array(&codes);
-			print_nodes(list);
-			/*if (list && list->cmd && ft_strcmp(list->cmd, "echo") == 0)
-				builtin_echo(list->phrase);
+			//print_int_array(&codes);
+			//print_nodes(list);
 
-			if (list && list->cmd && ft_strcmp(list->cmd, "pwd") == 0)
-				builtin_pwd();
-
-			if (list && list->cmd && ft_strcmp(list->cmd, "export") == 0)
-				builtin_export(list->phrase, &shell_env);
-
-			if (list && list->cmd && ft_strcmp(list->cmd, "unset") == 0)
-				builtin_unset(list->phrase, &shell_env);
-
-			if (list && list->cmd && ft_strcmp(list->cmd, "env") == 0)
-				builtin_env(shell_env);
-
-			if (list && list->cmd && ft_strcmp(list->cmd, "exit") == 0)
-				should_exit = builtin_exit(list->phrase); */
-			
-			// VER AQUI LOS COMANDOS VACIOS SOLO CON INFILE Y OUTFILE
-			//printf("list->infile: %s\n", (char *)list->infiles->content);
-			//if (list->cmd == NULL)
-			//	printf("cmd: %s\n", list->cmd);
 			exit_code = execute_cmds(&list, shell_env);
 			change_exit_value(ft_itoa(exit_code), &shell_env);
 		}

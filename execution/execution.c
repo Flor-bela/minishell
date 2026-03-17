@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/16 17:54:59 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/17 13:43:04 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 static void	error_fork(char **envp)
 {
-	perror("fork");
+	perror("minishell: "); //probar
 	ft_free_malloc();
 	change_exit_value("1", &envp);
 	exit(EXIT_FAILURE);
@@ -22,7 +22,7 @@ static void	error_fork(char **envp)
 
 static void	error_pipe(char **envp)
 {
-	perror("pipe");
+	perror("minishell: "); // probar
 	ft_free_malloc();
 	change_exit_value("1", &envp);
 	exit(EXIT_FAILURE);
@@ -31,7 +31,7 @@ static void	error_pipe(char **envp)
  
 static void	error_fd_file(char *name_infile, char **envp)
 {
-	perror(name_infile);
+	perror(name_infile); //minishell: (strjoin name_infile) -> cambiar esto!!!!
 	ft_free_malloc();
 	change_exit_value("1", &envp);
 	exit(EXIT_FAILURE);
@@ -158,25 +158,93 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		len++;
 		data_tmp = data_tmp->next;
 	}
-	
-	arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
-	while (i < len - 1)
+
+	if (len > 0) // added this...in those cases where cmd is equal == 0
 	{
-		arr_fds[i] = (int *)ft_malloc(sizeof(int) * 2); 
-		if (pipe(arr_fds[i]) == -1)
-			error_pipe(envp);
-		i++;
+		arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
+		while (i < len - 1)
+		{
+			arr_fds[i] = (int *)ft_malloc(sizeof(int) * 2); 
+			if (pipe(arr_fds[i]) == -1)
+				error_pipe(envp);
+			i++;
+		}
 	}
-	
+		
 	i = 0;
 	data_tmp = *data;
-	// Only one command -> built-in!!!
-	printf("len is %d\n", len);
+	// Only redirections without commands!!!
 	if (len == 0)
 	{
-		printf("hola\n");
+		// infiles < 
+		int	saved_stdin;
+		int saved_stdout;
+
+		saved_stdin = -1;
+		saved_stdout = -1;
+		if (data_tmp->infiles != NULL)
+		{
+			t_list_red	*tmp_infiles;
+			int	fd_file;
+			
+			tmp_infiles = data_tmp->infiles;
+			saved_stdin = dup(STDIN_FILENO);
+			while (tmp_infiles != NULL)
+			{
+				fd_file = open(tmp_infiles->content, O_RDONLY);
+				if (fd_file == -1)
+				{
+					close_fds(arr_fds, len);
+					perror(tmp_infiles->content);
+					ft_free_malloc();
+					return (1);
+				}
+				dup2(fd_file, STDIN_FILENO);
+				close(fd_file);
+				tmp_infiles = tmp_infiles->next;
+			}
+		}
+		// outfiles >
+		if (data_tmp->outfiles != NULL)
+		{
+			t_list_red	*tmp_outfiles;
+			int	fd_file;
+			
+			tmp_outfiles = data_tmp->outfiles;
+			saved_stdout = dup(STDOUT_FILENO);
+			while (tmp_outfiles != NULL)
+			{
+				if (tmp_outfiles->doble == 0)
+					fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+				if (tmp_outfiles->doble == 1)
+					fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_APPEND, 0666);
+				if (fd_file == -1)
+				{
+					close_fds(arr_fds, len);
+					perror(tmp_outfiles->content);
+					ft_free_malloc();
+					return (1);
+				}
+				dup2(fd_file, STDOUT_FILENO);
+				close (fd_file);
+				tmp_outfiles= tmp_outfiles->next;
+			}
+		}
+		///// 
+		if (saved_stdin != -1)
+		{
+			dup2(saved_stdin, STDIN_FILENO);
+			close(saved_stdin);
+		}
+		if (saved_stdout != -1)
+		{
+			dup2(saved_stdout, STDOUT_FILENO);
+			close(saved_stdout);
+		}
+		return (0); // si se ejecuta bien???
 	}
 	
+	// Only one command -> built-in!!!
 	if (len == 1 && (is_built_in(data_tmp->cmd) == 1))
 	{
 		// infiles <
@@ -187,7 +255,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		tmp_infiles = data_tmp->infiles;
 		if (tmp_infiles != NULL)
 		{
-			int			fd_file;
+			int	fd_file;
 			
 			saved_stdin = dup(STDIN_FILENO);
 			while (tmp_infiles != NULL)
@@ -237,6 +305,8 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		return_value = 0;
 		if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
 			return_value = builtin_echo(data_tmp->phrase);
+		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
+			return_value = builtin_cd(data_tmp->phrase->content);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
 			return_value = builtin_pwd();
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
