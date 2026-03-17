@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/17 16:54:40 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/17 17:30:25 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ char	**get_args(t_list	*phrase)
 	i = 0;
 	args = NULL;
 	tmp = phrase;
-	while (tmp != NULL) // count arguments
+	while (tmp != NULL)
 	{
 		args_count++;
 		tmp = tmp->next;
@@ -154,12 +154,13 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	last_exit_status = 0;
 	data_tmp = *data;
 	pids = NULL;
+	//while (data_tmp != NULL)
 	while (data_tmp && data_tmp->cmd != NULL) // data && data_tmp->cmd anterior
 	{
 		len++;
 		data_tmp = data_tmp->next;
 	}
-	//printf("len is %d\n", len);
+	printf("len is %d\n", len);
 	if (len > 0) // added this...in those cases where cmd is equal == 0
 	{
 		arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
