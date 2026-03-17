@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/17 12:46:45 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 13:25:11 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -572,7 +572,9 @@ static int	process_export_arg(char *arg, char ***envp)
 
 	if (!is_valid_identifier(arg))
 	{
-		fprintf(stderr, "export: `%s': not a valid identifier\n", arg);
+		write(2, "export: `", 9);
+		write(2, arg, ft_strlen(arg));
+		write(2, "': not a valid identifier\n", 26);
 		return (0);
 	}
 	if (!strchr(arg, '='))
@@ -624,7 +626,9 @@ int	builtin_unset(t_list *args, char ***envp)
 		arg = (char *)curr->content;
 		if (!is_valid_identifier(arg))
 		{
-			fprintf(stderr, "unset: `%s': not a valid identifier\n", arg);
+			write(2, "unset: `", 8);
+			write(2, arg, ft_strlen(arg));
+			write(2, "': not a valid identifier\n", 26);
 			curr = curr->next;
 			continue ;
 		}
@@ -662,15 +666,12 @@ void	change_exit_value(char *value, char ***envp)
 {
 	int		idx;
 	char	*entry;
-	size_t	len;
 
 	if (!value)
 		return ;
-	len = ft_strlen(value) + ft_strlen("return_value=") + 1;
-	entry = malloc(len);
+	entry = ft_strjoin("return_value=", value);
 	if (!entry)
 		return ;
-	sprintf(entry, "return_value=%s", value);
 	idx = find_env_index(*envp, "return_value");
 	if (idx >= 0)
 		replace_env_value(*envp, idx, entry);

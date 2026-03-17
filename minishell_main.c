@@ -339,7 +339,7 @@ int	main(int argc, char **argv, char **envp)
 			change_exit_value(ft_itoa(exit_code), &shell_env);
 		}
 		else
-			fprintf(stderr, "(parse error)\n");
+			write(2, "(parse error)\n", ft_strlen("(parse error)\n"));
 		cmd_list_destroy(list);
 		intvec_destroy(&codes);
 		free(line);
