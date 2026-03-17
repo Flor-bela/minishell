@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:08 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/17 12:51:50 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 17:12:34 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,13 +75,60 @@ static int	parse_loop(const char *line, t_parser *p,
 }
 
 int	parse_line(const char *line, t_intvec *codes,
-	t_cmdnode **out_list, char **env)
+			t_cmdnode **out_list, char **env)
 {
 	t_parser	p;
+	int			last_was_pipe;
 
 	parser_init(&p, out_list);
-	if (parse_loop(line, &p, codes, env) == -1)
+	last_was_pipe = 1;
+
+	while (line[p.i])
+	{
+		skip_spaces(line, &p.i);
+		if (!line[p.i])
+			break ;
+
+		// 🔥 DETECTAR OPERADOR
+		p.op_match = match_op(line, p.i, &p.op_len, &p.op_code);
+		if (p.op_match == -1)
+			return (parser_error(&p, codes));
+
+		if (p.op_match == 1)
+		{
+			// 🔥 CONTROL DE PIPE
+			if (p.op_code == 5)
+			{
+				if (last_was_pipe)
+				{
+					write(2, "syntax error near unexpected token `|'\n", 40);
+					return (parser_error(&p, codes));
+				}
+				last_was_pipe = 1;
+			}
+			else
+				last_was_pipe = 0;
+
+			if (handle_operator(line, &p, codes, env) == -1)
+				return (parser_error(&p, codes));
+		}
+		else
+		{
+			last_was_pipe = 0;
+
+			if (handle_command(line, &p, codes, env) == -1)
+				return (parser_error(&p, codes));
+		}
+	}
+
+	// 🔥 ERROR SI TERMINA EN PIPE
+	if (last_was_pipe)
+	{
+		write(2, "syntax error near unexpected token `|'\n", 40);
 		return (parser_error(&p, codes));
+	}
+
+	finalize_pending(&p);
 	*out_list = p.head;
 	return (0);
 }

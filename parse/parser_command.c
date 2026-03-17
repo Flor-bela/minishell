@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:03 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/16 17:52:47 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/17 17:32:50 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,34 @@ static int	add_command_token(const char *line, t_parser *p, char **env)
 	tok = read_token_grouped(line, &p->i, &grouped);
 	if (!tok)
 		return (1);
+
 	expanded = expand_env_vars(tok, env);
 	free(tok);
+	if (!expanded)
+		return (1);
+
 	clean = remove_quotes_str(expanded);
 	free(expanded);
-	str_list_push_back(&p->current_cmd->phrase, clean);
+	if (!clean)
+		return (1);
+
+	// 🔥 CASO CLAVE: token vacío → ignorar completamente
+	if (clean[0] == '\0')
+	{
+		free(clean);
+		return (0);
+	}
+
+	// 🔥 SI NO HAY CMD → ESTE ES EL CMD REAL
+	if (!p->current_cmd->cmd)
+	{
+		p->current_cmd->cmd = ft_strdup(clean);
+	}
+	else
+	{
+		str_list_push_back(&p->current_cmd->phrase, clean);
+	}
+
 	free(clean);
 	return (0);
 }
@@ -71,25 +94,16 @@ static int	fill_command_tail(const char *line, t_parser *p,
 }
 
 int	handle_command(const char *line, t_parser *p,
-	t_intvec *codes, char **env)
+				t_intvec *codes, char **env)
 {
-	char	*cmd;
-	char	*expanded;
-	int		grouped;
+	if (!p->current_cmd)
+	{
+		p->current_cmd = node_new(NULL);
+		cmd_list_append(&p->head, &p->tail, p->current_cmd);
+	}
 
-	grouped = 0;
-	cmd = read_token_grouped(line, &p->i, &grouped);
-	if (!cmd)
-		return (0);
-	expanded = expand_env_vars(cmd, env);
-	free(cmd);
-	cmd = remove_quotes_str(expanded);
-	free(expanded);
-	intvec_push(codes, 0);
-	p->current_cmd = node_new(cmd);
-	move_red_list_to_back(&p->current_cmd->infiles, &p->pending_in);
-	move_red_list_to_back(&p->current_cmd->outfiles, &p->pending_out);
-	cmd_list_append(&p->head, &p->tail, p->current_cmd);
-	free(cmd);
-	return (fill_command_tail(line, p, codes, env));
+	if (add_command_token(line, p, env))
+		return (1);
+
+	return (0);
 }
