@@ -3,18 +3,19 @@
 int	parse_line(const char *line, t_intvec *out_codes,
 		t_cmdnode **out_list, char **shell_env);
 
-volatile sig_atomic_t	g_sigint_received = 0;
+int	g_sigint_received = 0;
 
 static void	handle_sigint(int sig)
 {
 	(void)sig;
-	g_sigint_received = 1;
-	write(STDOUT_FILENO, "\n", 1);
+	write(1, "\n", 1);
 	rl_on_new_line();
 	rl_replace_line("", 0);
 	rl_redisplay();
+	rl_done = 1;
+	g_sigint_received = 1;
 }
-
+ 
 static void	setup_signals(void)
 {
 	struct sigaction	sa_int;
@@ -88,7 +89,7 @@ static void	cmd_list_destroy(t_cmdnode *h)
 		h = nx;
 	}
 }
- 
+ /* 
 static void	print_int_array(const t_intvec *v)
 {
 	size_t	i;
@@ -103,9 +104,9 @@ static void	print_int_array(const t_intvec *v)
 		i++;
 	}
 	printf("\n");
-}
+} */
  
-static void	print_str_list(const t_list *lst)
+/* static void	print_str_list(const t_list *lst)
 {
 	printf("[");
 	while (lst)
@@ -116,8 +117,8 @@ static void	print_str_list(const t_list *lst)
 		lst = lst->next;
 	}
 	printf("]");
-}
-static void	print_red_list(const t_list_red *lst)
+} */
+/* static void	print_red_list(const t_list_red *lst)
 {
 	printf("[");
 	while (lst)
@@ -130,8 +131,8 @@ static void	print_red_list(const t_list_red *lst)
 		lst = lst->next;
 	}
 	printf("]");
-}
-static void	print_nodes(const t_cmdnode *h)
+} */
+/* static void	print_nodes(const t_cmdnode *h)
 {
 	int	idx;
 
@@ -149,7 +150,7 @@ static void	print_nodes(const t_cmdnode *h)
 		h = h->next;
 		idx++;
 	}
-}
+} */
 
 static void	update_quote_state_line(const char *line, char *quote_state)
 {
@@ -196,23 +197,47 @@ static char	*join_lines(char *base, const char *extra)
 	return (res);
 }
 
+/* static void	sigint_noninteractive(int sig)
+{
+	(void)sig;
+	printf("\n");
+	rl_replace_line("", 0);
+	rl_redisplay();
+	g_sigint_received = 1;
+} */
+
+/* static void sigint_noninteractive_setup(void)
+{
+	struct sigaction sa;
+
+	sa.sa_handler = sigint_noninteractive;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGINT, &sa, NULL);
+} */
+
 static int	read_prompt_line(const char *prompt, char **out_line)
 {
 	char	*line;
 
-	g_sigint_received = 0;
+	setup_signals();
 	line = readline(prompt);
+	printf("Exit the readline\n");
+	signal(SIGINT, SIG_IGN);
 	if (!line)
 	{
+		printf("Entered !line\n");
 		*out_line = NULL;
 		if (g_sigint_received)
 			return (-1);
 		return (0);
 	}
-	if (g_sigint_received)
+	if (g_sigint_received == 1)
 	{
+		printf("Enetred g_sigint == 1\n");
 		free(line);
 		*out_line = NULL;
+		g_sigint_received = 0;
 		return (-1);
 	}
 	*out_line = line;
@@ -286,7 +311,6 @@ int	main(int argc, char **argv, char **envp)
 	shell_env = dup_envp(envp);
 	if (!shell_env)
 		return (1);
-	setup_signals();
 	using_history();
 	change_exit_value("127", &shell_env);
 	while (1)
@@ -310,6 +334,7 @@ int	main(int argc, char **argv, char **envp)
 			//print_int_array(&codes);
 			//print_nodes(list);
 			exit_code = execute_cmds(&list, shell_env);
+			printf("exit_code %d\n", exit_code);
 			change_exit_value(ft_itoa(exit_code), &shell_env);
 		}
 		else
