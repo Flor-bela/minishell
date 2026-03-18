@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/18 11:34:57 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/18 12:28:43 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -348,6 +348,9 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	else //// Pipeline!!!! 
 	{
 		pids = ft_malloc(sizeof(pid_t) * len); // si es solo un y built-in no deberia crear pids....(quizás esto lo pongo dentro del loop???)
+		
+		signal(SIGINT, SIG_IGN);
+		signal(SIGQUIT, SIG_IGN);
 
 		while (i < len) // ir executando este loop para crear los procesos y ejecutar los comandos
 		{
@@ -356,6 +359,10 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				error_fork(envp);
 			else if (pids[i] == 0) // in child process
 			{
+
+				signal(SIGINT, SIG_DFL);
+				signal(SIGQUIT, SIG_DFL);
+
 				// 1st count how many arguments we have:
 				if (data_tmp->cmd != NULL)
 					args = get_args(data_tmp->phrase);
@@ -467,6 +474,9 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 			waitpid(pids[i], &last_exit_status, 0);
 			i++;
 		}
+		signal(SIGINT, handle_sigint);
+		signal(SIGQUIT, SIG_IGN);
+		write(1, "\n", 1);
 	}
 	return (WEXITSTATUS(last_exit_status));
 }

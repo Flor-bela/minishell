@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/17 16:11:37 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/18 12:07:19 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,5 +106,7 @@ int		is_built_in(char *cmd_name);
 void	change_exit_value(char *args, char ***envp);
 
 //int		main (int argc, char **argv, char **envp);
+
+void	handle_sigint(int sig);
 
 #endif

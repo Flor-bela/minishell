@@ -5,13 +5,12 @@ int	parse_line(const char *line, t_intvec *out_codes,
 
 volatile sig_atomic_t	g_sigint_received = 0;
 
-static void	handle_sigint(int sig)
+void	handle_sigint(int sig)
 {
 	(void)sig;
-	g_sigint_received = 1;
-	write(STDOUT_FILENO, "\n", 1);
-	rl_on_new_line();
+	write(1, "^C\n", 3);
 	rl_replace_line("", 0);
+	rl_on_new_line();
 	rl_redisplay();
 }
 
@@ -23,7 +22,7 @@ static void	setup_signals(void)
 	memset(&sa_int, 0, sizeof(sa_int));
 	sa_int.sa_handler = handle_sigint;
 	sigemptyset(&sa_int.sa_mask);
-	sa_int.sa_flags = 0;
+	sa_int.sa_flags = 0;   // ❌ quita SA_RESTART
 	sigaction(SIGINT, &sa_int, NULL);
 	memset(&sa_quit, 0, sizeof(sa_quit));
 	sa_quit.sa_handler = SIG_IGN;
@@ -200,7 +199,6 @@ static int	read_prompt_line(const char *prompt, char **out_line)
 {
 	char	*line;
 
-	g_sigint_received = 0;
 	line = readline(prompt);
 	if (!line)
 	{
@@ -213,6 +211,7 @@ static int	read_prompt_line(const char *prompt, char **out_line)
 	{
 		free(line);
 		*out_line = NULL;
+		g_sigint_received = 0;
 		return (-1);
 	}
 	*out_line = line;
@@ -279,28 +278,29 @@ int	main(int argc, char **argv, char **envp)
 	int			exit_code;
 
 	exit_code = 0;
-	if ((argc = 0) && (argv == NULL))
-	{
-	}
-
+	(void)argc;
+	(void)argv;
 	shell_env = dup_envp(envp);
 	if (!shell_env)
 		return (1);
 	setup_signals();
+	rl_catch_signals = 0;
 	using_history();
 	change_exit_value("127", &shell_env);
 	while (1)
 	{
 		line = read_full_command();
+	
 		if (!line)
 		{
 			printf("exit\n");
 			break ;
 		}
+
 		if (line[0] == '\0' || is_only_spaces(line))
 		{
 			free(line);
-			continue ;
+			continue;
 		}
 		add_history(line);
 		intvec_reset(&codes);
