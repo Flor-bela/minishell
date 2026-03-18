@@ -47,7 +47,7 @@ OBJ_DIR = obj
 OBJECTS = $(SOURCES:%.c=$(OBJ_DIR)/%.o)
 
 FLAGS = -Wall -Werror -Wextra -g
-LDFLAGS = -lreadline -lhistory
+LDFLAGS = -lreadline -lhistory 
 CC = cc
 
 all: $(NAME)

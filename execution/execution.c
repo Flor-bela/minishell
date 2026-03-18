@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/18 17:31:32 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/18 19:31:13 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 static void	error_fork(char **envp)
 {
 	perror("minishell: fork"); // probar
+	ft_free_malloc(); // ??
 	change_exit_value("1", &envp);
 	exit(1);
 }
@@ -22,6 +23,7 @@ static void	error_fork(char **envp)
 static void	error_pipe(char **envp)
 {
 	perror("minishell: pipe"); // probar
+	ft_free_malloc(); // ??
 	change_exit_value("1", &envp);
 	exit(1);
 }
@@ -33,6 +35,7 @@ static void	error_fd_file(char *name_infile, char **envp)
 	
 	error = ft_strjoin_modif("minishell: ", name_infile);
 	perror(error);
+	ft_free_malloc();
 	change_exit_value("1", &envp);
 	exit(1);
 }
@@ -84,6 +87,7 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 			error = ft_strjoin_modif("minishell: ", data_cmd);
 			perror(error);
 			close_fds(arr_fds, len);
+			ft_free_malloc();
 			change_exit_value("127", &envp);
 			exit(127);
 		}
@@ -94,6 +98,7 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 			error = ft_strjoin_modif("minishell: ", data_cmd);
 			perror(error);
 			close_fds(arr_fds, len);
+			ft_free_malloc();
 			change_exit_value("126", &envp);
 			exit(126);
 		}
@@ -165,6 +170,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	last_exit_status = 0;
 	data_tmp = *data;
 	pids = NULL;
+	arr_fds = NULL;
 	//while (data_tmp && data_tmp->cmd != NULL) // data && data_tmp->cmd anterior
 	while (data_tmp != NULL)
 	{
@@ -172,7 +178,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		data_tmp = data_tmp->next;
 	}
 	//printf("len is %d\n", len);
-	if (len > 0) // added this...in those cases where cmd is equal == 0
+	if (len > 1) // i) added this...in those cases where cmd is equal == 0 ii)len > 0 ->
 	{
 		arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
 		while (i < len - 1)
@@ -439,20 +445,24 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 						perror(error);
 						if (errno == EACCES)
 						{	
+							ft_free_malloc(); // ??
 							change_exit_value("126", &envp);
 							exit(126);
 						}
 						else if (errno == ENOENT)
 						{
+							ft_free_malloc(); // ??
 							change_exit_value("127", &envp);
 							exit(127);
 						}
 						else
 						{
+							ft_free_malloc(); // ??
 							change_exit_value("126", &envp);
 							exit(126);}
 					}
 				}
+				ft_free_malloc(); // ??
 				exit(0);
 			}
 			i++;
