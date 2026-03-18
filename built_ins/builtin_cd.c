@@ -6,29 +6,34 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 12:44:37 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/17 16:17:10 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/18 00:33:34 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "provisionaryFunctions.h"
 
-int	builtin_cd(char *path)
+int	builtin_cd(char **args, **envp)
 {
-	if (path == NULL)
+	char *path;
+
+	path = NULL;
+	if (args == NULL)
 	{
 		path = getenv("HOME");
 		if (path == NULL)
 		{
-			write(2, "minishell: cd: ", 16); // minishell
-			perror(path);
+			write(2, "minishell: cd: HOME not set\n", 28); // not sure about his error message
 			return (1);
 		}
 	}
+	// else // too many arguments when??? -> check this
+		// write(2, "minishell: cd: too many arguments\n", 34);
 	if (chdir(path) != 0)
 	{
-		perror("cd");
+		perror("minishell: cd");
 		return (1);
 	}
+	// update PWD and OLDPWD -> ver esto!!!
 
 	return (0);
 }

@@ -307,8 +307,8 @@ int	main(int argc, char **argv, char **envp)
 		list = NULL;
 		if (parse_line(line, &codes, &list, shell_env) == 0)
 		{
-			print_int_array(&codes);
-			print_nodes(list);
+			//print_int_array(&codes);
+			//print_nodes(list);
 			exit_code = execute_cmds(&list, shell_env);
 			change_exit_value(ft_itoa(exit_code), &shell_env);
 		}
