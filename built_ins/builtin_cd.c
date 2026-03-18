@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_cd.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 12:44:37 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/18 00:33:34 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/18 11:31:33 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "provisionaryFunctions.h"
 
-int	builtin_cd(char **args, **envp)
+/*int	builtin_cd(char **args, **envp)
 {
 	char *path;
 
@@ -36,4 +36,4 @@ int	builtin_cd(char **args, **envp)
 	// update PWD and OLDPWD -> ver esto!!!
 
 	return (0);
-}
+}*/

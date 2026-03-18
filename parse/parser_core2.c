@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 18:01:22 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/17 18:12:00 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/18 11:42:04 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,17 +46,18 @@ static int	handle_cmd_line(const char *line, t_parser *p,
 static int	parse_loop_line(const char *line, t_parser *p,
 	t_intvec *codes, char **env)
 {
-	int	last_pipe;
-
-	last_pipe = 1;
+	p->last_pipe = 1;
 	while (line[p->i])
 	{
 		skip_spaces(line, &p->i);
 		if (!line[p->i])
 			break ;
+
 		p->op_match = match_op(line, p->i, &p->op_len, &p->op_code);
+
 		if (p->op_match == -1)
 			return (parser_error(p, codes));
+
 		if (p->op_match == 1)
 		{
 			if (handle_op_line(line, p, codes, env))
@@ -68,8 +69,9 @@ static int	parse_loop_line(const char *line, t_parser *p,
 				return (-1);
 		}
 	}
-	if (last_pipe)
+	if (p->last_pipe)
 		return (error_pipe(p, codes));
+
 	return (0);
 }
 
