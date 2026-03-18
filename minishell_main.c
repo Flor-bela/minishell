@@ -88,7 +88,7 @@ static void	cmd_list_destroy(t_cmdnode *h)
 		h = nx;
 	}
 }
- 
+ /* 
 static void	print_int_array(const t_intvec *v)
 {
 	size_t	i;
@@ -103,8 +103,8 @@ static void	print_int_array(const t_intvec *v)
 		i++;
 	}
 	printf("\n");
-}
- 
+} */
+/* 
 static void	print_str_list(const t_list *lst)
 {
 	printf("[");
@@ -116,8 +116,9 @@ static void	print_str_list(const t_list *lst)
 		lst = lst->next;
 	}
 	printf("]");
-}
-static void	print_red_list(const t_list_red *lst)
+} */
+
+/* static void	print_red_list(const t_list_red *lst)
 {
 	printf("[");
 	while (lst)
@@ -130,8 +131,8 @@ static void	print_red_list(const t_list_red *lst)
 		lst = lst->next;
 	}
 	printf("]");
-}
-static void	print_nodes(const t_cmdnode *h)
+} */
+/* static void	print_nodes(const t_cmdnode *h)
 {
 	int	idx;
 
@@ -149,7 +150,7 @@ static void	print_nodes(const t_cmdnode *h)
 		h = h->next;
 		idx++;
 	}
-}
+} */
 
 static void	update_quote_state_line(const char *line, char *quote_state)
 {

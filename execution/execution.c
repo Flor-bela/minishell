@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/18 00:23:53 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/18 17:31:32 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -320,7 +320,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
 			return_value = builtin_echo(data_tmp->phrase);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
-			return_value = builtin_cd(data_tmp->phrase->content);
+			return_value = builtin_cd(data_tmp->phrase, envp);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
 			return_value = builtin_pwd();
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
@@ -468,5 +468,19 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 			i++;
 		}
 	}
-	return (WEXITSTATUS(last_exit_status));
+	int signal_code;
+	
+	signal_code = 0;
+	if (WIFEXITED(last_exit_status))
+		last_exit_status = WEXITSTATUS(last_exit_status);
+	else if (WIFSIGNALED(last_exit_status))
+	{
+		signal_code = WTERMSIG(last_exit_status);
+		if (signal_code == SIGINT)
+			write(1, "\n", 1);
+		else if (signal_code == SIGQUIT)
+			write(1, "Quit (core dumped)\n", 20);
+		last_exit_status = signal_code + 128;
+	}
+	return (last_exit_status);
 }

@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/17 16:11:37 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/18 16:55:18 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ int		builtin_export(t_list *args, char ***envp);
 int		builtin_unset(t_list *args, char ***envp);
 int		builtin_env(char **envp);
 int		builtin_exit(t_list *args);
-int		builtin_cd(char *path);
+int		builtin_cd(t_list *args, char **envp);
 void	change_exit_value(char *args, char ***envp);
 
 char	*read_heredoc_input(const char *delimiter, int expand_vars, char **shell_env);
