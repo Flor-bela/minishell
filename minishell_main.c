@@ -236,26 +236,24 @@ static int	read_prompt_line(const char *prompt, char **out_line)
 	g_sigint_received = 0; // 🔥 RESET AQUÍ
 
 	line = readline(prompt);
-	//dprintf(2,"DEBUG: readline main devuelve = %p (%s)\n", line, line);
-	if (g_sigint_received)
+	//dprintf(2,"DEBUG: readline main devuelve = %p (%s) %d\n", line, line, g_sigint_received);
+	if (g_sigint_received && (!line || *line == '\0'))
 	{
 		free(line);
 		*out_line = NULL;
 		g_sigint_received = 0;
 		return (-1);
 	}
-
 	if (!line)
 	{
 		*out_line = NULL;
 		return (0);
 	}
-
-	*out_line = line;
-	return (1);
+		*out_line = line;
+		return (1);
 }
 
-static char	*read_full_command(void)
+static char	*read_full_command(int num)
 {
 	char	*line;
 	char	*full_line;
@@ -269,20 +267,22 @@ static char	*read_full_command(void)
 		if (!full_line)
 		{
 			status = read_prompt_line("minishell$ ", &line);
-			printf("DEBUG: read_prompt_line minishell devuelve cmds = %p\n", status);
+			////printf("DEBUG: read_prompt_line minishell devuelve cmds = %p\n", status);
 		}
 		else
 		{
 			status = read_prompt_line("> ", &line);
-			printf("DEBUG: read_prompt_line > devuelve cmds = %p\n", status);
+		//	//printf("DEBUG: read_prompt_line > devuelve cmds = %p\n", status);
 		}
 		if (status == -1)
 		{
 			free(full_line);
+			num = -1;
 			return (NULL);
 		}
 		if (status == 0)
 		{
+			num = 0;
 			if (!full_line)
 				return (NULL);
 			continue ;
@@ -319,6 +319,7 @@ int	main(int argc, char **argv, char **envp)
 	t_cmdnode	*list;
 	char		**shell_env;
 	int			exit_code;
+	int 		*num;
 	
 
 	exit_code = 0;
@@ -332,12 +333,14 @@ int	main(int argc, char **argv, char **envp)
 	change_exit_value("127", &shell_env);
 	while (1)
 	{
+		line = NULL;
+		num = 0;
 		//write(2, "DEBUG: antes de parsear\n", 24);
-		line = read_full_command();
-		printf("DEBUG: despues de parsear\n");
+		line = read_full_command(&num);
+		//printf("DEBUG: despues de parsear\n");
 		/*if (g_sigint_received)
 		{
-			printf("DEBUG: Ctrl+C detectado → salto iteración\n");
+			//printf("DEBUG: Ctrl+C detectado → salto iteración\n");
 			g_sigint_received = 0;
 			free(line);
 			continue;
@@ -345,7 +348,7 @@ int	main(int argc, char **argv, char **envp)
 		
 		if (!line)
 		{
-			if (g_sigint_received)
+			if (g_sigint_received && num !=1)
 			{
 				g_sigint_received = 0;
 
@@ -368,16 +371,16 @@ int	main(int argc, char **argv, char **envp)
 		list = NULL;
 		if (parse_line(line, &codes, &list, shell_env) == 0)
 		{
-			if (g_sigint_received)
+			/*if (g_sigint_received)
 			{
-				printf("DEBUG: heredoc cancelado → no ejecutar\n");
+				//printf("DEBUG: heredoc cancelado → no ejecutar\n");
 				
 				g_sigint_received = 0;
 				cmd_list_destroy(list);
 				intvec_destroy(&codes);
 				free(line);
 				continue;
-			}
+			}*/
 			print_int_array(&codes);
 			print_nodes(list);
 			exit_code = execute_cmds(&list, shell_env);

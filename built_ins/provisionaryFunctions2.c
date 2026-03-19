@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 19:47:30 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 20:51:34 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -272,7 +272,7 @@ static char	*join_and_free(char *s1, const char *s2)
 	size_t	len2;
 	char	*res;
 	
-	printf("DEBUG: join_and_free s1=%p s2=%p\n", s1, s2);
+	//printf("DEBUG: join_and_free s1=%p s2=%p\n", s1, s2);
 	if (!s1)
 	{
 		res = ft_strdup(s2);
@@ -594,7 +594,7 @@ char	*read_fd_all(int fd)
 		bytes = read(fd, buffer, 1024);
 		if (!bytes)
 		{
-			printf("DEBUG: read_fd_all devolvió NULL\n");
+			//printf("DEBUG: read_fd_all devolvió NULL\n");
 			return (NULL);
 		}
 		if (bytes < 0)
@@ -625,21 +625,21 @@ char	*heredoc_with_fork(const char *delimiter,
 	char	*content;
 	int		status;
 
-	printf("DEBUG: entro heredoc\n");
+	//printf("DEBUG: entro heredoc\n");
 	if (pipe(fd) == -1)
 		return (NULL);
 
 	pid = fork();
 	if (pid == -1)
 	{
-		printf("DEBUG: padre heredoc\n");
+		//printf("DEBUG: padre heredoc\n");
 		
 		return (NULL);
 	}
 
 	if (pid == 0)
 	{
-		printf("DEBUG: hijo heredoc\n");
+		//printf("DEBUG: hijo heredoc\n");
 		close(fd[0]);
 
 		content = read_heredoc_input(delimiter, expand_vars, env);
@@ -662,18 +662,18 @@ char	*heredoc_with_fork(const char *delimiter,
 
 	waitpid(pid, &status, 0);
 
-	printf("DEBUG: status raw = %d\n", status);
-	printf("DEBUG: WIFEXITED=%d WEXITSTATUS=%d\n",
-    WIFEXITED(status), WEXITSTATUS(status));
-	printf("DEBUG: WIFSIGNALED=%d WTERMSIG=%d\n",
-    WIFSIGNALED(status), WTERMSIG(status));
+	//printf("DEBUG: status raw = %d\n", status);
+	//printf("DEBUG: WIFEXITED=%d WEXITSTATUS=%d\n",
+    //WIFEXITED(status), WEXITSTATUS(status));
+	//printf("DEBUG: WIFSIGNALED=%d WTERMSIG=%d\n",
+    //WIFSIGNALED(status), WTERMSIG(status));
 
 	// 🔥 🔥 🔥 CLAVE
 	if (g_sigint_received == 1 ||
     (WIFEXITED(status) && WEXITSTATUS(status) == 130) ||
     (WIFSIGNALED(status) && WTERMSIG(status) == SIGINT))
 	{
-		printf("DEBUG: heredoc cancelado\n");
+		//printf("DEBUG: heredoc cancelado\n");
 		
 		close(fd[0]);
 		g_sigint_received = 1;

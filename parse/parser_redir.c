@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 19:22:53 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 20:51:21 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,16 +29,16 @@ static int	handle_heredoc(t_cmdnode *cmd,
 
 	// 🔥 CAMBIO CLAVE
 	heredoc_content = heredoc_with_fork(real_delim, expand_vars, env);
-	printf("DEBUG: heredoc devuelto = %p\n", heredoc_content);
+	//printf("DEBUG: heredoc devuelto = %p\n", heredoc_content);
 	free(real_delim);
 
 	if (!heredoc_content)
 	{
 		if (g_sigint_received)
 		{
-			printf("DEBUG: heredoc NULL → abortando comando -1\n");
+			//printf("DEBUG: heredoc NULL → abortando comando -1\n");
 			return (-1); // aborta parse limpio
-		}printf("DEBUG: heredoc NULL → abortando comando NULL\n");
+		}//printf("DEBUG: heredoc NULL → abortando comando NULL\n");
 		return (NULL);
 	}
 
@@ -67,7 +67,7 @@ static int	handle_pending_heredoc(t_parser *p,
 
 	// 🔥 CAMBIO CLAVE
 	heredoc_content = heredoc_with_fork(real_delim, expand_vars, env);
-	printf("DEBUG: heredoc devuelto = %p\n", heredoc_content);
+	//printf("DEBUG: heredoc devuelto = %p\n", heredoc_content);
 	free(real_delim);
 
 	if (!heredoc_content)
