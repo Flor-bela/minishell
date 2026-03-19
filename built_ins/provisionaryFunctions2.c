@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 20:51:34 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 20:59:40 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -547,6 +547,12 @@ char	*read_heredoc_input(const char *delimiter,
 		if (!line)
 			break ;
 
+		if (line)
+		{
+			int len = ft_strlen(line);
+			if (len > 0 && line[len - 1] == '\n')
+				line[len - 1] = '\0';
+		}
 		if (ft_strcmp(line, delimiter) == 0)
 		{
 			free(line);
