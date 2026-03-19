@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 16:18:35 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 18:17:21 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,14 +29,17 @@ static int	handle_heredoc(t_cmdnode *cmd,
 
 	// 🔥 CAMBIO CLAVE
 	heredoc_content = heredoc_with_fork(real_delim, expand_vars, env);
-
+	//printf("DEBUG: heredoc devuelto = %p\n", heredoc_content);
 	free(real_delim);
 
 	if (!heredoc_content)
 	{
 		if (g_sigint_received)
+		{
+			//printf("DEBUG: heredoc NULL → abortando comando -1\n");
 			return (-1); // aborta parse limpio
-		return (-1);
+		}//printf("DEBUG: heredoc NULL → abortando comando NULL\n");
+		return (NULL);
 	}
 
 	t_list_red *node;
@@ -64,11 +67,11 @@ static int	handle_pending_heredoc(t_parser *p,
 
 	// 🔥 CAMBIO CLAVE
 	heredoc_content = heredoc_with_fork(real_delim, expand_vars, env);
-
+	//printf("DEBUG: heredoc devuelto = %p\n", heredoc_content);
 	free(real_delim);
 
 	if (!heredoc_content)
-		return (-1);
+		return (NULL);
 
 	red_list_push_back(&p->pending_in, heredoc_content, 1);
 	free(heredoc_content);

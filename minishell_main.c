@@ -5,14 +5,16 @@ int	parse_line(const char *line, t_intvec *out_codes,
 
 volatile sig_atomic_t g_sigint_received = 0;
 
-void	handle_sigint(int sig)
+void handle_sigint(int sig)
 {
-	(void)sig;
-	g_sigint_received = 1; // 🔥 IMPORTANTE
-	write(1, "\n", 1);
-	rl_on_new_line();
-	rl_replace_line("", 0);
-	rl_redisplay();
+    (void)sig;
+    g_sigint_received = 1;
+
+    write(1, "\n", 1);
+
+    rl_on_new_line();
+    rl_replace_line("", 0);
+    rl_redisplay();
 }
 
 void	setup_signals_prompt(void)
@@ -237,7 +239,7 @@ static int	read_prompt_line(const char *prompt, char **out_line)
 	g_sigint_received = 0; // 🔥 RESET AQUÍ
 
 	line = readline(prompt);
-
+	//dprintf(2,"DEBUG: readline main devuelve = %p (%s)\n", line, line);
 	if (g_sigint_received)
 	{
 		free(line);
@@ -268,9 +270,15 @@ static char	*read_full_command(void)
 	while (1)
 	{
 		if (!full_line)
+		{
 			status = read_prompt_line("minishell$ ", &line);
+			//printf("DEBUG: read_prompt_line minishell devuelve cmds = %p\n", status);
+		}
 		else
+		{
 			status = read_prompt_line("> ", &line);
+			//printf("DEBUG: read_prompt_line > devuelve cmds = %p\n", status);
+		}
 		if (status == -1)
 		{
 			free(full_line);
@@ -327,19 +335,23 @@ int	main(int argc, char **argv, char **envp)
 	change_exit_value("127", &shell_env);
 	while (1)
 	{
+		//write(2, "DEBUG: antes de parsear\n", 24);
 		line = read_full_command();
-	
+		//printf("DEBUG: despues de parsear\n");
+		if (g_sigint_received)
+		{
+			//printf("DEBUG: Ctrl+C detectado → salto iteración\n");
+			g_sigint_received = 0;
+			free(line);
+			continue;
+		}
+		
 		if (!line)
 		{
-			if(g_sigint_received)
-			{
-				g_sigint_received=0;
-				continue;
-			}
 			printf("exit\n");
 			break ;
 		}
-
+		
 		if (line[0] == '\0' || is_only_spaces(line))
 		{
 			free(line);
@@ -350,6 +362,18 @@ int	main(int argc, char **argv, char **envp)
 		list = NULL;
 		if (parse_line(line, &codes, &list, shell_env) == 0)
 		{
+			if (g_sigint_received)
+			{
+				//printf("DEBUG: heredoc cancelado → no ejecutar\n");
+				rl_replace_line("", 0);
+				rl_on_new_line();
+				rl_redisplay();
+				g_sigint_received = 0;
+				cmd_list_destroy(list);
+				intvec_destroy(&codes);
+				free(line);
+				continue;
+			}
 			print_int_array(&codes);
 			print_nodes(list);
 			exit_code = execute_cmds(&list, shell_env);

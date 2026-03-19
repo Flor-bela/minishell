@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 16:08:28 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 18:17:57 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -271,7 +271,8 @@ static char	*join_and_free(char *s1, const char *s2)
 	size_t	len1;
 	size_t	len2;
 	char	*res;
-
+	
+	//printf("DEBUG: join_and_free s1=%p s2=%p\n", s1, s2);
 	if (!s1)
 	{
 		res = ft_strdup(s2);
@@ -487,6 +488,32 @@ static int	process_heredoc_line(char **line, char **content,
 	return (0);
 }
 
+static char *get_next_line(int fd)
+{
+    char *buf = malloc(1024);
+    int i = 0;
+    char c;
+
+    if (!buf)
+        return NULL;
+
+    while (read(fd, &c, 1) > 0)
+    {
+        buf[i++] = c;
+        if (c == '\n')
+            break;
+    }
+
+    if (i == 0)
+    {
+        free(buf);
+        return NULL;
+    }
+
+    buf[i] = '\0';
+    return buf;
+}
+
 char	*read_heredoc_input(const char *delimiter,
 			int expand_vars, char **shell_env)
 {
@@ -504,13 +531,19 @@ char	*read_heredoc_input(const char *delimiter,
 
 	while (1)
 	{
-		line = readline("> ");
+		line = get_next_line(STDIN_FILENO);
 
 		if (g_sigint_received)
 		{
 			g_sigint_received = 0;
+
 			free(line);
 			free(content);
+
+			rl_replace_line("", 0);
+			rl_on_new_line();
+			rl_redisplay();
+
 			setup_signals_prompt();
 			return (NULL);
 		}
@@ -564,6 +597,11 @@ char	*read_fd_all(int fd)
 	while (1)
 	{
 		bytes = read(fd, buffer, 1024);
+		if (!bytes)
+		{
+			//printf("DEBUG: read_fd_all devolvió NULL\n");
+			return (NULL);
+		}
 		if (bytes < 0)
 		{
 			free(result);
@@ -592,15 +630,23 @@ char	*heredoc_with_fork(const char *delimiter,
 	char	*content;
 	int		status;
 
+	//printf("DEBUG: entro heredoc\n");
 	if (pipe(fd) == -1)
 		return (NULL);
 
 	pid = fork();
 	if (pid == -1)
+	{
+		//printf("DEBUG: padre heredoc\n");
+		rl_on_new_line();
+		rl_replace_line("", 0);
+		rl_redisplay();
 		return (NULL);
+	}
 
 	if (pid == 0)
 	{
+		//printf("DEBUG: hijo heredoc\n");
 		close(fd[0]);
 
 		content = read_heredoc_input(delimiter, expand_vars, env);
@@ -609,6 +655,7 @@ char	*heredoc_with_fork(const char *delimiter,
 		{
 			close(fd[1]);
 			exit(130); // Ctrl+C
+			//return 1;
 		}
 
 		write(fd[1], content, ft_strlen(content));
@@ -622,9 +669,21 @@ char	*heredoc_with_fork(const char *delimiter,
 
 	waitpid(pid, &status, 0);
 
+	//printf("DEBUG: status raw = %d\n", status);
+	//printf("DEBUG: WIFEXITED=%d WEXITSTATUS=%d\n",
+    //WIFEXITED(status), WEXITSTATUS(status));
+	//printf("DEBUG: WIFSIGNALED=%d WTERMSIG=%d\n",
+    //WIFSIGNALED(status), WTERMSIG(status));
+
 	// 🔥 🔥 🔥 CLAVE
-	if (WIFEXITED(status) && WEXITSTATUS(status) == 130)
+	if (g_sigint_received == 1 ||
+    (WIFEXITED(status) && WEXITSTATUS(status) == 130) ||
+    (WIFSIGNALED(status) && WTERMSIG(status) == SIGINT))
 	{
+		//printf("DEBUG: heredoc cancelado\n");
+		rl_on_new_line();
+		rl_replace_line("", 0);
+		rl_redisplay();
 		close(fd[0]);
 		g_sigint_received = 1;
 		return (NULL);
