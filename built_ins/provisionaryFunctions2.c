@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 16:36:50 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/19 17:20:27 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -656,7 +656,7 @@ int	builtin_env(char **envp)
 	return (0);
 }
 
-int	builtin_exit(t_list *args) // todos tienen aunque sea error que hacer exit!!!
+int	builtin_exit(t_list *args, int in_child) // todos tienen aunque sea error que hacer exit!!!
 {
 	if (args == NULL) // si sale deberia liberar todo aqui!!!
 		exit (0); ///asi por ahora
@@ -696,8 +696,8 @@ int	builtin_exit(t_list *args) // todos tienen aunque sea error que hacer exit!!
 	if (flag == 1) // error numeric argument required -> return (2); -> primero error
 	{
 		char *error;
-		
-		write(1, "exit\n", 6);
+		if (in_child != 1)
+			write(1, "exit\n", 6);
 		error = ft_strjoin_modif("minishell: exit: ", str);
 		error = ft_strjoin_modif(error, ": numeric argument required\n");
 		write(2, error, ft_strlen(error));
@@ -707,7 +707,8 @@ int	builtin_exit(t_list *args) // todos tienen aunque sea error que hacer exit!!
 	} 
  	if (i > 1)
 	{
-		write(1, "exit\n", 6);
+		if (in_child != 1)
+			write(1, "exit\n", 6);
 		write(2, "minishell: exit: too many arguments\n", 37);
 		return (1);
 	}
@@ -718,7 +719,8 @@ int	builtin_exit(t_list *args) // todos tienen aunque sea error que hacer exit!!
 	num = ft_atoi((const char*)str);
 	if (num < 0 || num > 255)
 		num  = num % 256;
-	write(1, "exit\n", 6);
+	if (in_child != 1)
+			write(1, "exit\n", 6);
 	exit (num);
 }
 

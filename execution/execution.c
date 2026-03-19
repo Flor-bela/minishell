@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/19 14:03:44 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/19 16:51:36 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -336,7 +336,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
 			return_value = builtin_env(envp);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
-			return_value = builtin_exit(data_tmp->phrase);
+			return_value = builtin_exit(data_tmp->phrase, 0);
 		
 		if (saved_stdin != -1)
 		{
@@ -443,7 +443,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
 					return_value = builtin_env(envp);
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
-					return_value = builtin_exit(data_tmp->phrase);
+					return_value = builtin_exit(data_tmp->phrase, 1);
 				
 				else // execute command:
 				{
