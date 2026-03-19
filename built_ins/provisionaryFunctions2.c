@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 12:30:11 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 16:08:28 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -499,76 +499,140 @@ char	*read_heredoc_input(const char *delimiter,
 	if (!content)
 		return (NULL);
 
-	g_sigint_received = 0; // 🔥 AQUÍ
-	signal(SIGINT, handle_sigint_heredoc);
-
+	g_sigint_received = 0;
+	setup_signals_heredoc();
 
 	while (1)
 	{
 		line = readline("> ");
+
 		if (g_sigint_received)
 		{
 			g_sigint_received = 0;
 			free(line);
 			free(content);
+			setup_signals_prompt();
 			return (NULL);
 		}
 
-		// Ctrl+D
 		if (!line)
 			break ;
 
-		// Si se pulsa Ctrl+C mientras readline
-		if (g_sigint_received)
-		{
-			g_sigint_received = 0;
-			free(line);
-			free(content);
-			return (NULL);
-		}
-
-		// Fin del heredoc
 		if (ft_strcmp(line, delimiter) == 0)
 		{
 			free(line);
 			break ;
 		}
 
-		// Expandir variables si toca
 		if (expand_vars)
 		{
 			expanded = expand_heredoc_line(line, shell_env);
 			free(line);
 			line = expanded;
 			if (!line)
-			{
-				free(content);
 				return (NULL);
-			}
 		}
 
-		// Añadir línea al contenido
 		tmp = join_and_free(content, line);
 		if (!tmp)
-		{
-			free(line);
-			free(content);
 			return (NULL);
-		}
 		content = tmp;
 
 		tmp = join_and_free(content, "\n");
 		if (!tmp)
-		{
-			free(line);
-			free(content);
 			return (NULL);
-		}
 		content = tmp;
 
 		free(line);
 	}
-	signal(SIGINT, handle_sigint);
+
+	setup_signals_prompt();
+	return (content);
+}
+
+char	*read_fd_all(int fd)
+{
+	char	buffer[1025];
+	char	*result;
+	char	*tmp;
+	ssize_t	bytes;
+
+	result = ft_strdup("");
+	if (!result)
+		return (NULL);
+
+	while (1)
+	{
+		bytes = read(fd, buffer, 1024);
+		if (bytes < 0)
+		{
+			free(result);
+			return (NULL);
+		}
+		if (bytes == 0)
+			break ;
+		buffer[bytes] = '\0';
+
+		tmp = join_and_free(result, buffer);
+		if (!tmp)
+		{
+			free(result);
+			return (NULL);
+		}
+		result = tmp;
+	}
+	return (result);
+}
+
+char	*heredoc_with_fork(const char *delimiter,
+			int expand_vars, char **env)
+{
+	int		fd[2];
+	pid_t	pid;
+	char	*content;
+	int		status;
+
+	if (pipe(fd) == -1)
+		return (NULL);
+
+	pid = fork();
+	if (pid == -1)
+		return (NULL);
+
+	if (pid == 0)
+	{
+		close(fd[0]);
+
+		content = read_heredoc_input(delimiter, expand_vars, env);
+
+		if (!content)
+		{
+			close(fd[1]);
+			exit(130); // Ctrl+C
+		}
+
+		write(fd[1], content, ft_strlen(content));
+		free(content);
+		close(fd[1]);
+		exit(0);
+	}
+
+	// 🔥 PARENT
+	close(fd[1]);
+
+	waitpid(pid, &status, 0);
+
+	// 🔥 🔥 🔥 CLAVE
+	if (WIFEXITED(status) && WEXITSTATUS(status) == 130)
+	{
+		close(fd[0]);
+		g_sigint_received = 1;
+		return (NULL);
+	}
+
+	content = read_fd_all(fd[0]);
+	close(fd[0]);
+
 	return (content);
 }
 

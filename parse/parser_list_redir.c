@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:25 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/17 12:25:40 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 16:09:53 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ static t_list_red	*red_node_new(const char *s, int doble)
 	node->doble = doble;
 	node->prev = NULL;
 	node->next = NULL;
+	node->is_heredoc = 0;
 	return (node);
 }
 
@@ -69,9 +70,10 @@ static void	red_list_append(t_list_red **head, t_list_red **tail,
 	}
 }
 
-void	red_list_push_back(t_list_red **head, const char *s, int doble)
+t_list_red *red_list_push_back(t_list_red **head, const char *s, int doble)
 {
-	t_list_red	*tail;
+	t_list_red *tail;
+	t_list_red *new;
 
 	tail = *head;
 	if (tail)
@@ -79,7 +81,18 @@ void	red_list_push_back(t_list_red **head, const char *s, int doble)
 		while (tail->next)
 			tail = tail->next;
 	}
-	red_list_append(head, &tail, s, doble);
+
+	new = red_node_new(s, doble);
+
+	if (!*head)
+		*head = new;
+	else
+	{
+		tail->next = new;
+		new->prev = tail;
+	}
+
+	return (new); // 🔥 IMPORTANTE
 }
 
 void	red_list_free(t_list_red *lst)

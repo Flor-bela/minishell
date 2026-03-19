@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/18 20:07:42 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 16:11:23 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ typedef struct s_list_red
 {
 	void				*content;
 	int					doble; // si es doble << o >> entonces es == a 1; simples == 0;
+	int 				is_heredoc;
 	struct s_list_red	*prev;
 	struct s_list_red	*next;
 }					t_list_red;
@@ -112,5 +113,6 @@ void	change_exit_value(char *args, char ***envp);
 void	handle_sigint(int sig);
 
 void	handle_sigint_heredoc(int sig);
+void	setup_signals_heredoc(void);
 
 #endif

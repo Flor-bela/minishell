@@ -8,6 +8,7 @@ volatile sig_atomic_t g_sigint_received = 0;
 void	handle_sigint(int sig)
 {
 	(void)sig;
+	g_sigint_received = 1; // 🔥 IMPORTANTE
 	write(1, "\n", 1);
 	rl_on_new_line();
 	rl_replace_line("", 0);
@@ -16,19 +17,36 @@ void	handle_sigint(int sig)
 
 void	setup_signals_prompt(void)
 {
-	signal(SIGINT, handle_sigint);
+	struct sigaction	sa;
+
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = handle_sigint;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGINT, &sa, NULL);
 	signal(SIGQUIT, SIG_IGN);
 }
 
-void	handle_sigint_heredoc(int sig)
+void handle_sigint_heredoc(int sig)
 {
 	(void)sig;
 	g_sigint_received = 1;
 	write(1, "\n", 1);
+	rl_replace_line("", 0);
+	rl_done = 1;
+}
 
-	rl_replace_line("", 0);  // 🔥 limpia buffer
-	rl_on_new_line();        // 🔥 mueve cursor
-	rl_done = 1;             // 🔥 sale de readline
+void	setup_signals_heredoc(void)
+{
+	struct sigaction	sa;
+
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = handle_sigint_heredoc;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0; // 🔥 MUY IMPORTANTE (sin SA_RESTART)
+
+	sigaction(SIGINT, &sa, NULL);
+	signal(SIGQUIT, SIG_IGN);
 }
 
 static void	setup_signals(void)
@@ -216,14 +234,10 @@ static int	read_prompt_line(const char *prompt, char **out_line)
 {
 	char	*line;
 
+	g_sigint_received = 0; // 🔥 RESET AQUÍ
+
 	line = readline(prompt);
-	if (!line)
-	{
-		*out_line = NULL;
-		if (g_sigint_received)
-			return (-1);
-		return (0);
-	}
+
 	if (g_sigint_received)
 	{
 		free(line);
@@ -231,6 +245,13 @@ static int	read_prompt_line(const char *prompt, char **out_line)
 		g_sigint_received = 0;
 		return (-1);
 	}
+
+	if (!line)
+	{
+		*out_line = NULL;
+		return (0);
+	}
+
 	*out_line = line;
 	return (1);
 }
@@ -335,7 +356,11 @@ int	main(int argc, char **argv, char **envp)
 			change_exit_value(ft_itoa(exit_code), &shell_env);
 		}
 		else
-			write(2, "(parse error)\n", ft_strlen("(parse error)\n"));
+		{
+			if (!g_sigint_received)
+				write(2, "(parse error)\n", ft_strlen("(parse error)\n"));
+			g_sigint_received = 0;
+		}
 		cmd_list_destroy(list);
 		intvec_destroy(&codes);
 		free(line);
@@ -350,51 +375,3 @@ int	main(int argc, char **argv, char **envp)
 	free_envp_copy(shell_env);
 	return (0);
 }
-
-
-/*int	main(int argc, char **argv, char **envp)
-{
-	char	*input;
-	char	**env_copy;
-
-	(void)argc;
-	(void)argv;
-
-	// 🔹 Copia del entorno (ya lo haces tú)
-	env_copy = dup_envp(envp);
-	if (!env_copy)
-		return (1);
-
-	// 🔥 IMPORTANTE: activar señales del prompt
-	setup_signals_prompt();
-
-	while (1)
-	{
-		input = readline("minishell$ ");
-
-		// Ctrl+D (EOF)
-		if (!input)
-		{
-			write(1, "exit\n", 5);
-			break;
-		}
-
-		// Si está vacío → ignorar
-		if (input[0] == '\0')
-		{
-			free(input);
-			continue;
-		}
-
-		add_history(input);
-
-		// 🔹 AQUÍ VA TU PARSER + EXEC
-		// parse(input);
-		// execute(...);
-
-		free(input);
-	}
-
-	free_envp_copy(env_copy);
-	return (0);
-}*/

@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:28:12 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/17 18:13:27 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 16:12:35 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ void		intvec_push(t_intvec *v, int x);
 void		intvec_free(t_intvec *v);
 void		str_list_push_back(t_list **head, const char *s);
 void		str_list_free(t_list *lst);
-void		red_list_push_back(t_list_red **head, const char *s, int doble);
+t_list_red *red_list_push_back(t_list_red **head, const char *s, int doble);
 void		red_list_free(t_list_red *lst);
 
 /* cmd utils */
