@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 18:01:22 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 18:17:21 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 19:22:53 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ static int	parse_loop_line(const char *line, t_parser *p,
 	t_intvec *codes, char **env)
 {
 	p->last_pipe = 1;
-	//printf("DEBUG: entrando parser\n");
+	printf("DEBUG: entrando parser\n");
 	while (line[p->i])
 	{
 		skip_spaces(line, &p->i);

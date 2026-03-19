@@ -11,10 +11,9 @@ void handle_sigint(int sig)
     g_sigint_received = 1;
 
     write(1, "\n", 1);
-
     rl_on_new_line();
-    rl_replace_line("", 0);
-    rl_redisplay();
+	rl_replace_line("", 0);
+
 }
 
 void	setup_signals_prompt(void)
@@ -34,8 +33,6 @@ void handle_sigint_heredoc(int sig)
 	(void)sig;
 	g_sigint_received = 1;
 	write(1, "\n", 1);
-	rl_replace_line("", 0);
-	rl_done = 1;
 }
 
 void	setup_signals_heredoc(void)
@@ -272,12 +269,12 @@ static char	*read_full_command(void)
 		if (!full_line)
 		{
 			status = read_prompt_line("minishell$ ", &line);
-			//printf("DEBUG: read_prompt_line minishell devuelve cmds = %p\n", status);
+			printf("DEBUG: read_prompt_line minishell devuelve cmds = %p\n", status);
 		}
 		else
 		{
 			status = read_prompt_line("> ", &line);
-			//printf("DEBUG: read_prompt_line > devuelve cmds = %p\n", status);
+			printf("DEBUG: read_prompt_line > devuelve cmds = %p\n", status);
 		}
 		if (status == -1)
 		{
@@ -337,19 +334,28 @@ int	main(int argc, char **argv, char **envp)
 	{
 		//write(2, "DEBUG: antes de parsear\n", 24);
 		line = read_full_command();
-		//printf("DEBUG: despues de parsear\n");
-		if (g_sigint_received)
+		printf("DEBUG: despues de parsear\n");
+		/*if (g_sigint_received)
 		{
-			//printf("DEBUG: Ctrl+C detectado → salto iteración\n");
+			printf("DEBUG: Ctrl+C detectado → salto iteración\n");
 			g_sigint_received = 0;
 			free(line);
 			continue;
-		}
+		}*/
 		
 		if (!line)
 		{
+			if (g_sigint_received)
+			{
+				g_sigint_received = 0;
+
+				
+				rl_redisplay();
+				continue;
+			}
+
 			printf("exit\n");
-			break ;
+			break;
 		}
 		
 		if (line[0] == '\0' || is_only_spaces(line))
@@ -364,10 +370,8 @@ int	main(int argc, char **argv, char **envp)
 		{
 			if (g_sigint_received)
 			{
-				//printf("DEBUG: heredoc cancelado → no ejecutar\n");
-				rl_replace_line("", 0);
-				rl_on_new_line();
-				rl_redisplay();
+				printf("DEBUG: heredoc cancelado → no ejecutar\n");
+				
 				g_sigint_received = 0;
 				cmd_list_destroy(list);
 				intvec_destroy(&codes);

@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/19 18:17:21 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 19:22:53 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,7 +160,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	int		**arr_fds;
 	t_cmdnode *data_tmp;
 
-	//printf("DEBUG: entrando execute_cmds\n");
+	printf("DEBUG: entrando execute_cmds\n");
 	len = 0;
 	i = 0;
 	last_exit_status = 0;
@@ -172,7 +172,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		len++;
 		data_tmp = data_tmp->next;
 	}
-	//printf("len is %d\n", len);
+	printf("len is %d\n", len);
 	if (len > 0) // added this...in those cases where cmd is equal == 0
 	{
 		arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
@@ -316,7 +316,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		
 		//ejecutar
 		int	return_value;
-		//printf("DEBUG: antes de execute_cmds\n");
+		printf("DEBUG: antes de execute_cmds\n");
 		return_value = 0;
 		if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
 			return_value = builtin_echo(data_tmp->phrase);
@@ -439,7 +439,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				// 4th: executes the command:
 				if (cmd_path != NULL && args != NULL)
 				{
-					//printf("DEBUG: ejecutando comando\n");
+					printf("DEBUG: ejecutando comando\n");
 					if (execve(cmd_path, args, envp) < 0)
 					{
 						char *error;
