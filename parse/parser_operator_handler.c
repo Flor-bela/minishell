@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 20:51:21 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 23:18:31 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,35 @@ static char	*get_redir_target(const char *line, size_t *i, char **env)
 	expanded = expand_env_vars(target, env);
 	free(target);
 	return (expanded);
+}
+
+void	redir_add_back(t_list_red **lst, char *content, int doble)
+{
+	t_list_red	*new;
+	t_list_red	*tmp;
+
+	if (!content)
+		return ;
+
+	new = malloc(sizeof(t_list_red));
+	if (!new)
+		return ;
+
+	new->content = content;
+	new->doble = doble;
+	new->next = NULL;
+
+	if (*lst == NULL)
+	{
+		*lst = new;
+		return ;
+	}
+
+	tmp = *lst;
+	while (tmp->next != NULL)
+		tmp = tmp->next;
+
+	tmp->next = new;
 }
 
 static int	handle_pipe(t_parser *p)
@@ -74,6 +103,7 @@ static int	handle_redirection(const char *line, t_parser *p, char **env)
 	free(target);
 	return (0);
 }
+
 
 int	handle_operator(const char *line, t_parser *p,
 	t_intvec *codes, char **env)

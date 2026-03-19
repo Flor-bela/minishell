@@ -13,6 +13,8 @@ copiaMinishell/
 │   ├── is_built_in.c
 │   └── strchr_modif.c
 ├── ft_utils
+│   ├── ft_atoi.c
+│   ├── ft_isdigit.c
 │   ├── ft_itoa.c
 │   ├── ft_lstadd_back.c
 │   ├── ft_lstnew.c
@@ -49,6 +51,609 @@ copiaMinishell/
 └── minishell.h
 ```
 
+### `execution/execution.c`
+
+```cpp
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   execution.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
+/*   Updated: 2026/03/19 23:55:51 by oscar            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../minishell.h"
+#include "../built_ins/provisionaryFunctions.h"
+
+static void	error_fork(char **envp)
+{
+	perror("minishell: fork"); // probar
+	ft_free_malloc(); // ??
+	change_exit_value("1", &envp);
+	exit(1);
+}
+
+static void	error_pipe(char **envp)
+{
+	perror("minishell: pipe"); // probar
+	ft_free_malloc(); // ??
+	change_exit_value("1", &envp);
+	exit(1);
+}
+
+ 
+static void	error_fd_file(char *name_infile, char **envp)
+{
+	char *error;
+	
+	error = ft_strjoin_modif("minishell: ", name_infile);
+	perror(error);
+	ft_free_malloc();
+	change_exit_value("1", &envp);
+	exit(1);
+}
+
+
+char	**get_args(t_list	*phrase)
+{
+	//1st count how many arguments we have (t_list->content)
+	t_list	*tmp;
+	int		args_count;
+	char	**args;
+	int		i;
+
+	args_count = 0;
+	i = 0;
+	args = NULL;
+	tmp = phrase;
+	while (tmp != NULL)
+	{
+		args_count++;
+		tmp = tmp->next;
+	}
+	args = (char **)ft_malloc(sizeof(char *) * (args_count + 2)); // + 2 para añadir el array con nombre del comando (args[0]) y el ultimo array que es el del caracter nulo
+	tmp = phrase;
+	while (i < args_count)
+	{
+		args[i + 1] = tmp->content;
+		tmp = tmp->next;
+		i++;
+	}
+	args[args_count + 1] = NULL;
+	return (args);
+}
+
+static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int **arr_fds, int len) // adds args[0] has the name of the command and gets command path
+{
+	char	*cmd_name;
+	char	*cmd_path;
+	
+	cmd_path = NULL;
+	if (find_chr(data_cmd, '/') == 1) // if it has / in the name of the command...
+	{
+		cmd_name = strchr_modif(data_cmd, '/');
+		cmd_path = data_cmd;
+		if (access(cmd_path, F_OK) != 0)
+		{
+			char *error;
+			
+			error = ft_strjoin_modif("minishell: ", data_cmd);
+			perror(error);
+			close_fds(arr_fds, len);
+			ft_free_malloc();
+			change_exit_value("127", &envp);
+			exit(127);
+		}
+		if (access(cmd_path, X_OK) != 0)
+		{
+			char *error;
+			
+			error = ft_strjoin_modif("minishell: ", data_cmd);
+			perror(error);
+			close_fds(arr_fds, len);
+			ft_free_malloc();
+			change_exit_value("126", &envp);
+			exit(126);
+		}
+		//if (access(cmd_path, X_OK) == 0)
+		args[0] = cmd_name;
+
+	}
+	else //-> si no tiene / entonces busca el path del comando y añade el nombre directamente a args[0];
+	{
+		cmd_path = get_cmd_path(envp, data_cmd, arr_fds, len);
+		args[0] = data_cmd;
+	}
+	return (cmd_path);
+}
+
+static void handle_infile_redirections(t_list_red **tmp_infiles,
+    int **arr_fds, int len, char **envp)
+{
+    int fd_file;
+
+    while (*tmp_infiles != NULL)
+    {
+        if ((*tmp_infiles)->doble == 1)
+        {
+            // 🔥 HEREDOC
+            char *content = heredoc_with_fork((*tmp_infiles)->content, 1, envp);
+
+            if (!content)
+                exit(1);
+
+            int pipefd[2];
+            pipe(pipefd);
+
+            write(pipefd[1], content, ft_strlen(content));
+            close(pipefd[1]);
+
+            dup2(pipefd[0], STDIN_FILENO);
+            close(pipefd[0]);
+
+            free(content);
+        }
+        else
+        {
+            // 🔥 ARCHIVO NORMAL
+            fd_file = open((*tmp_infiles)->content, O_RDONLY);
+            if (fd_file == -1)
+            {
+                close_fds(arr_fds, len);
+                error_fd_file((*tmp_infiles)->content, envp);
+            }
+            dup2(fd_file, STDIN_FILENO);
+            close(fd_file);
+        }
+
+        *tmp_infiles = (*tmp_infiles)->next;
+    }
+}
+
+static void	handle_outfile_redirections(t_list_red **tmp_outfiles,
+	int **arr_fds, int len, char **envp)
+{
+	int	fd_file;
+
+	while (*tmp_outfiles != NULL)
+	{
+		if ((*tmp_outfiles)->doble == 0)
+		{
+			// >
+			fd_file = open((*tmp_outfiles)->content,
+				O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		}
+		else
+		{
+			// >>
+			fd_file = open((*tmp_outfiles)->content,
+				O_WRONLY | O_CREAT | O_APPEND, 0666);
+		}
+
+		if (fd_file == -1)
+		{
+			close_fds(arr_fds, len);
+			error_fd_file((*tmp_outfiles)->content, envp);
+		}
+
+		dup2(fd_file, STDOUT_FILENO);
+		close(fd_file);
+
+		*tmp_outfiles = (*tmp_outfiles)->next;
+	}
+}
+
+int	execute_cmds(t_cmdnode **data, char **envp)
+{
+	pid_t	*pids;
+	char	**args;
+	char	*cmd_path;
+	int		len;
+	int		i;
+	int		last_exit_status;
+	int		**arr_fds;
+	t_cmdnode *data_tmp;
+
+	//printf("DEBUG: entrando execute_cmds\n");
+	len = 0;
+	i = 0;
+	last_exit_status = 0;
+	data_tmp = *data;
+	pids = NULL;
+	arr_fds = NULL;
+	//while (data_tmp && data_tmp->cmd != NULL) // data && data_tmp->cmd anterior
+	while (data_tmp != NULL)
+	{
+		len++;
+		data_tmp = data_tmp->next;
+	}
+	//printf("len is %d\n", len);
+	//if (len > 0) // added this...in those cases where cmd is equal == 0
+	//printf("len is %d\n", len);
+	if (len > 1) // i) added this...in those cases where cmd is equal == 0 ii)len > 0 ->
+	{
+		arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
+		while (i < len - 1)
+		{
+			arr_fds[i] = (int *)ft_malloc(sizeof(int) * 2); 
+			if (pipe(arr_fds[i]) == -1)
+				error_pipe(envp);
+			i++;
+		}
+	}
+	i = 0;
+	data_tmp = *data;
+	// Only redirections without commands and without pipes!
+	if (len == 1 && (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0'))// (if (len == 0)) cambie esto porque solo con infiles o outfiles, len ya va a ser == 1!!!
+	{
+		// infiles < 
+		int	saved_stdin;
+		int saved_stdout;
+
+		saved_stdin = -1;
+		saved_stdout = -1;
+		if (data_tmp->infiles != NULL)
+		{
+			t_list_red	*tmp_infiles;
+			int	fd_file;
+			
+			tmp_infiles = data_tmp->infiles;
+			saved_stdin = dup(STDIN_FILENO);
+			while (tmp_infiles != NULL)
+			{
+				if(tmp_infiles->doble=1)
+				{
+					tmp_infiles = tmp_infiles->next;
+				}else{
+					fd_file = open(tmp_infiles->content, O_RDONLY);
+					if (fd_file == -1)
+					{
+						char *error;
+						
+						error = ft_strjoin_modif("minishell: ", (char *)tmp_infiles->content);
+						perror(error);
+						return (1);
+					}
+					dup2(fd_file, STDIN_FILENO);
+					close(fd_file);
+					tmp_infiles = tmp_infiles->next;	
+				}
+			}
+		}
+		// outfiles >
+		if (data_tmp->outfiles != NULL)
+		{
+			t_list_red	*tmp_outfiles;
+			int	fd_file;
+			
+			tmp_outfiles = data_tmp->outfiles;
+			saved_stdout = dup(STDOUT_FILENO);
+			while (tmp_outfiles != NULL)
+			{
+				if (tmp_outfiles->doble == 0)
+					fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+				if (tmp_outfiles->doble == 1)
+					fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_APPEND, 0666);
+				if (fd_file == -1)
+				{
+					char *error;
+					
+					error = ft_strjoin_modif("minishell: ", (char *)tmp_outfiles->content);
+					perror(error);
+					return (1);
+				}
+				dup2(fd_file, STDOUT_FILENO);
+				close (fd_file);
+				tmp_outfiles = tmp_outfiles->next;
+			}
+		}
+		///// 
+		if (saved_stdin != -1)
+		{
+			dup2(saved_stdin, STDIN_FILENO);
+			close(saved_stdin);
+		}
+		if (saved_stdout != -1)
+		{
+			dup2(saved_stdout, STDOUT_FILENO);
+			close(saved_stdout);
+		}
+		return (0); // si se ejecuta bien???
+	}
+	
+	// Only one command -> built-in!!!
+	if (len == 1 && (is_built_in(data_tmp->cmd) == 1))
+	{
+		// infiles <
+		t_list_red	*tmp_infiles;
+		int 		saved_stdin;
+		
+		saved_stdin = -1;
+		tmp_infiles = data_tmp->infiles;
+		if (tmp_infiles != NULL)
+		{
+			int	fd_file;
+			
+			saved_stdin = dup(STDIN_FILENO);
+			while (tmp_infiles != NULL)
+			{
+				fd_file = open(tmp_infiles->content, O_RDONLY);
+				if (fd_file == -1)
+				{
+					close_fds(arr_fds, len);
+					error_fd_file(tmp_infiles->content, envp);
+				}
+				dup2(fd_file, STDIN_FILENO);
+				close(fd_file);
+				tmp_infiles = tmp_infiles->next;
+			}
+		}
+		// outfiles >
+		t_list_red	*tmp_outfiles;
+		int	saved_stdout;
+
+		saved_stdout = -1;
+		tmp_outfiles = data_tmp->outfiles;
+		if (tmp_outfiles != NULL)
+		{
+			int	fd_file;
+			
+			saved_stdout = dup(STDOUT_FILENO);
+			while (tmp_outfiles != NULL)
+			{
+				if (tmp_outfiles->doble == 0)
+					fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+				if (tmp_outfiles->doble == 1)
+					fd_file = open(tmp_outfiles->content, O_WRONLY | O_CREAT | O_APPEND, 0666);
+				if (fd_file == -1)
+				{
+					close_fds(arr_fds, len);
+					error_fd_file(tmp_outfiles->content, envp);
+				}
+				dup2(fd_file, STDOUT_FILENO);
+				close (fd_file);
+				tmp_outfiles= tmp_outfiles->next;
+			}
+		}
+		
+		//ejecutar
+		int	return_value;
+		//printf("DEBUG: antes de execute_cmds\n");
+		return_value = 0;
+		if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
+			return_value = builtin_echo(data_tmp->phrase);
+		//else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
+		//	return_value = builtin_cd(data_tmp->phrase, envp);
+		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
+			return_value = builtin_pwd();
+		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
+			return_value = builtin_export(data_tmp->phrase, &envp);
+		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "unset", 5) == 0 && data_tmp->cmd[5] == '\0'))
+			return_value = builtin_unset(data_tmp->phrase, &envp);
+		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
+			return_value = builtin_env(envp);
+		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
+			return_value = builtin_exit(data_tmp->phrase, 0);
+		
+		if (saved_stdin != -1)
+		{
+			dup2(saved_stdin, STDIN_FILENO);
+			close(saved_stdin);
+		}
+		if (saved_stdout != -1)
+		{
+			dup2(saved_stdout, STDOUT_FILENO);
+			close(saved_stdout);
+		}
+		return(return_value);
+	}
+	
+	else //// Pipeline!!!! 
+	{
+		pids = ft_malloc(sizeof(pid_t) * len); // si es solo un y built-in no deberia crear pids....(quizás esto lo pongo dentro del loop???)
+		
+		signal(SIGINT, handle_sigint);
+		signal(SIGQUIT, SIG_IGN);
+
+		while (i < len) // ir executando este loop para crear los procesos y ejecutar los comandos
+		{
+			pids[i] = fork();
+			if (pids[i] == -1)
+				error_fork(envp);
+			else if (pids[i] == 0) // in child process
+			{
+
+				signal(SIGINT, SIG_DFL);
+				signal(SIGQUIT, SIG_DFL);
+
+				// 1st count how many arguments we have:
+				if (data_tmp->cmd != NULL)
+					args = get_args(data_tmp->phrase);
+				else
+					args = NULL;
+				// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
+				if (data_tmp->cmd != NULL)
+					cmd_path = get_cmd_name_and_path(args, envp, data_tmp->cmd, arr_fds, len);
+				else
+					cmd_path = NULL;
+				// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
+				if (i == 0) // first command and only one command
+				{
+					// infiles <
+					t_list_red	*tmp_infiles;
+
+					tmp_infiles = data_tmp->infiles;
+					if (tmp_infiles != NULL)
+						handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
+
+					// outfiles >
+					t_list_red	*tmp_outfiles;
+
+					tmp_outfiles = data_tmp->outfiles;
+					if (tmp_outfiles != NULL)
+						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
+					if (len > 1 && data_tmp->outfiles == NULL) // si existe pipe escribe en el pipe, si no que escriba en el terminal
+						dup2(arr_fds[0][1], STDOUT_FILENO);
+				}
+				else if (i != 0 && i == (len - 1)) // last command (i no puede ser 0 si no va a repetirse con el primero comando)
+				{
+					// infiles <
+					t_list_red	*tmp_infiles;
+
+					tmp_infiles = data_tmp->infiles;
+					if (tmp_infiles != NULL)
+						handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
+					else // only reads from pipe if there are no infiles
+						dup2(arr_fds[i - 1][0], STDIN_FILENO); // lee del pipe
+					// escribe directamente en STDOUT -> o sea la terminal
+					
+					//outfiles >
+					t_list_red	*tmp_outfiles;
+
+					tmp_outfiles = data_tmp->outfiles;
+					if (tmp_outfiles != NULL)
+						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
+				}
+				else // in the middle
+				{
+					t_list_red	*tmp_infiles;
+
+					tmp_infiles = data_tmp->infiles;
+					if (tmp_infiles != NULL)
+						handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
+					else
+					{
+						dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the reading part of the previous pipe as standard input
+						/* if (data_tmp->outfiles == NULL) // writes to pipe only if outfile doesn´t exist
+							dup2(arr_fds[i][1], STDOUT_FILENO); // write in the writing part of the next pipe. */ // creo que esto está duplicado...
+					}
+					//outfiles >
+					t_list_red	*tmp_outfiles;
+
+					tmp_outfiles = data_tmp->outfiles;
+					if (tmp_outfiles != NULL)
+						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
+					else
+						dup2(arr_fds[i][1], STDOUT_FILENO);
+				}
+				close_fds(arr_fds, len);
+
+
+				// 🔥 FIX: no ejecutar si no hay comando (caso << sin cmd)
+				if (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0')
+				{
+					ft_free_malloc();
+					exit(0);
+				}
+				
+
+				int	return_value;
+				
+				return_value = 0;
+				// 4th: executes the command:
+			
+				if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
+					return_value = builtin_echo(data_tmp->phrase);
+			//	else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
+				//	return_value = builtin_cd(data_tmp->phrase, envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
+					return_value = builtin_pwd();
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
+					return_value = builtin_export(data_tmp->phrase, &envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "unset", 5) == 0 && data_tmp->cmd[5] == '\0'))
+					return_value = builtin_unset(data_tmp->phrase, &envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
+					return_value = builtin_env(envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
+					return_value = builtin_exit(data_tmp->phrase, 1);
+				
+				else // execute command:
+				{
+					//printf("DEBUG: ejecutando comando\n");
+			//		if (execve(cmd_path, args, envp) < 0)
+					if (data_tmp->cmd != NULL)
+						args = get_args(data_tmp->phrase);
+					else
+						args = NULL;
+					// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
+					if (data_tmp->cmd != NULL)
+						cmd_path = get_cmd_name_and_path(args, envp, data_tmp->cmd, arr_fds, len);
+					else
+						cmd_path = NULL;
+					if ((cmd_path != NULL && args != NULL))
+					{
+						// 1st count how many arguments we have:
+						
+						if (execve(cmd_path, args, envp) < 0)
+						{
+							char *error;
+						
+							error = ft_strjoin_modif("minishell: ", cmd_path);
+							perror(error);
+							if (errno == EACCES)
+							{	
+								ft_free_malloc(); // ??
+								change_exit_value("126", &envp);
+								exit(126);
+							}
+							else if (errno == ENOENT)
+							{
+								ft_free_malloc(); // ??
+								change_exit_value("127", &envp);
+								exit(127);
+							}
+							else
+							{
+								ft_free_malloc(); // ??
+								change_exit_value("126", &envp);
+								exit(126);
+							}
+						}
+					}
+				}
+				//close(arr_fds, len);
+				ft_free_malloc();
+				exit(return_value);
+			}
+			i++;
+			data_tmp = data_tmp->next;
+		}
+		
+		// Main:
+		close_fds(arr_fds, len);
+		i = 0;
+		while (i < len)
+		{
+			waitpid(pids[i], &last_exit_status, 0);
+			i++;
+		}
+		signal(SIGINT, handle_sigint);
+		signal(SIGQUIT, SIG_IGN);
+		write(1, "\n", 1);
+	}
+	int signal_code;
+	
+	signal_code = 0;
+	if (WIFEXITED(last_exit_status))
+		last_exit_status = WEXITSTATUS(last_exit_status);
+	else if (WIFSIGNALED(last_exit_status))
+	{
+		signal_code = WTERMSIG(last_exit_status);
+		if (signal_code == SIGINT)
+			write(1, "\n", 1);
+		else if (signal_code == SIGQUIT)
+			write(1, "Quit (core dumped)\n", 20);
+		last_exit_status = signal_code + 128;
+	}
+	return (last_exit_status);
+}
+
+```
+
 ### `built_ins/builtin_cd.c`
 
 ```cpp
@@ -60,37 +665,89 @@ copiaMinishell/
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 12:44:37 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/18 11:31:33 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 22:39:12 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "provisionaryFunctions.h"
 
-/*int	builtin_cd(char **args, **envp)
+//int	builtin_cd(char **args, **envp)
+ 
+static int	update_env(char **envp, char *key, char *path)
 {
-	char *path;
+	size_t	i;
+	size_t	len;
+	char	*new_entry;
+	char	*final_entry;
 
-	path = NULL;
+	if (envp == NULL || key == NULL || path == NULL)
+		return (1);
+
+	len = ft_strlen(key);
+	i = 0;
+	while (envp[i] != NULL)
+	{
+		if (ft_strncmp(envp[i], key, len) == 0 && envp[i][len] == '=')
+		{
+			free(envp[i]);
+			new_entry = ft_strjoin(key, "=");
+			final_entry = ft_strjoin(new_entry, path);
+			free(new_entry);
+			envp[i] = final_entry;
+			return (0);
+		}
+		i++;
+	}
+	return (0);
+}
+
+int	builtin_cd(t_list *args, char **envp)
+{
+	char	*path;
+	char	*oldpwd;
+	char	*newpwd;
+
+	oldpwd = NULL;
+	newpwd = NULL;
+	if (args != NULL && args->next != NULL)
+	{
+		write(2, "minishell: cd: too many arguments\n", 35);
+		return (1);
+	}
+	oldpwd = getcwd(NULL, 0);
+	if (envp == NULL)
+		return (1);
+	if (oldpwd == NULL)
+		oldpwd = ft_strdup("");
 	if (args == NULL)
 	{
-		path = getenv("HOME");
+		path = get_env_value(envp, "HOME");
 		if (path == NULL)
 		{
-			write(2, "minishell: cd: HOME not set\n", 28); // not sure about his error message
+			write(2, "minishell: cd: HOME not set\n", 29);
+			free(oldpwd);
 			return (1);
 		}
 	}
-	// else // too many arguments when??? -> check this
-		// write(2, "minishell: cd: too many arguments\n", 34);
+	else
+		path = args->content;
 	if (chdir(path) != 0)
 	{
 		perror("minishell: cd");
+		free(oldpwd);
 		return (1);
 	}
-	// update PWD and OLDPWD -> ver esto!!!
-
+	newpwd = getcwd(NULL, 0);
+	if (newpwd == NULL)
+		newpwd = ft_strdup("");
+	update_env(envp, "OLDPWD", oldpwd);
+	update_env(envp, "PWD", newpwd);
+	free(oldpwd);
+	free(newpwd);
 	return (0);
-}*/
+}
+
+
 
 ```
 
@@ -105,7 +762,7 @@ copiaMinishell/
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/18 11:31:41 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 22:50:12 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,10 +784,12 @@ int		builtin_pwd(void);
 int		builtin_export(t_list *args, char ***envp);
 int		builtin_unset(t_list *args, char ***envp);
 int		builtin_env(char **envp);
-int		builtin_exit(t_list *args);
-//int		builtin_cd(char **args, **envp);
+int		builtin_exit(t_list *args, int in_child);
+int		builtin_cd(t_list *args, char **envp);
 
 void	change_exit_value(char *args, char ***envp);
+char	*heredoc_with_fork(const char *delimiter,
+			int expand_vars, char **env);
 
 #endif
 ```
@@ -146,7 +805,7 @@ void	change_exit_value(char *args, char ***envp);
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 20:59:40 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 23:25:03 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -603,7 +1262,7 @@ static char	*expand_heredoc_line(const char *line, char **shell_env)
 	return (res);
 }
 
-static int	process_heredoc_line(char **line, char **content,
+/*static int	process_heredoc_line(char **line, char **content,
 	int expand_vars, char **shell_env)
 {
 	char	*tmp;
@@ -626,7 +1285,7 @@ static int	process_heredoc_line(char **line, char **content,
 		return (1);
 	*content = tmp;
 	return (0);
-}
+}*/
 
 static char *get_next_line(int fd)
 {
@@ -738,11 +1397,6 @@ char	*read_fd_all(int fd)
 	while (1)
 	{
 		bytes = read(fd, buffer, 1024);
-		if (!bytes)
-		{
-			//printf("DEBUG: read_fd_all devolvió NULL\n");
-			return (NULL);
-		}
 		if (bytes < 0)
 		{
 			free(result);
@@ -971,10 +1625,72 @@ int	builtin_env(char **envp)
 	return (0);
 }
 
-int	builtin_exit(t_list *args)
+int	builtin_exit(t_list *args, int in_child) // todos tienen aunque sea error que hacer exit!!!
 {
-	(void)args;
-	return (-11);
+	if (args == NULL) // si sale deberia liberar todo aqui!!!
+		exit (0); ///asi por ahora
+	
+	int	i;
+	t_list	*tmp;
+	
+	i = 0;
+	tmp = args;
+	while (tmp != NULL)
+	{
+		if (tmp->content != NULL)
+			i++;
+		tmp = tmp->next;
+	}
+	// primero ver si son non-digit!!!! da ese error antes de que son muchos argumentos!
+	char	*str;
+	int		j;
+	int		flag;
+
+	tmp = args;
+	str = tmp->content;
+	j = 0;
+	flag = 0;
+
+	while (str[j] != '\0')
+	{
+		if (str[0] == '-' || str[0] == '+') // si es negativo continuar
+			j++;
+		if ((ft_isdigit(str[j]) == 0)) // significa que no es digito!!!
+		{
+			flag = 1;
+			break;
+		}
+		j++;
+	}
+	if (flag == 1) // error numeric argument required -> return (2); -> primero error
+	{
+		char *error;
+		if (in_child != 1)
+			write(1, "exit\n", 6);
+		error = ft_strjoin_modif("minishell: exit: ", str);
+		error = ft_strjoin_modif(error, ": numeric argument required\n");
+		write(2, error, ft_strlen(error));
+		
+		// si sale deberia liberar todo aqui!!!
+		exit (2); /// aqui si sale!
+	} 
+ 	if (i > 1)
+	{
+		if (in_child != 1)
+			write(1, "exit\n", 6);
+		write(2, "minishell: exit: too many arguments\n", 37);
+		return (1);
+	}
+	
+	// si llega aqui es que no tuvo errores antes!
+	int	num;
+	
+	num = ft_atoi((const char*)str);
+	if (num < 0 || num > 255)
+		num  = num % 256;
+	if (in_child != 1)
+			write(1, "exit\n", 6);
+	exit (num);
 }
 
 void	change_exit_value(char *value, char ***envp)
@@ -1008,7 +1724,7 @@ void	change_exit_value(char *value, char ***envp)
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/02 17:56:01 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/17 23:42:58 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/18 19:28:55 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1042,15 +1758,17 @@ void	close_fds(int **arr_fds, int len_cmds)
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/19 22:00:48 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 23:55:51 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
+#include "../built_ins/provisionaryFunctions.h"
 
 static void	error_fork(char **envp)
 {
 	perror("minishell: fork"); // probar
+	ft_free_malloc(); // ??
 	change_exit_value("1", &envp);
 	exit(1);
 }
@@ -1058,6 +1776,7 @@ static void	error_fork(char **envp)
 static void	error_pipe(char **envp)
 {
 	perror("minishell: pipe"); // probar
+	ft_free_malloc(); // ??
 	change_exit_value("1", &envp);
 	exit(1);
 }
@@ -1069,6 +1788,7 @@ static void	error_fd_file(char *name_infile, char **envp)
 	
 	error = ft_strjoin_modif("minishell: ", name_infile);
 	perror(error);
+	ft_free_malloc();
 	change_exit_value("1", &envp);
 	exit(1);
 }
@@ -1120,6 +1840,7 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 			error = ft_strjoin_modif("minishell: ", data_cmd);
 			perror(error);
 			close_fds(arr_fds, len);
+			ft_free_malloc();
 			change_exit_value("127", &envp);
 			exit(127);
 		}
@@ -1130,6 +1851,7 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 			error = ft_strjoin_modif("minishell: ", data_cmd);
 			perror(error);
 			close_fds(arr_fds, len);
+			ft_free_malloc();
 			change_exit_value("126", &envp);
 			exit(126);
 		}
@@ -1238,14 +1960,17 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	last_exit_status = 0;
 	data_tmp = *data;
 	pids = NULL;
+	arr_fds = NULL;
 	//while (data_tmp && data_tmp->cmd != NULL) // data && data_tmp->cmd anterior
 	while (data_tmp != NULL)
 	{
 		len++;
 		data_tmp = data_tmp->next;
 	}
-	printf("len is %d\n", len);
-	if (len > 0) // added this...in those cases where cmd is equal == 0
+	//printf("len is %d\n", len);
+	//if (len > 0) // added this...in those cases where cmd is equal == 0
+	//printf("len is %d\n", len);
+	if (len > 1) // i) added this...in those cases where cmd is equal == 0 ii)len > 0 ->
 	{
 		arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
 		while (i < len - 1)
@@ -1259,7 +1984,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	i = 0;
 	data_tmp = *data;
 	// Only redirections without commands and without pipes!
-	if (len == 1 && data_tmp->cmd == NULL) // (if (len == 0)) cambie esto porque solo con infiles o outfiles, len ya va a ser == 1!!!
+	if (len == 1 && (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0'))// (if (len == 0)) cambie esto porque solo con infiles o outfiles, len ya va a ser == 1!!!
 	{
 		// infiles < 
 		int	saved_stdin;
@@ -1276,18 +2001,23 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 			saved_stdin = dup(STDIN_FILENO);
 			while (tmp_infiles != NULL)
 			{
-				fd_file = open(tmp_infiles->content, O_RDONLY);
-				if (fd_file == -1)
+				if(tmp_infiles->doble=1)
 				{
-					char *error;
-					
-					error = ft_strjoin_modif("minishell: ", (char *)tmp_infiles->content);
-					perror(error);
-					return (1);
+					tmp_infiles = tmp_infiles->next;
+				}else{
+					fd_file = open(tmp_infiles->content, O_RDONLY);
+					if (fd_file == -1)
+					{
+						char *error;
+						
+						error = ft_strjoin_modif("minishell: ", (char *)tmp_infiles->content);
+						perror(error);
+						return (1);
+					}
+					dup2(fd_file, STDIN_FILENO);
+					close(fd_file);
+					tmp_infiles = tmp_infiles->next;	
 				}
-				dup2(fd_file, STDIN_FILENO);
-				close(fd_file);
-				tmp_infiles = tmp_infiles->next;
 			}
 		}
 		// outfiles >
@@ -1393,7 +2123,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
 			return_value = builtin_echo(data_tmp->phrase);
 		//else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
-	//		return_value = builtin_cd(data_tmp->phrase->content);
+		//	return_value = builtin_cd(data_tmp->phrase, envp);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
 			return_value = builtin_pwd();
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
@@ -1403,7 +2133,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
 			return_value = builtin_env(envp);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
-			return_value = builtin_exit(data_tmp->phrase);
+			return_value = builtin_exit(data_tmp->phrase, 0);
 		
 		if (saved_stdin != -1)
 		{
@@ -1507,34 +2237,83 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 						dup2(arr_fds[i][1], STDOUT_FILENO);
 				}
 				close_fds(arr_fds, len);
+
+
+				// 🔥 FIX: no ejecutar si no hay comando (caso << sin cmd)
+				if (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0')
+				{
+					ft_free_malloc();
+					exit(0);
+				}
 				
+
+				int	return_value;
+				
+				return_value = 0;
 				// 4th: executes the command:
-				if (cmd_path != NULL && args != NULL)
+			
+				if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
+					return_value = builtin_echo(data_tmp->phrase);
+			//	else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
+				//	return_value = builtin_cd(data_tmp->phrase, envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
+					return_value = builtin_pwd();
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
+					return_value = builtin_export(data_tmp->phrase, &envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "unset", 5) == 0 && data_tmp->cmd[5] == '\0'))
+					return_value = builtin_unset(data_tmp->phrase, &envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
+					return_value = builtin_env(envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
+					return_value = builtin_exit(data_tmp->phrase, 1);
+				
+				else // execute command:
 				{
 					//printf("DEBUG: ejecutando comando\n");
-					if (execve(cmd_path, args, envp) < 0)
+			//		if (execve(cmd_path, args, envp) < 0)
+					if (data_tmp->cmd != NULL)
+						args = get_args(data_tmp->phrase);
+					else
+						args = NULL;
+					// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
+					if (data_tmp->cmd != NULL)
+						cmd_path = get_cmd_name_and_path(args, envp, data_tmp->cmd, arr_fds, len);
+					else
+						cmd_path = NULL;
+					if ((cmd_path != NULL && args != NULL))
 					{
-						char *error;
+						// 1st count how many arguments we have:
 						
-						error = ft_strjoin_modif("minishell: ", cmd_path);
-						perror(error);
-						if (errno == EACCES)
-						{	
-							change_exit_value("126", &envp);
-							exit(126);
-						}
-						else if (errno == ENOENT)
+						if (execve(cmd_path, args, envp) < 0)
 						{
-							change_exit_value("127", &envp);
-							exit(127);
+							char *error;
+						
+							error = ft_strjoin_modif("minishell: ", cmd_path);
+							perror(error);
+							if (errno == EACCES)
+							{	
+								ft_free_malloc(); // ??
+								change_exit_value("126", &envp);
+								exit(126);
+							}
+							else if (errno == ENOENT)
+							{
+								ft_free_malloc(); // ??
+								change_exit_value("127", &envp);
+								exit(127);
+							}
+							else
+							{
+								ft_free_malloc(); // ??
+								change_exit_value("126", &envp);
+								exit(126);
+							}
 						}
-						else
-						{
-							change_exit_value("126", &envp);
-							exit(126);}
 					}
 				}
-				exit(0);
+				//close(arr_fds, len);
+				ft_free_malloc();
+				exit(return_value);
 			}
 			i++;
 			data_tmp = data_tmp->next;
@@ -1552,7 +2331,21 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		signal(SIGQUIT, SIG_IGN);
 		write(1, "\n", 1);
 	}
-	return (WEXITSTATUS(last_exit_status));
+	int signal_code;
+	
+	signal_code = 0;
+	if (WIFEXITED(last_exit_status))
+		last_exit_status = WEXITSTATUS(last_exit_status);
+	else if (WIFSIGNALED(last_exit_status))
+	{
+		signal_code = WTERMSIG(last_exit_status);
+		if (signal_code == SIGINT)
+			write(1, "\n", 1);
+		else if (signal_code == SIGQUIT)
+			write(1, "Quit (core dumped)\n", 20);
+		last_exit_status = signal_code + 128;
+	}
+	return (last_exit_status);
 }
 
 ```
@@ -1605,7 +2398,7 @@ int	find_chr(const char *s, int c)
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/17 23:53:03 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/19 12:08:29 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1672,6 +2465,7 @@ char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len)
 		error = ft_strjoin_modif(error, ": command not found\n");
 		write(2, error, ft_strlen(error));
 		close_fds(arr_fds, len);
+		ft_free_malloc();
 		change_exit_value("127", &envp);
 		exit(127);
 	}
@@ -1758,6 +2552,78 @@ char	*strchr_modif(const char *s, int c)
 	if (ch == '\0')
 		return ((char *)&s[i]);
 	return (NULL);
+}
+
+```
+
+### `ft_utils/ft_atoi.c`
+
+```cpp
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_atoi.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/05/08 14:00:25 by fda-roch          #+#    #+#             */
+/*   Updated: 2026/03/19 13:43:19 by fda-roch         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../minishell.h"
+
+int	ft_atoi(const char *nptr)
+{
+	int	i;
+	int	sign;
+	int	num;
+
+	i = 0;
+	sign = 1;
+	num = 0;
+	while ((nptr[i] == 32) || (nptr[i] >= 9 && nptr[i] <= 13))
+		i++;
+	if ((nptr[i] == '+') || (nptr[i] == '-'))
+	{
+		if (nptr[i] == '-')
+			sign = -1;
+		i++;
+	}
+	while ((nptr[i] >= '0') && (nptr[i] <= '9'))
+	{
+		num = num * 10;
+		num = num + nptr[i] - '0';
+		i++;
+	}
+	return (sign * num);
+}
+
+```
+
+### `ft_utils/ft_isdigit.c`
+
+```cpp
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_isdigit.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/09 14:45:20 by fda-roch          #+#    #+#             */
+/*   Updated: 2026/03/19 13:40:17 by fda-roch         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../minishell.h"
+
+int	ft_isdigit(int c)
+{
+	if (c >= 48 && c <= 57)
+		return (2048);
+	else
+		return (0);
 }
 
 ```
@@ -2560,7 +3426,7 @@ char	*ft_strndup(const char *s, size_t n)
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:28:12 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 21:59:24 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 23:09:43 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -2637,6 +3503,7 @@ int			parser_error(t_parser *p, t_intvec *codes);
 void		finalize_pending(t_parser *p);
 int			parse_loop(const char *line, t_parser *p,
 				t_intvec *codes, char **env);
+char	*get_clean_token(const char *line, size_t *i, char **env);
 
 #endif
 ```
@@ -2746,13 +3613,13 @@ void	cmd_list_free(t_cmdnode *h)
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:03 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/17 18:14:09 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 23:13:15 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "parser.h"
 
-static char	*get_clean_token(const char *line, size_t *i, char **env)
+char	*get_clean_token(const char *line, size_t *i, char **env)
 {
 	char	*tok;
 	char	*expanded;
@@ -2903,7 +3770,7 @@ int	parse_loop(const char *line, t_parser *p,
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 18:01:22 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 20:51:21 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 22:35:42 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -3199,7 +4066,7 @@ char	*append_str_dyn(char *base, const char *add)
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:25 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 16:09:53 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 22:51:12 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -3244,7 +4111,7 @@ static t_list_red	*red_node_new(const char *s, int doble)
 	return (node);
 }
 
-static void	red_list_append(t_list_red **head, t_list_red **tail,
+/*static void	red_list_append(t_list_red **head, t_list_red **tail,
 	const char *s, int doble)
 {
 	t_list_red	*node;
@@ -3261,7 +4128,7 @@ static void	red_list_append(t_list_red **head, t_list_red **tail,
 		(*tail)->next = node;
 		*tail = node;
 	}
-}
+}*/
 
 t_list_red *red_list_push_back(t_list_red **head, const char *s, int doble)
 {
@@ -3502,7 +4369,7 @@ int	match_op(const char *s, size_t i, size_t *len, int *code)
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 20:51:21 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 23:18:31 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -3525,6 +4392,35 @@ static char	*get_redir_target(const char *line, size_t *i, char **env)
 	expanded = expand_env_vars(target, env);
 	free(target);
 	return (expanded);
+}
+
+void	redir_add_back(t_list_red **lst, char *content, int doble)
+{
+	t_list_red	*new;
+	t_list_red	*tmp;
+
+	if (!content)
+		return ;
+
+	new = malloc(sizeof(t_list_red));
+	if (!new)
+		return ;
+
+	new->content = content;
+	new->doble = doble;
+	new->next = NULL;
+
+	if (*lst == NULL)
+	{
+		*lst = new;
+		return ;
+	}
+
+	tmp = *lst;
+	while (tmp->next != NULL)
+		tmp = tmp->next;
+
+	tmp->next = new;
 }
 
 static int	handle_pipe(t_parser *p)
@@ -3571,6 +4467,7 @@ static int	handle_redirection(const char *line, t_parser *p, char **env)
 	return (0);
 }
 
+
 int	handle_operator(const char *line, t_parser *p,
 	t_intvec *codes, char **env)
 {
@@ -3581,7 +4478,6 @@ int	handle_operator(const char *line, t_parser *p,
 		return (handle_pipe(p));
 	return (handle_redirection(line, p, env));
 }
-
 ```
 
 ### `parse/parser_redir.c`
@@ -3595,7 +4491,7 @@ int	handle_operator(const char *line, t_parser *p,
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 20:51:21 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 23:54:15 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -3604,38 +4500,28 @@ int	handle_operator(const char *line, t_parser *p,
 static int	handle_heredoc(t_cmdnode *cmd,
 	const char *target, char **env)
 {
-	char	*heredoc_content;
 	char	*real_delim;
-	int		expand_vars;
+	t_list_red *node;
 
-	expand_vars = 1;
-	if (strchr(target, '\'') || strchr(target, '"'))
-		expand_vars = 0;
+	(void)env;
 
 	real_delim = remove_quotes_str(target);
 	if (!real_delim)
 		return (-1);
 
-	// 🔥 CAMBIO CLAVE
-	heredoc_content = heredoc_with_fork(real_delim, expand_vars, env);
-	//printf("DEBUG: heredoc devuelto = %p\n", heredoc_content);
-	free(real_delim);
+	// ❌ NO ejecutar heredoc aquí
+	// heredoc_with_fork(...)
 
-	if (!heredoc_content)
+	node = red_list_push_back(&cmd->infiles, real_delim, 1);
+	if (!node)
 	{
-		if (g_sigint_received)
-		{
-			//printf("DEBUG: heredoc NULL → abortando comando -1\n");
-			return (-1); // aborta parse limpio
-		}//printf("DEBUG: heredoc NULL → abortando comando NULL\n");
-		return (NULL);
+		free(real_delim);
+		return (-1);
 	}
 
-	t_list_red *node;
+	node->is_heredoc = 1;
 
-	node = red_list_push_back(&cmd->infiles, heredoc_content, 1);
-	node->is_heredoc = 1; // 🔥 ESTA ES LA LÍNEA CLAVE
-
+	free(real_delim);
 	return (0);
 }
 
@@ -3660,7 +4546,7 @@ static int	handle_pending_heredoc(t_parser *p,
 	free(real_delim);
 
 	if (!heredoc_content)
-		return (NULL);
+		return (0);
 
 	red_list_push_back(&p->pending_in, heredoc_content, 1);
 	free(heredoc_content);
@@ -3839,6 +4725,131 @@ void	update_token_quote(const char *s, size_t *i,
 
 ```
 
+### `minishell.h`
+
+```cpp
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   minishell.h                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
+/*   Updated: 2026/03/19 22:47:49 by oscar            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#ifndef MINISHELL_H
+# define MINISHELL_H
+
+# include <stdio.h>
+# include <stdlib.h>
+# include <unistd.h>
+# include <string.h>
+# include <errno.h>
+# include <fcntl.h>
+# include <signal.h>
+# include <ctype.h>
+# include <termios.h>
+# include <readline/readline.h>
+# include <readline/history.h>
+# include <sys/stat.h>
+# include <sys/types.h>
+# include <sys/wait.h>
+
+typedef struct s_list
+{
+	void			*content;
+	struct s_list	*prev;
+	struct s_list	*next;
+}					t_list;
+
+typedef struct s_list_red
+{
+	void				*content;
+	int					doble; // si es doble << o >> entonces es == a 1; simples == 0;
+	int 				is_heredoc;
+	struct s_list_red	*prev;
+	struct s_list_red	*next;
+}					t_list_red;
+
+typedef struct s_cmdnode
+{
+	char				*cmd;
+	t_list				*phrase;
+	t_list_red			*infiles; // < o << (redirecciones) -> pero yo no veo el <<
+	t_list_red			*outfiles; // > o >> (redirecciones)
+	struct s_cmdnode	*next;
+}						t_cmdnode;
+
+typedef struct s_intvec
+{
+	int		*data;
+	size_t	len;
+	size_t	cap;
+}			t_intvec;
+
+extern volatile sig_atomic_t g_sigint_received;
+
+int		builtin_echo(t_list *args);
+int		builtin_pwd(void);
+int		builtin_export(t_list *args, char ***envp);
+int		builtin_unset(t_list *args, char ***envp);
+int		builtin_env(char **envp);
+int		builtin_exit(t_list *args, int in_child);
+int		builtin_cd(t_list *args, char **envp);
+void	change_exit_value(char *args, char ***envp);
+
+char	*read_heredoc_input(const char *delimiter, int expand_vars, char **shell_env);
+char	*remove_quotes_str(const char *str);
+int		parse_line(const char *line, t_intvec *out_codes,
+			t_cmdnode **out_list, char **shell_env);
+char	*get_env_value(char **envp, const char *key);
+char	**dup_envp(char **envp);
+void	free_envp_copy(char **envp);
+
+t_list	*ft_lstnew(void *content);
+void	ft_lstadd_back(t_list **lst, t_list *new);
+void	*ft_malloc(size_t size);
+void	ft_free_malloc(void);
+
+char	**ft_split(char const *s, char c);
+size_t	ft_strlen(const char *s);
+size_t	ft_strlcpy(char *dst, const char *src, size_t size);
+int		find_chr(const char *s, int c);
+char	*strchr_modif(const char *s, int c);
+char	*ft_strjoin_modif(char const *s1, char const *s2);
+char	*ft_strjoin(char const *s1, char const *s2);
+int		ft_strncmp(const char *s1, const char *s2, size_t n);
+char	*ft_itoa(int n);
+void	*ft_memset(void *s, int c, size_t n);
+char	*ft_strdup(const char *s);
+void	*ft_memcpy(void *dest, const void *src, size_t n);
+void	*ft_realloc(void *ptr, size_t old_size, size_t new_size);
+int		ft_strcmp(const char *s1, const char *s2);
+char	*ft_strndup(const char *s, size_t n);
+int		ft_isdigit(int c);
+int		ft_atoi(const char *nptr);
+
+char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len);
+int		execute_cmds(t_cmdnode **data, char **envp);
+void	close_fds(int **arr_fds, int len_cmds);
+
+int		is_built_in(char *cmd_name);
+
+void	change_exit_value(char *args, char ***envp);
+
+//int		main (int argc, char **argv, char **envp);
+
+void	handle_sigint(int sig);
+
+void	handle_sigint_heredoc(int sig);
+void	setup_signals_heredoc(void);
+
+#endif
+```
+
 ### `minishell_main.c`
 
 ```cpp
@@ -3892,7 +4903,7 @@ void	setup_signals_heredoc(void)
 	signal(SIGQUIT, SIG_IGN);
 }
 
-static void	setup_signals(void)
+/*static void	setup_signals(void)
 {
 	struct sigaction	sa_int;
 	struct sigaction	sa_quit;
@@ -3907,7 +4918,7 @@ static void	setup_signals(void)
 	sigemptyset(&sa_quit.sa_mask);
 	sa_quit.sa_flags = 0;
 	sigaction(SIGQUIT, &sa_quit, NULL);
-}
+}*/
 
 static void	intvec_reset(t_intvec *v)
 {
@@ -3981,7 +4992,7 @@ static void	print_int_array(const t_intvec *v)
 	}
 	printf("\n");
 }
- 
+
 static void	print_str_list(const t_list *lst)
 {
 	printf("[");
@@ -3994,6 +5005,7 @@ static void	print_str_list(const t_list *lst)
 	}
 	printf("]");
 }
+
 static void	print_red_list(const t_list_red *lst)
 {
 	printf("[");
@@ -4097,7 +5109,7 @@ static int	read_prompt_line(const char *prompt, char **out_line)
 		return (1);
 }
 
-static char	*read_full_command(int num)
+static char	*read_full_command()
 {
 	char	*line;
 	char	*full_line;
@@ -4121,12 +5133,10 @@ static char	*read_full_command(int num)
 		if (status == -1)
 		{
 			free(full_line);
-			num = -1;
 			return (NULL);
 		}
 		if (status == 0)
 		{
-			num = 0;
 			if (!full_line)
 				return (NULL);
 			continue ;
@@ -4192,7 +5202,7 @@ int	main(int argc, char **argv, char **envp)
 		
 		if (!line)
 		{
-			if (g_sigint_received && num !=1)
+			if (g_sigint_received && *num !=1)
 			{
 				g_sigint_received = 0;
 
@@ -4215,6 +5225,8 @@ int	main(int argc, char **argv, char **envp)
 		list = NULL;
 		if (parse_line(line, &codes, &list, shell_env) == 0)
 		{
+			//printf("DEBUG infiles:\n");
+			//print_red_list(list->infiles);
 			/*if (g_sigint_received)
 			{
 				//printf("DEBUG: heredoc cancelado → no ejecutar\n");
@@ -4225,8 +5237,8 @@ int	main(int argc, char **argv, char **envp)
 				free(line);
 				continue;
 			}*/
-			print_int_array(&codes);
-			print_nodes(list);
+			//print_int_array(&codes);
+			//print_nodes(list);
 			exit_code = execute_cmds(&list, shell_env);
 			change_exit_value(ft_itoa(exit_code), &shell_env);
 		}
@@ -4239,139 +5251,16 @@ int	main(int argc, char **argv, char **envp)
 		cmd_list_destroy(list);
 		intvec_destroy(&codes);
 		free(line);
-		if (exit_code == -11)
+		/* if (exit_code == -11)  // ver esto!!!! como saber que entró a exit!
 		{
 			printf("exit\n");
 			break ;
-		}
+		} */
 	}
 	rl_clear_history();
 	ft_free_malloc();
 	free_envp_copy(shell_env);
 	return (0);
 }
-```
-
-### `minishell.h`
-
-```cpp
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   minishell.h                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/19 16:11:23 by oscar            ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#ifndef MINISHELL_H
-# define MINISHELL_H
-
-# include <stdio.h>
-# include <stdlib.h>
-# include <unistd.h>
-# include <string.h>
-# include <errno.h>
-# include <fcntl.h>
-# include <signal.h>
-# include <ctype.h>
-# include <termios.h>
-# include <readline/readline.h>
-# include <readline/history.h>
-# include <sys/stat.h>
-# include <sys/types.h>
-# include <sys/wait.h>
-
-typedef struct s_list
-{
-	void			*content;
-	struct s_list	*prev;
-	struct s_list	*next;
-}					t_list;
-
-typedef struct s_list_red
-{
-	void				*content;
-	int					doble; // si es doble << o >> entonces es == a 1; simples == 0;
-	int 				is_heredoc;
-	struct s_list_red	*prev;
-	struct s_list_red	*next;
-}					t_list_red;
-
-typedef struct s_cmdnode
-{
-	char				*cmd;
-	t_list				*phrase;
-	t_list_red			*infiles; // < o << (redirecciones) -> pero yo no veo el <<
-	t_list_red			*outfiles; // > o >> (redirecciones)
-	struct s_cmdnode	*next;
-}						t_cmdnode;
-
-typedef struct s_intvec
-{
-	int		*data;
-	size_t	len;
-	size_t	cap;
-}			t_intvec;
-
-extern volatile sig_atomic_t g_sigint_received;
-
-int		builtin_echo(t_list *args);
-int		builtin_pwd(void);
-int		builtin_export(t_list *args, char ***envp);
-int		builtin_unset(t_list *args, char ***envp);
-int		builtin_env(char **envp);
-int		builtin_exit(t_list *args);
-int		builtin_cd(char *path);
-void	change_exit_value(char *args, char ***envp);
-
-char	*read_heredoc_input(const char *delimiter, int expand_vars, char **shell_env);
-char	*remove_quotes_str(const char *str);
-int		parse_line(const char *line, t_intvec *out_codes,
-			t_cmdnode **out_list, char **shell_env);
-char	*get_env_value(char **envp, const char *key);
-char	**dup_envp(char **envp);
-void	free_envp_copy(char **envp);
-
-t_list	*ft_lstnew(void *content);
-void	ft_lstadd_back(t_list **lst, t_list *new);
-void	*ft_malloc(size_t size);
-void	ft_free_malloc(void);
-
-char	**ft_split(char const *s, char c);
-size_t	ft_strlen(const char *s);
-size_t	ft_strlcpy(char *dst, const char *src, size_t size);
-int		find_chr(const char *s, int c);
-char	*strchr_modif(const char *s, int c);
-char	*ft_strjoin_modif(char const *s1, char const *s2);
-char	*ft_strjoin(char const *s1, char const *s2);
-int		ft_strncmp(const char *s1, const char *s2, size_t n);
-char	*ft_itoa(int n);
-void	*ft_memset(void *s, int c, size_t n);
-char	*ft_strdup(const char *s);
-void	*ft_memcpy(void *dest, const void *src, size_t n);
-void	*ft_realloc(void *ptr, size_t old_size, size_t new_size);
-int		ft_strcmp(const char *s1, const char *s2);
-char	*ft_strndup(const char *s, size_t n);
-
-char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len);
-int		execute_cmds(t_cmdnode **data, char **envp);
-void	close_fds(int **arr_fds, int len_cmds);
-
-int		is_built_in(char *cmd_name);
-
-void	change_exit_value(char *args, char ***envp);
-
-//int		main (int argc, char **argv, char **envp);
-
-void	handle_sigint(int sig);
-
-void	handle_sigint_heredoc(int sig);
-void	setup_signals_heredoc(void);
-
-#endif
 ```
 

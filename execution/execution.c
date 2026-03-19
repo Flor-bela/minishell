@@ -6,15 +6,17 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/19 22:00:48 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 00:04:50 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
+#include "../built_ins/provisionaryFunctions.h"
 
 static void	error_fork(char **envp)
 {
 	perror("minishell: fork"); // probar
+	ft_free_malloc(); // ??
 	change_exit_value("1", &envp);
 	exit(1);
 }
@@ -22,6 +24,7 @@ static void	error_fork(char **envp)
 static void	error_pipe(char **envp)
 {
 	perror("minishell: pipe"); // probar
+	ft_free_malloc(); // ??
 	change_exit_value("1", &envp);
 	exit(1);
 }
@@ -33,6 +36,7 @@ static void	error_fd_file(char *name_infile, char **envp)
 	
 	error = ft_strjoin_modif("minishell: ", name_infile);
 	perror(error);
+	ft_free_malloc();
 	change_exit_value("1", &envp);
 	exit(1);
 }
@@ -84,6 +88,7 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 			error = ft_strjoin_modif("minishell: ", data_cmd);
 			perror(error);
 			close_fds(arr_fds, len);
+			ft_free_malloc();
 			change_exit_value("127", &envp);
 			exit(127);
 		}
@@ -94,6 +99,7 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 			error = ft_strjoin_modif("minishell: ", data_cmd);
 			perror(error);
 			close_fds(arr_fds, len);
+			ft_free_malloc();
 			change_exit_value("126", &envp);
 			exit(126);
 		}
@@ -202,14 +208,17 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	last_exit_status = 0;
 	data_tmp = *data;
 	pids = NULL;
+	arr_fds = NULL;
 	//while (data_tmp && data_tmp->cmd != NULL) // data && data_tmp->cmd anterior
 	while (data_tmp != NULL)
 	{
 		len++;
 		data_tmp = data_tmp->next;
 	}
-	printf("len is %d\n", len);
-	if (len > 0) // added this...in those cases where cmd is equal == 0
+	//printf("len is %d\n", len);
+	//if (len > 0) // added this...in those cases where cmd is equal == 0
+	//printf("len is %d\n", len);
+	if (len > 1) // i) added this...in those cases where cmd is equal == 0 ii)len > 0 ->
 	{
 		arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
 		while (i < len - 1)
@@ -223,7 +232,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	i = 0;
 	data_tmp = *data;
 	// Only redirections without commands and without pipes!
-	if (len == 1 && data_tmp->cmd == NULL) // (if (len == 0)) cambie esto porque solo con infiles o outfiles, len ya va a ser == 1!!!
+	if (len == 1 && (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0'))// (if (len == 0)) cambie esto porque solo con infiles o outfiles, len ya va a ser == 1!!!
 	{
 		// infiles < 
 		int	saved_stdin;
@@ -240,18 +249,23 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 			saved_stdin = dup(STDIN_FILENO);
 			while (tmp_infiles != NULL)
 			{
-				fd_file = open(tmp_infiles->content, O_RDONLY);
-				if (fd_file == -1)
+				if (tmp_infiles->doble == 1)
 				{
-					char *error;
-					
-					error = ft_strjoin_modif("minishell: ", (char *)tmp_infiles->content);
-					perror(error);
-					return (1);
+					tmp_infiles = tmp_infiles->next;
+				}else{
+					fd_file = open(tmp_infiles->content, O_RDONLY);
+					if (fd_file == -1)
+					{
+						char *error;
+						
+						error = ft_strjoin_modif("minishell: ", (char *)tmp_infiles->content);
+						perror(error);
+						return (1);
+					}
+					dup2(fd_file, STDIN_FILENO);
+					close(fd_file);
+					tmp_infiles = tmp_infiles->next;	
 				}
-				dup2(fd_file, STDIN_FILENO);
-				close(fd_file);
-				tmp_infiles = tmp_infiles->next;
 			}
 		}
 		// outfiles >
@@ -357,7 +371,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
 			return_value = builtin_echo(data_tmp->phrase);
 		//else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
-	//		return_value = builtin_cd(data_tmp->phrase->content);
+		//	return_value = builtin_cd(data_tmp->phrase, envp);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
 			return_value = builtin_pwd();
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
@@ -367,7 +381,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
 			return_value = builtin_env(envp);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
-			return_value = builtin_exit(data_tmp->phrase);
+			return_value = builtin_exit(data_tmp->phrase, 0);
 		
 		if (saved_stdin != -1)
 		{
@@ -471,34 +485,83 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 						dup2(arr_fds[i][1], STDOUT_FILENO);
 				}
 				close_fds(arr_fds, len);
+
+
+				// 🔥 FIX: no ejecutar si no hay comando (caso << sin cmd)
+				if (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0')
+				{
+					ft_free_malloc();
+					exit(0);
+				}
 				
+
+				int	return_value;
+				
+				return_value = 0;
 				// 4th: executes the command:
-				if (cmd_path != NULL && args != NULL)
+			
+				if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
+					return_value = builtin_echo(data_tmp->phrase);
+			//	else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
+				//	return_value = builtin_cd(data_tmp->phrase, envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
+					return_value = builtin_pwd();
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
+					return_value = builtin_export(data_tmp->phrase, &envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "unset", 5) == 0 && data_tmp->cmd[5] == '\0'))
+					return_value = builtin_unset(data_tmp->phrase, &envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
+					return_value = builtin_env(envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
+					return_value = builtin_exit(data_tmp->phrase, 1);
+				
+				else // execute command:
 				{
 					//printf("DEBUG: ejecutando comando\n");
-					if (execve(cmd_path, args, envp) < 0)
+			//		if (execve(cmd_path, args, envp) < 0)
+					if (data_tmp->cmd != NULL)
+						args = get_args(data_tmp->phrase);
+					else
+						args = NULL;
+					// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
+					if (data_tmp->cmd != NULL)
+						cmd_path = get_cmd_name_and_path(args, envp, data_tmp->cmd, arr_fds, len);
+					else
+						cmd_path = NULL;
+					if ((cmd_path != NULL && args != NULL))
 					{
-						char *error;
+						// 1st count how many arguments we have:
 						
-						error = ft_strjoin_modif("minishell: ", cmd_path);
-						perror(error);
-						if (errno == EACCES)
-						{	
-							change_exit_value("126", &envp);
-							exit(126);
-						}
-						else if (errno == ENOENT)
+						if (execve(cmd_path, args, envp) < 0)
 						{
-							change_exit_value("127", &envp);
-							exit(127);
+							char *error;
+						
+							error = ft_strjoin_modif("minishell: ", cmd_path);
+							perror(error);
+							if (errno == EACCES)
+							{	
+								ft_free_malloc(); // ??
+								change_exit_value("126", &envp);
+								exit(126);
+							}
+							else if (errno == ENOENT)
+							{
+								ft_free_malloc(); // ??
+								change_exit_value("127", &envp);
+								exit(127);
+							}
+							else
+							{
+								ft_free_malloc(); // ??
+								change_exit_value("126", &envp);
+								exit(126);
+							}
 						}
-						else
-						{
-							change_exit_value("126", &envp);
-							exit(126);}
 					}
 				}
-				exit(0);
+				//close(arr_fds, len);
+				ft_free_malloc();
+				exit(return_value);
 			}
 			i++;
 			data_tmp = data_tmp->next;
@@ -514,7 +577,20 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		}
 		signal(SIGINT, handle_sigint);
 		signal(SIGQUIT, SIG_IGN);
-		write(1, "\n", 1);
 	}
-	return (WEXITSTATUS(last_exit_status));
+	int signal_code;
+	
+	signal_code = 0;
+	if (WIFEXITED(last_exit_status))
+		last_exit_status = WEXITSTATUS(last_exit_status);
+	else if (WIFSIGNALED(last_exit_status))
+	{
+		signal_code = WTERMSIG(last_exit_status);
+		if (signal_code == SIGINT)
+			write(1, "\n", 1);
+		else if (signal_code == SIGQUIT)
+			write(1, "Quit (core dumped)\n", 20);
+		last_exit_status = signal_code + 128;
+	}
+	return (last_exit_status);
 }

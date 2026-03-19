@@ -48,7 +48,7 @@ void	setup_signals_heredoc(void)
 	signal(SIGQUIT, SIG_IGN);
 }
 
-static void	setup_signals(void)
+/*static void	setup_signals(void)
 {
 	struct sigaction	sa_int;
 	struct sigaction	sa_quit;
@@ -63,7 +63,7 @@ static void	setup_signals(void)
 	sigemptyset(&sa_quit.sa_mask);
 	sa_quit.sa_flags = 0;
 	sigaction(SIGQUIT, &sa_quit, NULL);
-}
+}*/
 
 static void	intvec_reset(t_intvec *v)
 {
@@ -137,7 +137,7 @@ static void	print_int_array(const t_intvec *v)
 	}
 	printf("\n");
 }
- 
+
 static void	print_str_list(const t_list *lst)
 {
 	printf("[");
@@ -150,6 +150,7 @@ static void	print_str_list(const t_list *lst)
 	}
 	printf("]");
 }
+
 static void	print_red_list(const t_list_red *lst)
 {
 	printf("[");
@@ -253,7 +254,7 @@ static int	read_prompt_line(const char *prompt, char **out_line)
 		return (1);
 }
 
-static char	*read_full_command(int num)
+static char	*read_full_command()
 {
 	char	*line;
 	char	*full_line;
@@ -277,12 +278,10 @@ static char	*read_full_command(int num)
 		if (status == -1)
 		{
 			free(full_line);
-			num = -1;
 			return (NULL);
 		}
 		if (status == 0)
 		{
-			num = 0;
 			if (!full_line)
 				return (NULL);
 			continue ;
@@ -348,7 +347,7 @@ int	main(int argc, char **argv, char **envp)
 		
 		if (!line)
 		{
-			if (g_sigint_received && num !=1)
+			if (g_sigint_received && *num !=1)
 			{
 				g_sigint_received = 0;
 
@@ -371,7 +370,7 @@ int	main(int argc, char **argv, char **envp)
 		list = NULL;
 		if (parse_line(line, &codes, &list, shell_env) == 0)
 		{
-			printf("DEBUG infiles:\n");
+			//printf("DEBUG infiles:\n");
 			//print_red_list(list->infiles);
 			/*if (g_sigint_received)
 			{
@@ -383,8 +382,8 @@ int	main(int argc, char **argv, char **envp)
 				free(line);
 				continue;
 			}*/
-			print_int_array(&codes);
-			print_nodes(list);
+			//print_int_array(&codes);
+			//print_nodes(list);
 			exit_code = execute_cmds(&list, shell_env);
 			change_exit_value(ft_itoa(exit_code), &shell_env);
 		}
@@ -397,11 +396,11 @@ int	main(int argc, char **argv, char **envp)
 		cmd_list_destroy(list);
 		intvec_destroy(&codes);
 		free(line);
-		if (exit_code == -11)
+		/* if (exit_code == -11)  // ver esto!!!! como saber que entró a exit!
 		{
 			printf("exit\n");
 			break ;
-		}
+		} */
 	}
 	rl_clear_history();
 	ft_free_malloc();

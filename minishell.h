@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/19 16:11:23 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 22:47:49 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,8 +67,8 @@ int		builtin_pwd(void);
 int		builtin_export(t_list *args, char ***envp);
 int		builtin_unset(t_list *args, char ***envp);
 int		builtin_env(char **envp);
-int		builtin_exit(t_list *args);
-int		builtin_cd(char *path);
+int		builtin_exit(t_list *args, int in_child);
+int		builtin_cd(t_list *args, char **envp);
 void	change_exit_value(char *args, char ***envp);
 
 char	*read_heredoc_input(const char *delimiter, int expand_vars, char **shell_env);
@@ -99,6 +99,8 @@ void	*ft_memcpy(void *dest, const void *src, size_t n);
 void	*ft_realloc(void *ptr, size_t old_size, size_t new_size);
 int		ft_strcmp(const char *s1, const char *s2);
 char	*ft_strndup(const char *s, size_t n);
+int		ft_isdigit(int c);
+int		ft_atoi(const char *nptr);
 
 char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len);
 int		execute_cmds(t_cmdnode **data, char **envp);

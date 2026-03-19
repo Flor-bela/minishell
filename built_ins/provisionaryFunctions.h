@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/18 11:31:41 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 22:50:12 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,9 +28,11 @@ int		builtin_pwd(void);
 int		builtin_export(t_list *args, char ***envp);
 int		builtin_unset(t_list *args, char ***envp);
 int		builtin_env(char **envp);
-int		builtin_exit(t_list *args);
-//int		builtin_cd(char **args, **envp);
+int		builtin_exit(t_list *args, int in_child);
+int		builtin_cd(t_list *args, char **envp);
 
 void	change_exit_value(char *args, char ***envp);
+char	*heredoc_with_fork(const char *delimiter,
+			int expand_vars, char **env);
 
 #endif

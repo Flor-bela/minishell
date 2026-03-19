@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 20:59:40 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 00:05:54 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -463,7 +463,7 @@ static char	*expand_heredoc_line(const char *line, char **shell_env)
 	return (res);
 }
 
-static int	process_heredoc_line(char **line, char **content,
+/*static int	process_heredoc_line(char **line, char **content,
 	int expand_vars, char **shell_env)
 {
 	char	*tmp;
@@ -486,7 +486,7 @@ static int	process_heredoc_line(char **line, char **content,
 		return (1);
 	*content = tmp;
 	return (0);
-}
+}*/
 
 static char *get_next_line(int fd)
 {
@@ -598,11 +598,6 @@ char	*read_fd_all(int fd)
 	while (1)
 	{
 		bytes = read(fd, buffer, 1024);
-		if (!bytes)
-		{
-			//printf("DEBUG: read_fd_all devolvió NULL\n");
-			return (NULL);
-		}
 		if (bytes < 0)
 		{
 			free(result);
@@ -781,14 +776,16 @@ int	builtin_export(t_list *args, char ***envp)
 	curr = args;
 	while (curr)
 	{
-		arg = (char *)curr->content;
-		if (process_export_arg(arg, envp))
-			return (1);
-		curr = curr->next;
-	}
-	return (0);
-}
+		if (!curr->content)
+		{
+			curr = curr->next;
+			continue;
+		}
 
+		arg = (char *)curr->content;
+		return (0);
+	}
+}
 int	builtin_unset(t_list *args, char ***envp)
 {
 	t_list	*curr;
@@ -831,10 +828,72 @@ int	builtin_env(char **envp)
 	return (0);
 }
 
-int	builtin_exit(t_list *args)
+int	builtin_exit(t_list *args, int in_child) // todos tienen aunque sea error que hacer exit!!!
 {
-	(void)args;
-	return (-11);
+	if (args == NULL) // si sale deberia liberar todo aqui!!!
+		exit (0); ///asi por ahora
+	
+	int	i;
+	t_list	*tmp;
+	
+	i = 0;
+	tmp = args;
+	while (tmp != NULL)
+	{
+		if (tmp->content != NULL)
+			i++;
+		tmp = tmp->next;
+	}
+	// primero ver si son non-digit!!!! da ese error antes de que son muchos argumentos!
+	char	*str;
+	int		j;
+	int		flag;
+
+	tmp = args;
+	str = tmp->content;
+	j = 0;
+	flag = 0;
+
+	while (str[j] != '\0')
+	{
+		if (str[0] == '-' || str[0] == '+') // si es negativo continuar
+			j++;
+		if ((ft_isdigit(str[j]) == 0)) // significa que no es digito!!!
+		{
+			flag = 1;
+			break;
+		}
+		j++;
+	}
+	if (flag == 1) // error numeric argument required -> return (2); -> primero error
+	{
+		char *error;
+		if (in_child != 1)
+			write(1, "exit\n", 6);
+		error = ft_strjoin_modif("minishell: exit: ", str);
+		error = ft_strjoin_modif(error, ": numeric argument required\n");
+		write(2, error, ft_strlen(error));
+		
+		// si sale deberia liberar todo aqui!!!
+		exit (2); /// aqui si sale!
+	} 
+ 	if (i > 1)
+	{
+		if (in_child != 1)
+			write(1, "exit\n", 6);
+		write(2, "minishell: exit: too many arguments\n", 37);
+		return (1);
+	}
+	
+	// si llega aqui es que no tuvo errores antes!
+	int	num;
+	
+	num = ft_atoi((const char*)str);
+	if (num < 0 || num > 255)
+		num  = num % 256;
+	if (in_child != 1)
+			write(1, "exit\n", 6);
+	exit (num);
 }
 
 void	change_exit_value(char *value, char ***envp)

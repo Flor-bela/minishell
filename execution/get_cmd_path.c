@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/17 23:53:03 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/19 12:08:29 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,7 @@ char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len)
 		error = ft_strjoin_modif(error, ": command not found\n");
 		write(2, error, ft_strlen(error));
 		close_fds(arr_fds, len);
+		ft_free_malloc();
 		change_exit_value("127", &envp);
 		exit(127);
 	}

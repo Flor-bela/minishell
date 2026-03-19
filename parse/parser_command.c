@@ -6,13 +6,13 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:03 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/17 18:14:09 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 23:13:15 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "parser.h"
 
-static char	*get_clean_token(const char *line, size_t *i, char **env)
+char	*get_clean_token(const char *line, size_t *i, char **env)
 {
 	char	*tok;
 	char	*expanded;
