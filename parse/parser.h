@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:28:12 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 16:12:35 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 21:59:24 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define PARSER_H
 
 # include "../minishell.h"
+# include "../built_ins/provisionaryFunctions.h"
 
 typedef struct s_parser
 {

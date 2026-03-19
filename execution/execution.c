@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/19 20:51:21 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 22:00:48 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,45 +109,81 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 	return (cmd_path);
 }
 
-static void	handle_infile_redirections(t_list_red **tmp_infiles, int **arr_fds, int len, char **envp)
+static void handle_infile_redirections(t_list_red **tmp_infiles,
+    int **arr_fds, int len, char **envp)
 {
-	int	fd_file;
+    int fd_file;
 
-	while (*tmp_infiles != NULL)
-	{
-		fd_file = open((*tmp_infiles)->content, O_RDONLY);
-		if (fd_file == -1)
-		{
-			close_fds(arr_fds, len);
-			error_fd_file((*tmp_infiles)->content, envp);
-		}
-		dup2(fd_file, STDIN_FILENO);
-		close (fd_file);
-		*tmp_infiles = (*tmp_infiles)->next;
-	}
+    while (*tmp_infiles != NULL)
+    {
+        if ((*tmp_infiles)->doble == 1)
+        {
+            // 🔥 HEREDOC
+            char *content = heredoc_with_fork((*tmp_infiles)->content, 1, envp);
+
+            if (!content)
+                exit(1);
+
+            int pipefd[2];
+            pipe(pipefd);
+
+            write(pipefd[1], content, ft_strlen(content));
+            close(pipefd[1]);
+
+            dup2(pipefd[0], STDIN_FILENO);
+            close(pipefd[0]);
+
+            free(content);
+        }
+        else
+        {
+            // 🔥 ARCHIVO NORMAL
+            fd_file = open((*tmp_infiles)->content, O_RDONLY);
+            if (fd_file == -1)
+            {
+                close_fds(arr_fds, len);
+                error_fd_file((*tmp_infiles)->content, envp);
+            }
+            dup2(fd_file, STDIN_FILENO);
+            close(fd_file);
+        }
+
+        *tmp_infiles = (*tmp_infiles)->next;
+    }
 }
 
-static void	handle_outfile_redirections(t_list_red **tmp_outfiles, int **arr_fds, int len, char **envp)
+static void	handle_outfile_redirections(t_list_red **tmp_outfiles,
+	int **arr_fds, int len, char **envp)
 {
 	int	fd_file;
-	
+
 	while (*tmp_outfiles != NULL)
 	{
 		if ((*tmp_outfiles)->doble == 0)
-			fd_file = open((*tmp_outfiles)->content, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-		if ((*tmp_outfiles)->doble == 1)
-			fd_file = open((*tmp_outfiles)->content, O_WRONLY | O_CREAT | O_APPEND, 0666);
+		{
+			// >
+			fd_file = open((*tmp_outfiles)->content,
+				O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		}
+		else
+		{
+			// >>
+			fd_file = open((*tmp_outfiles)->content,
+				O_WRONLY | O_CREAT | O_APPEND, 0666);
+		}
+
 		if (fd_file == -1)
 		{
 			close_fds(arr_fds, len);
 			error_fd_file((*tmp_outfiles)->content, envp);
 		}
+
 		dup2(fd_file, STDOUT_FILENO);
-		close (fd_file);
-		*tmp_outfiles= (*tmp_outfiles)->next;
+		close(fd_file);
+
+		*tmp_outfiles = (*tmp_outfiles)->next;
 	}
 }
-
 
 int	execute_cmds(t_cmdnode **data, char **envp)
 {

@@ -371,6 +371,8 @@ int	main(int argc, char **argv, char **envp)
 		list = NULL;
 		if (parse_line(line, &codes, &list, shell_env) == 0)
 		{
+			printf("DEBUG infiles:\n");
+			//print_red_list(list->infiles);
 			/*if (g_sigint_received)
 			{
 				//printf("DEBUG: heredoc cancelado → no ejecutar\n");

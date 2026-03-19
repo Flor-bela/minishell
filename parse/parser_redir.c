@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 20:51:21 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/19 22:24:38 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,38 +15,28 @@
 static int	handle_heredoc(t_cmdnode *cmd,
 	const char *target, char **env)
 {
-	char	*heredoc_content;
 	char	*real_delim;
-	int		expand_vars;
+	t_list_red *node;
 
-	expand_vars = 1;
-	if (strchr(target, '\'') || strchr(target, '"'))
-		expand_vars = 0;
+	(void)env;
 
 	real_delim = remove_quotes_str(target);
 	if (!real_delim)
 		return (-1);
 
-	// 🔥 CAMBIO CLAVE
-	heredoc_content = heredoc_with_fork(real_delim, expand_vars, env);
-	//printf("DEBUG: heredoc devuelto = %p\n", heredoc_content);
-	free(real_delim);
+	// ❌ NO ejecutar heredoc aquí
+	// heredoc_with_fork(...)
 
-	if (!heredoc_content)
+	node = red_list_push_back(&cmd->infiles, real_delim, 1);
+	if (!node)
 	{
-		if (g_sigint_received)
-		{
-			//printf("DEBUG: heredoc NULL → abortando comando -1\n");
-			return (-1); // aborta parse limpio
-		}//printf("DEBUG: heredoc NULL → abortando comando NULL\n");
-		return (NULL);
+		free(real_delim);
+		return (-1);
 	}
 
-	t_list_red *node;
+	node->is_heredoc = 1;
 
-	node = red_list_push_back(&cmd->infiles, heredoc_content, 1);
-	node->is_heredoc = 1; // 🔥 ESTA ES LA LÍNEA CLAVE
-
+	free(real_delim);
 	return (0);
 }
 
@@ -67,7 +57,7 @@ static int	handle_pending_heredoc(t_parser *p,
 
 	// 🔥 CAMBIO CLAVE
 	heredoc_content = heredoc_with_fork(real_delim, expand_vars, env);
-	//printf("DEBUG: heredoc devuelto = %p\n", heredoc_content);
+	printf("DEBUG: heredoc devuelto = %p\n", heredoc_content);
 	free(real_delim);
 
 	if (!heredoc_content)
