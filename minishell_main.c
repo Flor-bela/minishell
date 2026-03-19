@@ -3,15 +3,32 @@
 int	parse_line(const char *line, t_intvec *out_codes,
 		t_cmdnode **out_list, char **shell_env);
 
-volatile sig_atomic_t	g_sigint_received = 0;
+volatile sig_atomic_t g_sigint_received = 0;
 
 void	handle_sigint(int sig)
 {
 	(void)sig;
-	write(1, "^C\n", 3);
-	rl_replace_line("", 0);
+	write(1, "\n", 1);
 	rl_on_new_line();
+	rl_replace_line("", 0);
 	rl_redisplay();
+}
+
+void	setup_signals_prompt(void)
+{
+	signal(SIGINT, handle_sigint);
+	signal(SIGQUIT, SIG_IGN);
+}
+
+void	handle_sigint_heredoc(int sig)
+{
+	(void)sig;
+	g_sigint_received = 1;
+	write(1, "\n", 1);
+
+	rl_replace_line("", 0);  // 🔥 limpia buffer
+	rl_on_new_line();        // 🔥 mueve cursor
+	rl_done = 1;             // 🔥 sale de readline
 }
 
 static void	setup_signals(void)
@@ -236,7 +253,7 @@ static char	*read_full_command(void)
 		if (status == -1)
 		{
 			free(full_line);
-			return (ft_strdup(""));
+			return (NULL);
 		}
 		if (status == 0)
 		{
@@ -276,6 +293,7 @@ int	main(int argc, char **argv, char **envp)
 	t_cmdnode	*list;
 	char		**shell_env;
 	int			exit_code;
+	
 
 	exit_code = 0;
 	(void)argc;
@@ -283,8 +301,7 @@ int	main(int argc, char **argv, char **envp)
 	shell_env = dup_envp(envp);
 	if (!shell_env)
 		return (1);
-	setup_signals();
-	rl_catch_signals = 0;
+	setup_signals_prompt();
 	using_history();
 	change_exit_value("127", &shell_env);
 	while (1)
@@ -293,6 +310,11 @@ int	main(int argc, char **argv, char **envp)
 	
 		if (!line)
 		{
+			if(g_sigint_received)
+			{
+				g_sigint_received=0;
+				continue;
+			}
 			printf("exit\n");
 			break ;
 		}
@@ -328,3 +350,51 @@ int	main(int argc, char **argv, char **envp)
 	free_envp_copy(shell_env);
 	return (0);
 }
+
+
+/*int	main(int argc, char **argv, char **envp)
+{
+	char	*input;
+	char	**env_copy;
+
+	(void)argc;
+	(void)argv;
+
+	// 🔹 Copia del entorno (ya lo haces tú)
+	env_copy = dup_envp(envp);
+	if (!env_copy)
+		return (1);
+
+	// 🔥 IMPORTANTE: activar señales del prompt
+	setup_signals_prompt();
+
+	while (1)
+	{
+		input = readline("minishell$ ");
+
+		// Ctrl+D (EOF)
+		if (!input)
+		{
+			write(1, "exit\n", 5);
+			break;
+		}
+
+		// Si está vacío → ignorar
+		if (input[0] == '\0')
+		{
+			free(input);
+			continue;
+		}
+
+		add_history(input);
+
+		// 🔹 AQUÍ VA TU PARSER + EXEC
+		// parse(input);
+		// execute(...);
+
+		free(input);
+	}
+
+	free_envp_copy(env_copy);
+	return (0);
+}*/

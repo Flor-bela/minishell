@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/18 12:07:19 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/18 20:07:42 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,8 @@ typedef struct s_intvec
 	size_t	cap;
 }			t_intvec;
 
+extern volatile sig_atomic_t g_sigint_received;
+
 int		builtin_echo(t_list *args);
 int		builtin_pwd(void);
 int		builtin_export(t_list *args, char ***envp);
@@ -108,5 +110,7 @@ void	change_exit_value(char *args, char ***envp);
 //int		main (int argc, char **argv, char **envp);
 
 void	handle_sigint(int sig);
+
+void	handle_sigint_heredoc(int sig);
 
 #endif
