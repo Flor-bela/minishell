@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/18 17:22:51 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/19 16:36:50 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -656,10 +656,70 @@ int	builtin_env(char **envp)
 	return (0);
 }
 
-int	builtin_exit(t_list *args)
+int	builtin_exit(t_list *args) // todos tienen aunque sea error que hacer exit!!!
 {
-	(void)args;
-	return (-11);
+	if (args == NULL) // si sale deberia liberar todo aqui!!!
+		exit (0); ///asi por ahora
+	
+	int	i;
+	t_list	*tmp;
+	
+	i = 0;
+	tmp = args;
+	while (tmp != NULL)
+	{
+		if (tmp->content != NULL)
+			i++;
+		tmp = tmp->next;
+	}
+	// primero ver si son non-digit!!!! da ese error antes de que son muchos argumentos!
+	char	*str;
+	int		j;
+	int		flag;
+
+	tmp = args;
+	str = tmp->content;
+	j = 0;
+	flag = 0;
+
+	while (str[j] != '\0')
+	{
+		if (str[0] == '-' || str[0] == '+') // si es negativo continuar
+			j++;
+		if ((ft_isdigit(str[j]) == 0)) // significa que no es digito!!!
+		{
+			flag = 1;
+			break;
+		}
+		j++;
+	}
+	if (flag == 1) // error numeric argument required -> return (2); -> primero error
+	{
+		char *error;
+		
+		write(1, "exit\n", 6);
+		error = ft_strjoin_modif("minishell: exit: ", str);
+		error = ft_strjoin_modif(error, ": numeric argument required\n");
+		write(2, error, ft_strlen(error));
+		
+		// si sale deberia liberar todo aqui!!!
+		exit (2); /// aqui si sale!
+	} 
+ 	if (i > 1)
+	{
+		write(1, "exit\n", 6);
+		write(2, "minishell: exit: too many arguments\n", 37);
+		return (1);
+	}
+	
+	// si llega aqui es que no tuvo errores antes!
+	int	num;
+	
+	num = ft_atoi((const char*)str);
+	if (num < 0 || num > 255)
+		num  = num % 256;
+	write(1, "exit\n", 6);
+	exit (num);
 }
 
 void	change_exit_value(char *value, char ***envp)

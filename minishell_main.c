@@ -318,11 +318,11 @@ int	main(int argc, char **argv, char **envp)
 		cmd_list_destroy(list);
 		intvec_destroy(&codes);
 		free(line);
-		if (exit_code == -11)
+		/* if (exit_code == -11)  // ver esto!!!! como saber que entró a exit!
 		{
 			printf("exit\n");
 			break ;
-		}
+		} */
 	}
 	rl_clear_history();
 	ft_free_malloc();

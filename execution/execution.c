@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/18 19:31:13 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/19 14:03:44 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -362,16 +362,6 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				error_fork(envp);
 			else if (pids[i] == 0) // in child process
 			{
-				// 1st count how many arguments we have:
-				if (data_tmp->cmd != NULL)
-					args = get_args(data_tmp->phrase);
-				else
-					args = NULL;
-				// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
-				if (data_tmp->cmd != NULL)
-					cmd_path = get_cmd_name_and_path(args, envp, data_tmp->cmd, arr_fds, len);
-				else
-					cmd_path = NULL;
 				// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
 				if (i == 0) // first command and only one command
 				{
@@ -434,36 +424,72 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				}
 				close_fds(arr_fds, len);
 				
+
+				int	return_value;
+				
+				return_value = 0;
 				// 4th: executes the command:
-				if (cmd_path != NULL && args != NULL)
+			
+				if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
+					return_value = builtin_echo(data_tmp->phrase);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
+					return_value = builtin_cd(data_tmp->phrase, envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
+					return_value = builtin_pwd();
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
+					return_value = builtin_export(data_tmp->phrase, &envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "unset", 5) == 0 && data_tmp->cmd[5] == '\0'))
+					return_value = builtin_unset(data_tmp->phrase, &envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
+					return_value = builtin_env(envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
+					return_value = builtin_exit(data_tmp->phrase);
+				
+				else // execute command:
 				{
-					if (execve(cmd_path, args, envp) < 0)
+					if (data_tmp->cmd != NULL)
+						args = get_args(data_tmp->phrase);
+					else
+						args = NULL;
+					// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
+					if (data_tmp->cmd != NULL)
+						cmd_path = get_cmd_name_and_path(args, envp, data_tmp->cmd, arr_fds, len);
+					else
+						cmd_path = NULL;
+					if ((cmd_path != NULL && args != NULL))
 					{
-						char *error;
+						// 1st count how many arguments we have:
 						
-						error = ft_strjoin_modif("minishell: ", cmd_path);
-						perror(error);
-						if (errno == EACCES)
-						{	
-							ft_free_malloc(); // ??
-							change_exit_value("126", &envp);
-							exit(126);
-						}
-						else if (errno == ENOENT)
+						if (execve(cmd_path, args, envp) < 0)
 						{
-							ft_free_malloc(); // ??
-							change_exit_value("127", &envp);
-							exit(127);
+							char *error;
+						
+							error = ft_strjoin_modif("minishell: ", cmd_path);
+							perror(error);
+							if (errno == EACCES)
+							{	
+								ft_free_malloc(); // ??
+								change_exit_value("126", &envp);
+								exit(126);
+							}
+							else if (errno == ENOENT)
+							{
+								ft_free_malloc(); // ??
+								change_exit_value("127", &envp);
+								exit(127);
+							}
+							else
+							{
+								ft_free_malloc(); // ??
+								change_exit_value("126", &envp);
+								exit(126);
+							}
 						}
-						else
-						{
-							ft_free_malloc(); // ??
-							change_exit_value("126", &envp);
-							exit(126);}
 					}
 				}
-				ft_free_malloc(); // ??
-				exit(0);
+				//close(arr_fds, len);
+				ft_free_malloc();
+				exit(return_value);
 			}
 			i++;
 			data_tmp = data_tmp->next;

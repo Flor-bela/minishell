@@ -40,6 +40,8 @@ SOURCES = \
 	ft_utils/ft_strndup.c \
 	ft_utils/ft_strcmp.c \
 	ft_utils/ft_realloc.c \
+	ft_utils/ft_isdigit.c\
+	ft_utils/ft_atoi.c\
 	\
 	minishell_main.c
 	

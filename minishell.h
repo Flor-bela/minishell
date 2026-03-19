@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/18 16:55:18 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/19 15:41:02 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,8 @@ void	*ft_memcpy(void *dest, const void *src, size_t n);
 void	*ft_realloc(void *ptr, size_t old_size, size_t new_size);
 int		ft_strcmp(const char *s1, const char *s2);
 char	*ft_strndup(const char *s, size_t n);
+int		ft_isdigit(int c);
+int		ft_atoi(const char *nptr);
 
 char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len);
 int		execute_cmds(t_cmdnode **data, char **envp);
