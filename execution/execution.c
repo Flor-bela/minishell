@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 17:49:45 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 18:06:44 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -421,6 +421,8 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 			close(saved_stdout);
 		}
 		change_exit_value("0", envp);
+		//cmd_list_destroy(*data);
+		//*data = NULL;
 		return (0);
 	}
 	
