@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 02:10:00 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 02:48:48 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -247,7 +247,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				int ret = builtin_echo(data_tmp->phrase);
 				char *status = ft_itoa(ret);
 				change_exit_value(status, envp);
-				free(status);
+				//free(status);
 				return (ret);
 			}
 			else if (ft_strcmp(data_tmp->cmd, "pwd") == 0)
@@ -255,7 +255,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				int ret = builtin_pwd();
 				char *status = ft_itoa(ret);
 				change_exit_value(status, envp);
-				free(status);
+				//free(status);
 				return (ret);
 			}
 			else if (ft_strcmp(data_tmp->cmd, "env") == 0)
@@ -263,7 +263,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				int ret = builtin_env(*envp);
 				char *status = ft_itoa(ret);
 				change_exit_value(status, envp);
-				free(status);
+				//free(status);
 				return (ret);
 			}
 			else if (ft_strcmp(data_tmp->cmd, "export") == 0)
@@ -271,7 +271,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				int ret = builtin_export(data_tmp->phrase, envp);
 				char *status = ft_itoa(ret);
 				change_exit_value(status, envp);
-				free(status);
+				//free(status);
 				return (ret);	
 			}
 			else if (ft_strcmp(data_tmp->cmd, "unset") == 0)
@@ -279,17 +279,23 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				int ret = builtin_unset(data_tmp->phrase, envp);
 				char *status = ft_itoa(ret);
 				change_exit_value(status, envp);
-				free(status);
+				//free(status);
 				return (ret);	
 			}
-			//else if (ft_strcmp(data_tmp->cmd, "cd") == 0)
-			//	return (builtin_cd(data_tmp->phrase, envp));
-			else if (ft_strcmp(data_tmp->cmd, "exit") == 0)
+			else if (ft_strcmp(data_tmp->cmd, "cd") == 0)
 			{
-				int ret = builtin_exit(data_tmp->phrase, 0);
+				int ret = builtin_cd(data_tmp->phrase, *envp);
 				char *status = ft_itoa(ret);
 				change_exit_value(status, envp);
-				free(status);
+				//free(status);
+				return (ret);
+			}
+			else if (ft_strcmp(data_tmp->cmd, "exit") == 0)
+			{
+				int ret = builtin_exit(data_tmp->phrase, 0, envp);
+				char *status = ft_itoa(ret);
+				change_exit_value(status, envp);
+				//free(status);
 				return (ret);
 			}
 		}
@@ -437,8 +443,8 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 		return_value = 0;
 		if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
 			return_value = builtin_echo(data_tmp->phrase);
-		//else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
-		//	return_value = builtin_cd(data_tmp->phrase, envp);
+		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
+			return_value = builtin_cd(data_tmp->phrase, *envp);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
 			return_value = builtin_pwd();
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
@@ -448,7 +454,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
 			return_value = builtin_env(*envp);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
-			return_value = builtin_exit(data_tmp->phrase, 0);
+			return_value = builtin_exit(data_tmp->phrase, 0, envp);
 		
 		if (saved_stdin != -1)
 		{
@@ -572,8 +578,8 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 			
 				if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
 					return_value = builtin_echo(data_tmp->phrase);
-			//	else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
-				//	return_value = builtin_cd(data_tmp->phrase, envp);
+				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
+					return_value = builtin_cd(data_tmp->phrase, *envp);
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
 					return_value = builtin_pwd();
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
@@ -583,7 +589,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
 					return_value = builtin_env(*envp);
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
-					return_value = builtin_exit(data_tmp->phrase, 1);
+					return_value = builtin_exit(data_tmp->phrase, 1, envp);
 				
 				else // execute command:
 				{

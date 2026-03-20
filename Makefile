@@ -8,6 +8,7 @@ SOURCES = \
 	execution/is_built_in.c \
 	\
 	built_ins/provisionaryFunctions2.c \
+	built_ins/builtin_cd.c \
 	\
 	parse/parser_list_redir.c \
 	parse/parser_cmd_utils.c \
@@ -47,7 +48,7 @@ SOURCES = \
 OBJ_DIR = obj
 OBJECTS = $(SOURCES:%.c=$(OBJ_DIR)/%.o)
 
-#FLAGS = -Wall -Werror -Wextra -g
+FLAGS = -Wall -Werror -Wextra -g
 LDFLAGS = -lreadline -lhistory
 CC = cc
 
