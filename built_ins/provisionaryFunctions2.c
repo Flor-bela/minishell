@@ -6,13 +6,13 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 10:32:37 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 16:13:50 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "provisionaryFunctions.h"
 
-static size_t	env_len(char **envp)
+size_t	env_len(char **envp)
 {
 	size_t	i;
 

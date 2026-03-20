@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/19 12:08:29 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/20 15:59:05 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ static char	*find_path(char **paths, char *cmd_name)
 	return (NULL);
 }
 
-char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len)
+char	*get_cmd_path(t_cmdnode **data, char **envp, char *cmd_name, int **arr_fds, int len, char *line, t_intvec *codes)
 {
 	char	**paths;
 	char	*cmd_path;
@@ -74,7 +74,21 @@ char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len)
 		write(2, error, ft_strlen(error));
 		close_fds(arr_fds, len);
 		ft_free_malloc();
-		change_exit_value("127", &envp);
+		size_t	i;
+		size_t	len_env;
+		
+		i = 0;
+		len_env = env_len(envp);
+		while (i < len_env)
+		{
+			free(envp[i]);
+			i++;
+		}
+		free(envp);
+		cmd_list_destroy(*data);
+		
+		free(line);
+		intvec_destroy(codes);
 		exit(127);
 	}
 	return (cmd_path);

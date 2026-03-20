@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 13:05:11 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 16:14:05 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@ char	**get_args(t_list	*phrase)
 	return (args);
 }
 
-static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int **arr_fds, int len) // adds args[0] has the name of the command and gets command path
+static char	*get_cmd_name_and_path(t_cmdnode **data, char **args, char **envp, char *data_cmd, int **arr_fds, int len, char *line, t_intvec *codes) // adds args[0] has the name of the command and gets command path
 {
 	char	*cmd_name;
 	char	*cmd_path;
@@ -118,7 +118,7 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 	}
 	else //-> si no tiene / entonces busca el path del comando y añade el nombre directamente a args[0];
 	{
-		cmd_path = get_cmd_path(envp, data_cmd, arr_fds, len);
+		cmd_path = get_cmd_path(data, envp, data_cmd, arr_fds, len, line, codes);
 		args[0] = data_cmd;
 	}
 	return (cmd_path);
@@ -129,45 +129,45 @@ static void handle_infile_redirections(t_list_red **tmp_infiles,
 {
     int fd_file;
 
-    while (*tmp_infiles != NULL)
-    {
-        if ((*tmp_infiles)->doble == 1)
-        {
-            // 🔥 HEREDOC
-            char *content = heredoc_with_fork((*tmp_infiles)->content, 1, envp);
+	while (*tmp_infiles != NULL)
+	{
+		if ((*tmp_infiles)->doble == 1)
+		{
+			// 🔥 HEREDOC
+			char *content = heredoc_with_fork((*tmp_infiles)->content, 1, envp);
 
-            if (!content)
+			if (!content)
 			{
 				change_exit_value("130", &envp);
 				exit(130);
 			}
 
-            int pipefd[2];
-            pipe(pipefd);
+			int pipefd[2];
+			pipe(pipefd);
 
-            write(pipefd[1], content, ft_strlen(content));
-            close(pipefd[1]);
+			write(pipefd[1], content, ft_strlen(content));
+			close(pipefd[1]);
 
-            dup2(pipefd[0], STDIN_FILENO);
-            close(pipefd[0]);
+			dup2(pipefd[0], STDIN_FILENO);
+			close(pipefd[0]);
 
-            free(content);
-        }
-        else
-        {
-            // 🔥 ARCHIVO NORMAL
-            fd_file = open((*tmp_infiles)->content, O_RDONLY);
-            if (fd_file == -1)
-            {
-                close_fds(arr_fds, len);
-                error_fd_file((*tmp_infiles)->content, envp);
-            }
-            dup2(fd_file, STDIN_FILENO);
-            close(fd_file);
-        }
+			free(content);
+		}
+		else
+		{
+			// 🔥 ARCHIVO NORMAL
+			fd_file = open((*tmp_infiles)->content, O_RDONLY);
+			if (fd_file == -1)
+			{
+				close_fds(arr_fds, len);
+				error_fd_file((*tmp_infiles)->content, envp);
+			}
+			dup2(fd_file, STDIN_FILENO);
+			close(fd_file);
+		}
 
-        *tmp_infiles = (*tmp_infiles)->next;
-    }
+		*tmp_infiles = (*tmp_infiles)->next;
+	}
 }
 
 static void	handle_outfile_redirections(t_list_red **tmp_outfiles,
@@ -203,7 +203,7 @@ static void	handle_outfile_redirections(t_list_red **tmp_outfiles,
 	}
 }
 
-int	execute_cmds(t_cmdnode **data, char ***envp)
+int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 {
 	pid_t	*pids;
 	char	**args;
@@ -331,7 +331,9 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				if (tmp_infiles->doble == 1)
 				{
 					tmp_infiles = tmp_infiles->next;
-				}else{
+				}
+				else
+				{
 					fd_file = open(tmp_infiles->content, O_RDONLY);
 					if (fd_file == -1)
 					{
@@ -561,12 +563,12 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				close_fds(arr_fds, len);
 
 
-				// 🔥 FIX: no ejecutar si no hay comando (caso << sin cmd)
+			/* 	// 🔥 FIX: no ejecutar si no hay comando (caso << sin cmd)
 				if (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0')
 				{
 					ft_free_malloc();
 					exit(0);
-				}
+				} */
 				
 
 				int	return_value;
@@ -599,7 +601,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 						args = NULL;
 					// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
 					if (data_tmp->cmd != NULL)
-						cmd_path = get_cmd_name_and_path(args, *envp, data_tmp->cmd, arr_fds, len);
+						cmd_path = get_cmd_name_and_path(data, args, *envp, data_tmp->cmd, arr_fds, len, line, codes);
 					else
 						cmd_path = NULL;
 					if ((cmd_path != NULL && args != NULL))

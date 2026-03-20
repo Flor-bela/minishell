@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 11:09:42 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 16:14:15 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,7 @@ t_list	*ft_lstnew(void *content);
 void	ft_lstadd_back(t_list **lst, t_list *new);
 void	*ft_malloc(size_t size);
 void	ft_free_malloc(void);
+size_t	env_len(char **envp);
 
 char	**ft_split(char const *s, char c);
 size_t	ft_strlen(const char *s);
@@ -102,20 +103,19 @@ char	*ft_strndup(const char *s, size_t n);
 int		ft_isdigit(int c);
 int		ft_atoi(const char *nptr);
 
-char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len);
-int		execute_cmds(t_cmdnode **data, char ***envp);
+char	*get_cmd_path(t_cmdnode **data, char **envp, char *cmd_name, int **arr_fds, int len, char *line, t_intvec *codes);
+int		execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes);
 void	close_fds(int **arr_fds, int len_cmds);
 
 int		is_built_in(char *cmd_name);
-
-void	change_exit_value(char *args, char ***envp);
-
-//int		main (int argc, char **argv, char **envp);
 
 void	handle_sigint(int sig);
 
 void	handle_sigint_heredoc(int sig);
 void	setup_signals_heredoc(void);
+
+void	cmd_list_destroy(t_cmdnode *h);
+void	intvec_destroy(t_intvec *v);
 
 #endif
 
