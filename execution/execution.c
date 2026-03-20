@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 10:38:00 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/20 11:20:03 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -489,17 +489,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				signal(SIGINT, SIG_DFL);
 				signal(SIGQUIT, SIG_DFL);
 
-				// 1st count how many arguments we have:
-				if (data_tmp->cmd != NULL)
-					args = get_args(data_tmp->phrase);
-				else
-					args = NULL;
-				// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
-				if (data_tmp->cmd != NULL)
-					cmd_path = get_cmd_name_and_path(args, *envp, data_tmp->cmd, arr_fds, len);
-				else
-					cmd_path = NULL;
-				// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
+				
 				if (i == 0) // first command and only one command
 				{
 					// infiles <
@@ -574,7 +564,8 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				
 				return_value = 0;
 				// 4th: executes the command:
-			
+				
+				printf("data_cmd is %s\n", data_tmp->cmd);
 				if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
 					return_value = builtin_echo(data_tmp->phrase);
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
