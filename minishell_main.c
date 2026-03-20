@@ -236,27 +236,39 @@ static int	read_prompt_line(const char *prompt, char **out_line)
 {
 	char	*line;
 
-	g_sigint_received = 0; // 🔥 RESET AQUÍ
+	//g_sigint_received = 0; // 🔥 RESET AQUÍ
 
 	line = readline(prompt);
 	//dprintf(2,"DEBUG: readline main devuelve = %p (%s) %d\n", line, line, g_sigint_received);
+<<<<<<< HEAD
 	if (!line)
 	{
 		*out_line = NULL;
 		return (0);
 	}
 	if (g_sigint_received && (!line || *line == '\0'))
+=======
+	/* if (g_sigint_received && (!line || *line == '\0'))
+>>>>>>> main
 	{
 		free(line);
 		*out_line = NULL;
 		g_sigint_received = 0;
 		return (-1);
+<<<<<<< HEAD
+=======
+	} */
+	if (!line)
+	{
+		*out_line = NULL;
+		return (0);
+>>>>>>> main
 	}
 		*out_line = line;
 		return (1);
 }
 
-static char	*read_full_command()
+static char	*read_full_command(void)
 {
 	char	*line;
 	char	*full_line;
@@ -320,7 +332,7 @@ int	main(int argc, char **argv, char **envp)
 	t_cmdnode	*list;
 	char		**shell_env;
 	int			exit_code;
-	int 		*num;
+	//int 		*num;
 	
 
 	exit_code = 0;
@@ -335,9 +347,9 @@ int	main(int argc, char **argv, char **envp)
 	while (1)
 	{
 		line = NULL;
-		num = 0;
+		//num = 0;
 		//write(2, "DEBUG: antes de parsear\n", 24);
-		line = read_full_command(&num);
+		line = read_full_command();
 		////printf("DEBUG despues de parsear\n");
 		/*if (g_sigint_received)
 		{
@@ -349,14 +361,15 @@ int	main(int argc, char **argv, char **envp)
 		
 		if (!line)
 		{
-			if (g_sigint_received && *num !=1)
+			//if (g_sigint_received && *num !=1)
+			/* if (g_sigint_received)
 			{
 				g_sigint_received = 0;
 
 				
 				rl_redisplay();
 				continue;
-			}
+			} */
 
 			printf("exit\n");
 			break;
