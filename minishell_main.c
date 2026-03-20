@@ -7,11 +7,11 @@ volatile sig_atomic_t g_sigint_received = 0;
 
 void handle_sigint(int sig)
 {
-    (void)sig;
-    g_sigint_received = 1;
+	(void)sig;
+	g_sigint_received = 1;
 
-    write(1, "\n", 1);
-    rl_on_new_line();
+	write(1, "\n", 1);
+	rl_on_new_line();
 	rl_replace_line("", 0);
 	rl_redisplay();
 }
@@ -73,7 +73,7 @@ static void	intvec_reset(t_intvec *v)
 	v->cap = 0;
 }
 
-static void	intvec_destroy(t_intvec *v)
+void	intvec_destroy(t_intvec *v)
 {
 	free(v->data);
 	v->data = NULL;
@@ -107,7 +107,7 @@ static void	red_list_destroy(t_list_red *lst)
 	}
 }
 
-static void	cmd_list_destroy(t_cmdnode *h)
+void	cmd_list_destroy(t_cmdnode *h)
 {
 	t_cmdnode	*nx;
 
@@ -386,7 +386,7 @@ int	main(int argc, char **argv, char **envp)
 			}*/
 			//print_int_array(&codes);
 			//print_nodes(list);
-			exit_code = execute_cmds(&list, &shell_env);
+			exit_code = execute_cmds(&list, &shell_env, line, &codes);
 			//printf("DEBUG salio de execute_cmds:\n");	
 			change_exit_value(ft_itoa(exit_code), &shell_env);
 		}

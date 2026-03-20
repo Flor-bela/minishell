@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   provisionaryFunctions2.c                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 02:11:33 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 14:34:01 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "provisionaryFunctions.h"
 
-static size_t	env_len(char **envp)
+size_t	env_len(char **envp)
 {
 	size_t	i;
 
