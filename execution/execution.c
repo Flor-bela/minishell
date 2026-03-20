@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 02:59:00 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 11:24:15 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,7 +235,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 	i = 0;
 	data_tmp = *data;
 
-	// 🔥 BUILTINS SIN FORK (caso simple: 1 comando)
+	/* // 🔥 BUILTINS SIN FORK (caso simple: 1 comando)
 	if (len == 1 && data_tmp->cmd != NULL)
 	{
 		////printf("DEBUG entrando builtins sin forks1\n");
@@ -300,7 +300,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 			}
 		}
 	}
-
+ */
 	// Only redirections without commands and without pipes!
 	if (len == 1 && (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0'))// (if (len == 0)) cambie esto porque solo con infiles o outfiles, len ya va a ser == 1!!!
 	{
@@ -490,17 +490,6 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				signal(SIGINT, SIG_DFL);
 				signal(SIGQUIT, SIG_DFL);
 
-				// 1st count how many arguments we have:
-				if (data_tmp->cmd != NULL)
-					args = get_args(data_tmp->phrase);
-				else
-					args = NULL;
-				// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
-				if (data_tmp->cmd != NULL)
-					cmd_path = get_cmd_name_and_path(args, *envp, data_tmp->cmd, arr_fds, len);
-				else
-					cmd_path = NULL;
-				// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
 				if (i == 0) // first command and only one command
 				{
 					// infiles <
