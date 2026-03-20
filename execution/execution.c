@@ -3,14 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2026/03/20 11:19:30 by oscar            ###   ########.fr       */
-=======
-/*   Updated: 2026/03/20 11:24:15 by fda-roch         ###   ########.fr       */
->>>>>>> main
+/*   Updated: 2026/03/20 12:57:10 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -239,13 +235,8 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 	i = 0;
 	data_tmp = *data;
 
-<<<<<<< HEAD
 	// 🔥 BUILTINS SIN FORK (caso simple: 1 comando)
 	/*if (len == 1 && data_tmp->cmd != NULL)
-=======
-	/* // 🔥 BUILTINS SIN FORK (caso simple: 1 comando)
-	if (len == 1 && data_tmp->cmd != NULL)
->>>>>>> main
 	{
 		////printf("DEBUG entrando builtins sin forks1\n");
 		if (is_built_in(data_tmp->cmd))
@@ -308,13 +299,8 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				return (ret);
 			}
 		}
-<<<<<<< HEAD
 	}*/
 
-=======
-	}
- */
->>>>>>> main
 	// Only redirections without commands and without pipes!
 	if (len == 1 && (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0'))// (if (len == 0)) cambie esto porque solo con infiles o outfiles, len ya va a ser == 1!!!
 	{
