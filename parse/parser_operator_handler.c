@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 01:37:27 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 03:16:49 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ static char	*get_redir_target(const char *line, size_t *i, char **env)
 	target = read_token_grouped(line, i, &grouped);
 	if (!target)
 	{
-		printf("minishell: syntax error\n");
+		//printf("minishell: syntax error\n");
 		change_exit_value("2", &env);
 		return (NULL);
 	}

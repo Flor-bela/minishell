@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 02:13:03 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 03:20:27 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,3 +118,9 @@ void	handle_sigint_heredoc(int sig);
 void	setup_signals_heredoc(void);
 
 #endif
+
+
+//pasar norminette
+// "" | ls
+//ls | | ls
+//exit 999999999999999999999
