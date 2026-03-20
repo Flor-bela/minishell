@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 14:34:01 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/20 17:27:50 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -620,7 +620,7 @@ char	*read_fd_all(int fd)
 }
 
 char	*heredoc_with_fork(const char *delimiter,
-			int expand_vars, char **env)
+			int expand_vars, char **env, t_cmdnode **data, char *line, t_intvec *codes)
 {
 	int		fd[2];
 	pid_t	pid;
@@ -649,13 +649,28 @@ char	*heredoc_with_fork(const char *delimiter,
 		if (!content)
 		{
 			close(fd[1]);
+			
+			ft_free_malloc();
+			free_envp_copy(env);
+			cmd_list_destroy(*data);
+			free(line);
+			intvec_destroy(codes);
+
+			
 			exit(130); // Ctrl+C
+			
 			//return 1;
 		}
 
 		write(fd[1], content, ft_strlen(content));
 		free(content);
 		close(fd[1]);
+
+		ft_free_malloc();
+		free_envp_copy(env);
+		cmd_list_destroy(*data);
+		free(line);
+		intvec_destroy(codes);
 		exit(0);
 	}
 
@@ -679,6 +694,7 @@ char	*heredoc_with_fork(const char *delimiter,
 		
 		close(fd[0]);
 		g_sigint_received = 1;
+		
 		change_exit_value("130", &env); // 🔥 AÑADIR
 		return (NULL);
 	}
@@ -845,10 +861,18 @@ int	builtin_env(char **envp)
 	return (0);
 }
 
-int	builtin_exit(t_list *args, int in_child, char ***envp) // todos tienen aunque sea error que hacer exit!!!
+int	builtin_exit(t_list *args, int in_child, char ***envp, t_cmdnode **data, char *line, t_intvec *codes) // todos tienen aunque sea error que hacer exit!!!
 {
 	if (args == NULL) // si sale deberia liberar todo aqui!!!
+	{
+		ft_free_malloc();
+		free_envp_copy(*envp);
+		cmd_list_destroy(*data);
+		free(line);
+		intvec_destroy(codes);
 		exit (0); ///asi por ahora
+	}
+		
 	
 	int	i;
 	t_list	*tmp;
@@ -891,6 +915,11 @@ int	builtin_exit(t_list *args, int in_child, char ***envp) // todos tienen aunqu
 		error = ft_strjoin_modif(error, ": numeric argument required\n");
 		write(2, error, ft_strlen(error));
 		
+		ft_free_malloc();
+		free_envp_copy(*envp);
+		cmd_list_destroy(*data);
+		free(line);
+		intvec_destroy(codes);
 		// si sale deberia liberar todo aqui!!!
 		exit (2); /// aqui si sale!
 	} 
@@ -911,6 +940,11 @@ int	builtin_exit(t_list *args, int in_child, char ***envp) // todos tienen aunqu
 		num  = num % 256;
 	if (in_child != 1)
 			write(1, "exit\n", 6);
+	ft_free_malloc();
+	free_envp_copy(*envp);
+	cmd_list_destroy(*data);
+	free(line);
+	intvec_destroy(codes);
 	exit (num);
 }
 

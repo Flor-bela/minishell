@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 15:58:33 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/20 16:53:31 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,7 @@ int		builtin_pwd(void);
 int		builtin_export(t_list *args, char ***envp);
 int		builtin_unset(t_list *args, char ***envp);
 int		builtin_env(char **envp);
-int		builtin_exit(t_list *args, int in_child, char ***envp);
+int		builtin_exit(t_list *args, int in_child, char ***envp, t_cmdnode **data, char *line, t_intvec *codes);
 int		builtin_cd(t_list *args, char **envp);
 void	change_exit_value(char *args, char ***envp);
 
@@ -116,6 +116,7 @@ void	setup_signals_heredoc(void);
 
 void	cmd_list_destroy(t_cmdnode *h);
 void	intvec_destroy(t_intvec *v);
+void	free_envp_copy(char **envp);
 
 #endif
 

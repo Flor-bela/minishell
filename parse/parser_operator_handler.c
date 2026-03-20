@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_operator_handler.c                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 03:16:49 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 17:16:13 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ static int	handle_pipe(t_parser *p)
 	return (0);
 }
 
-static int	handle_redirection(const char *line, t_parser *p, char **env)
+static int	handle_redirection(const char *line, t_parser *p, char **env, t_cmdnode **data, t_intvec *codes)
 {
 	char	*target;
 
@@ -94,7 +94,7 @@ static int	handle_redirection(const char *line, t_parser *p, char **env)
 	}
 	else
 	{
-		if (store_pending_redir(p, p->op_code, target, env))
+		if (store_pending_redir(p, p->op_code, target, env, data, (char *)line, codes))
 		{
 			free(target);
 			return (-1);
@@ -106,12 +106,12 @@ static int	handle_redirection(const char *line, t_parser *p, char **env)
 
 
 int	handle_operator(const char *line, t_parser *p,
-	t_intvec *codes, char **env)
+	t_intvec *codes, char **env, t_cmdnode **data)
 {
 	////printf("DEBUG operador detectado\n");
 	intvec_push(codes, p->op_code);
 	p->i += p->op_len;
 	if (p->op_code == 5)
 		return (handle_pipe(p));
-	return (handle_redirection(line, p, env));
+	return (handle_redirection(line, p, env, data, codes));
 }

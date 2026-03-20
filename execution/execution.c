@@ -6,31 +6,38 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 15:58:21 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/20 17:41:25 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 #include "../built_ins/provisionaryFunctions.h"
 
-static void	error_fork(char **envp)
+static void	error_fork(char **envp, t_cmdnode **data, char *line, t_intvec *codes)
 {
 	perror("minishell: fork"); // probar
-	ft_free_malloc(); // ??
 	change_exit_value("1", &envp);
+	ft_free_malloc(); // ??
+	free_envp_copy(envp);
+	cmd_list_destroy(*data);
+	free(line);
+	intvec_destroy(codes);
 	exit(1);
 }
 
-static void	error_pipe(char **envp)
+static void	error_pipe(char **envp, t_cmdnode **data, char *line, t_intvec *codes)
 {
 	perror("minishell: pipe"); // probar
-	ft_free_malloc(); // ??
 	change_exit_value("1", &envp);
+	free_envp_copy(envp);
+	cmd_list_destroy(*data);
+	free(line);
+	intvec_destroy(codes);
 	exit(1);
 }
 
  
-static void	error_fd_file(char *name_infile, char **envp)
+static void	error_fd_file(char *name_infile, char **envp, t_cmdnode **data, char *line, t_intvec *codes)
 {
 	char *error;
 	
@@ -38,6 +45,10 @@ static void	error_fd_file(char *name_infile, char **envp)
 	perror(error);
 	ft_free_malloc();
 	change_exit_value("1", &envp);
+	free_envp_copy(envp);
+	cmd_list_destroy(*data);
+	free(line);
+	intvec_destroy(codes);
 	exit(1);
 }
 
@@ -93,11 +104,21 @@ static char	*get_cmd_name_and_path(t_cmdnode **data, char **args, char **envp, c
 			if (errno == ENOTDIR)
 			{
 				change_exit_value("126", &envp);
+				//ft_free_malloc();
+				free_envp_copy(envp);
+				cmd_list_destroy(*data);
+				free(line);
+				intvec_destroy(codes);
 				exit(126);
 			}
 			else if (errno == ENOENT)
 			{
 				change_exit_value("127", &envp);
+				//ft_free_malloc();
+				free_envp_copy(envp);
+				cmd_list_destroy(*data);
+				free(line);
+				intvec_destroy(codes);
 				exit(127);
 			}
 		}
@@ -107,9 +128,13 @@ static char	*get_cmd_name_and_path(t_cmdnode **data, char **args, char **envp, c
 			
 			error = ft_strjoin_modif("minishell: ", data_cmd);
 			perror(error);
-			close_fds(arr_fds, len);
-			ft_free_malloc();
 			change_exit_value("126", &envp);
+			close_fds(arr_fds, len);
+			//ft_free_malloc();
+			free_envp_copy(envp);
+			cmd_list_destroy(*data);
+			free(line);
+			intvec_destroy(codes);
 			exit(126);
 		}
 		//if (access(cmd_path, X_OK) == 0)
@@ -125,7 +150,7 @@ static char	*get_cmd_name_and_path(t_cmdnode **data, char **args, char **envp, c
 }
 
 static void handle_infile_redirections(t_list_red **tmp_infiles,
-    int **arr_fds, int len, char **envp)
+    int **arr_fds, int len, char **envp, t_cmdnode **data, char *line, t_intvec *codes)
 {
     int fd_file;
 
@@ -134,11 +159,17 @@ static void handle_infile_redirections(t_list_red **tmp_infiles,
 		if ((*tmp_infiles)->doble == 1)
 		{
 			// 🔥 HEREDOC
-			char *content = heredoc_with_fork((*tmp_infiles)->content, 1, envp);
+			char *content = heredoc_with_fork((*tmp_infiles)->content, 1, envp, data, line, codes);
 
 			if (!content)
 			{
 				change_exit_value("130", &envp);
+				ft_free_malloc();
+				free_envp_copy(envp);
+				cmd_list_destroy(*data);
+				free(line);
+				intvec_destroy(codes);
+				// close fds here??
 				exit(130);
 			}
 
@@ -160,7 +191,7 @@ static void handle_infile_redirections(t_list_red **tmp_infiles,
 			if (fd_file == -1)
 			{
 				close_fds(arr_fds, len);
-				error_fd_file((*tmp_infiles)->content, envp);
+				error_fd_file((*tmp_infiles)->content, envp, data, line, codes);
 			}
 			dup2(fd_file, STDIN_FILENO);
 			close(fd_file);
@@ -171,7 +202,7 @@ static void handle_infile_redirections(t_list_red **tmp_infiles,
 }
 
 static void	handle_outfile_redirections(t_list_red **tmp_outfiles,
-	int **arr_fds, int len, char **envp)
+	int **arr_fds, int len, char **envp, t_cmdnode **data, char *line, t_intvec *codes)
 {
 	int	fd_file;
 
@@ -193,7 +224,7 @@ static void	handle_outfile_redirections(t_list_red **tmp_outfiles,
 		if (fd_file == -1)
 		{
 			close_fds(arr_fds, len);
-			error_fd_file((*tmp_outfiles)->content, envp);
+			error_fd_file((*tmp_outfiles)->content, envp, data, line, codes);
 		}
 
 		dup2(fd_file, STDOUT_FILENO);
@@ -237,7 +268,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 		{
 			arr_fds[i] = (int *)ft_malloc(sizeof(int) * 2); 
 			if (pipe(arr_fds[i]) == -1)
-				error_pipe(*envp);
+				error_pipe(*envp, data, line, codes);
 			i++;
 		}
 	}
@@ -413,7 +444,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 				if (fd_file == -1)
 				{
 					close_fds(arr_fds, len);
-					error_fd_file(tmp_infiles->content, *envp);
+					error_fd_file(tmp_infiles->content, *envp, data, line, codes);
 				}
 				dup2(fd_file, STDIN_FILENO);
 				close(fd_file);
@@ -440,7 +471,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 				if (fd_file == -1)
 				{
 					close_fds(arr_fds, len);
-					error_fd_file(tmp_outfiles->content, *envp);
+					error_fd_file(tmp_outfiles->content, *envp, data, line, codes);
 				}
 				dup2(fd_file, STDOUT_FILENO);
 				close (fd_file);
@@ -465,7 +496,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
 			return_value = builtin_env(*envp);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
-			return_value = builtin_exit(data_tmp->phrase, 0, envp);
+			return_value = builtin_exit(data_tmp->phrase, 0, envp, data, line, codes);
 		
 		if (saved_stdin != -1)
 		{
@@ -477,9 +508,13 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 			dup2(saved_stdout, STDOUT_FILENO);
 			close(saved_stdout);
 		}
-		char *status = ft_itoa(return_value);
-		change_exit_value(status, envp);
-		//free(status);
+		//char *status = ft_itoa(return_value);
+		//change_exit_value(status, envp); // esto es actualizado en main
+		/* ft_free_malloc();
+		free_envp_copy(*envp);
+		cmd_list_destroy(*data);
+		free(line);
+		intvec_destroy(codes); */
 		return (return_value);
 	}
 	
@@ -494,7 +529,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 		{
 			pids[i] = fork();
 			if (pids[i] == -1)
-				error_fork(*envp);
+				error_fork(*envp, data, line, codes);
 			else if (pids[i] == 0) // in child process
 			{
 
@@ -508,14 +543,14 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 
 					tmp_infiles = data_tmp->infiles;
 					if (tmp_infiles != NULL)
-						handle_infile_redirections(&tmp_infiles, arr_fds, len, *envp);
+						handle_infile_redirections(&tmp_infiles, arr_fds, len, *envp, data, line, codes);
 
 					// outfiles >
 					t_list_red	*tmp_outfiles;
 
 					tmp_outfiles = data_tmp->outfiles;
 					if (tmp_outfiles != NULL)
-						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, *envp);
+						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, *envp, data, line, codes);
 					if (len > 1 && data_tmp->outfiles == NULL) // si existe pipe escribe en el pipe, si no que escriba en el terminal
 						dup2(arr_fds[0][1], STDOUT_FILENO);
 				}
@@ -526,7 +561,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 
 					tmp_infiles = data_tmp->infiles;
 					if (tmp_infiles != NULL)
-						handle_infile_redirections(&tmp_infiles, arr_fds, len, *envp);
+						handle_infile_redirections(&tmp_infiles, arr_fds, len, *envp, data, line, codes);
 					else // only reads from pipe if there are no infiles
 						dup2(arr_fds[i - 1][0], STDIN_FILENO); // lee del pipe
 					// escribe directamente en STDOUT -> o sea la terminal
@@ -536,7 +571,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 
 					tmp_outfiles = data_tmp->outfiles;
 					if (tmp_outfiles != NULL)
-						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, *envp);
+						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, *envp, data, line, codes);
 				}
 				else // in the middle
 				{
@@ -544,7 +579,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 
 					tmp_infiles = data_tmp->infiles;
 					if (tmp_infiles != NULL)
-						handle_infile_redirections(&tmp_infiles, arr_fds, len, *envp);
+						handle_infile_redirections(&tmp_infiles, arr_fds, len, *envp, data, line, codes);
 					else
 					{
 						dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the reading part of the previous pipe as standard input
@@ -556,7 +591,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 
 					tmp_outfiles = data_tmp->outfiles;
 					if (tmp_outfiles != NULL)
-						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, *envp);
+						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, *envp, data, line, codes);
 					else
 						dup2(arr_fds[i][1], STDOUT_FILENO);
 				}
@@ -589,7 +624,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
 					return_value = builtin_env(*envp);
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
-					return_value = builtin_exit(data_tmp->phrase, 1, envp);
+					return_value = builtin_exit(data_tmp->phrase, 1, envp, data, line, codes);
 				
 				else // execute command:
 				{
@@ -616,19 +651,19 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 							perror(error);
 							if (errno == EACCES)
 							{	
-								ft_free_malloc(); // ??
+								//ft_free_malloc(); // ?? no need I think -- inside execve but try it
 								change_exit_value("126", envp);
 								exit(126);
 							}
 							else if (errno == ENOENT)
 							{
-								ft_free_malloc(); // ??
+								//ft_free_malloc(); // ??
 								change_exit_value("127", envp);
 								exit(127);
 							}
 							else
 							{
-								ft_free_malloc(); // ??
+								//ft_free_malloc(); // ??
 								change_exit_value("126", envp);
 								exit(126);
 							}
@@ -637,6 +672,10 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 				}
 				//close(arr_fds, len);
 				ft_free_malloc();
+				free_envp_copy(*envp);
+				cmd_list_destroy(*data);
+				free(line);
+				intvec_destroy(codes);
 				exit(return_value);
 			}
 			i++;

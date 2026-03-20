@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.h                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:28:12 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 23:09:43 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 17:14:55 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,11 +64,11 @@ int			match_op(const char *s, size_t i, size_t *len, int *code);
 int			add_redir_target(t_cmdnode *cmd, int op_code,
 				const char *target, char **env);
 int			store_pending_redir(t_parser *p, int op_code,
-				const char *target, char **env);
+				const char *target, char **env, t_cmdnode **data, char *line, t_intvec *codes);
 
 /* operator handler */
 int			handle_operator(const char *line, t_parser *p,
-				t_intvec *codes, char **env);
+				t_intvec *codes, char **env, t_cmdnode **data);
 
 /* command */
 int			handle_command(const char *line, t_parser *p,
@@ -81,8 +81,7 @@ int			parse_line(const char *line, t_intvec *codes,
 void		parser_init(t_parser *p, t_cmdnode **out_list);
 int			parser_error(t_parser *p, t_intvec *codes);
 void		finalize_pending(t_parser *p);
-int			parse_loop(const char *line, t_parser *p,
-				t_intvec *codes, char **env);
+int			parse_loop(const char *line, t_parser *p, t_intvec *codes, char **env, t_cmdnode **data);
 char	*get_clean_token(const char *line, size_t *i, char **env);
 
 #endif

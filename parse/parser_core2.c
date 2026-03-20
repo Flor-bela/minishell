@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_core2.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 18:01:22 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 01:37:27 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 17:12:44 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ static int	error_pipe(t_parser *p, t_intvec *codes)
 }
 
 static int	handle_op_line(const char *line, t_parser *p,
-	t_intvec *codes, char **env)
+	t_intvec *codes, char **env, t_cmdnode **data)
 {
 	if (p->op_code == 5)
 	{
@@ -29,7 +29,7 @@ static int	handle_op_line(const char *line, t_parser *p,
 	}
 	else
 		p->last_pipe = 0;
-	if (handle_operator(line, p, codes, env) == -1)
+	if (handle_operator(line, p, codes, env, data) == -1)
 		return (parser_error(p, codes));
 	return (0);
 }
@@ -44,7 +44,7 @@ static int	handle_cmd_line(const char *line, t_parser *p,
 }
 
 static int	parse_loop_line(const char *line, t_parser *p,
-	t_intvec *codes, char **env)
+	t_intvec *codes, char **env, t_cmdnode **data)
 {
 	p->last_pipe = 1;
 	////printf("DEBUG entrando parser\n");
@@ -61,7 +61,7 @@ static int	parse_loop_line(const char *line, t_parser *p,
 
 		if (p->op_match == 1)
 		{
-			if (handle_op_line(line, p, codes, env))
+			if (handle_op_line(line, p, codes, env, data))
 				return (-1);
 		}
 		else
@@ -82,7 +82,7 @@ int	parse_line(const char *line, t_intvec *codes,
 	t_parser	p;
 
 	parser_init(&p, out_list);
-	if (parse_loop_line(line, &p, codes, env) == -1)
+	if (parse_loop_line(line, &p, codes, env, out_list) == -1)
 		return (-1);
 	finalize_pending(&p);
 	*out_list = p.head;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_core.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:08 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/17 18:09:33 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 17:09:44 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ void	finalize_pending(t_parser *p)
 }
 
 int	parse_loop(const char *line, t_parser *p,
-	t_intvec *codes, char **env)
+	t_intvec *codes, char **env, t_cmdnode **data)
 {
 	while (line[p->i])
 	{
@@ -62,7 +62,7 @@ int	parse_loop(const char *line, t_parser *p,
 			return (-1);
 		if (p->op_match == 1)
 		{
-			if (handle_operator(line, p, codes, env) == -1)
+			if (handle_operator(line, p, codes, env, data) == -1)
 				return (-1);
 		}
 		else

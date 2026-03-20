@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 15:59:05 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/20 16:16:33 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,19 +74,8 @@ char	*get_cmd_path(t_cmdnode **data, char **envp, char *cmd_name, int **arr_fds,
 		write(2, error, ft_strlen(error));
 		close_fds(arr_fds, len);
 		ft_free_malloc();
-		size_t	i;
-		size_t	len_env;
-		
-		i = 0;
-		len_env = env_len(envp);
-		while (i < len_env)
-		{
-			free(envp[i]);
-			i++;
-		}
-		free(envp);
+		free_envp_copy(envp);
 		cmd_list_destroy(*data);
-		
 		free(line);
 		intvec_destroy(codes);
 		exit(127);
