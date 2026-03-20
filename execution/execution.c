@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 11:24:15 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/20 12:23:46 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,7 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 	{
 		cmd_name = strchr_modif(data_cmd, '/');
 		cmd_path = data_cmd;
+		// falta ver 
 		if (access(cmd_path, F_OK) != 0)
 		{
 			char *error;
@@ -89,8 +90,16 @@ static char	*get_cmd_name_and_path(char **args, char **envp, char *data_cmd, int
 			perror(error);
 			close_fds(arr_fds, len);
 			ft_free_malloc();
-			change_exit_value("127", &envp);
-			exit(127);
+			if (errno == ENOTDIR)
+			{
+				change_exit_value("126", &envp);
+				exit(126);
+			}
+			else if (errno == ENOENT)
+			{
+				change_exit_value("127", &envp);
+				exit(127);
+			}
 		}
 		if (access(cmd_path, X_OK) != 0)
 		{
