@@ -239,17 +239,17 @@ static int	read_prompt_line(const char *prompt, char **out_line)
 
 	line = readline(prompt);
 	//dprintf(2,"DEBUG: readline main devuelve = %p (%s) %d\n", line, line, g_sigint_received);
+	if (!line)
+	{
+		*out_line = NULL;
+		return (0);
+	}
 	if (g_sigint_received && (!line || *line == '\0'))
 	{
 		free(line);
 		*out_line = NULL;
 		g_sigint_received = 0;
 		return (-1);
-	}
-	if (!line)
-	{
-		*out_line = NULL;
-		return (0);
 	}
 		*out_line = line;
 		return (1);
@@ -340,7 +340,7 @@ int	main(int argc, char **argv, char **envp)
 		////printf("DEBUG despues de parsear\n");
 		/*if (g_sigint_received)
 		{
-			//////printf("DEBUG Ctrl+C detectado → salto iteración\n");
+			//printf("DEBUG Ctrl+C detectado → salto iteración\n");
 			g_sigint_received = 0;
 			free(line);
 			continue;
@@ -374,7 +374,7 @@ int	main(int argc, char **argv, char **envp)
 			//print_red_list(list->infiles);
 			/*if (g_sigint_received)
 			{
-				//////printf("DEBUG heredoc cancelado → no ejecutar\n");
+				//printf("DEBUG heredoc cancelado → no ejecutar\n");
 				
 				g_sigint_received = 0;
 				cmd_list_destroy(list);
@@ -392,7 +392,7 @@ int	main(int argc, char **argv, char **envp)
 		{
 			if (!g_sigint_received)
 			{
-				write(2, "minishell: syntax error\n", 24);
+			//	write(2, "minishell: syntax error\n", 24);
 				change_exit_value("2", &shell_env);
 			}
 			g_sigint_received = 0;

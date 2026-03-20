@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 02:59:00 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 11:19:30 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -236,7 +236,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 	data_tmp = *data;
 
 	// 🔥 BUILTINS SIN FORK (caso simple: 1 comando)
-	if (len == 1 && data_tmp->cmd != NULL)
+	/*if (len == 1 && data_tmp->cmd != NULL)
 	{
 		////printf("DEBUG entrando builtins sin forks1\n");
 		if (is_built_in(data_tmp->cmd))
@@ -299,7 +299,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				return (ret);
 			}
 		}
-	}
+	}*/
 
 	// Only redirections without commands and without pipes!
 	if (len == 1 && (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0'))// (if (len == 0)) cambie esto porque solo con infiles o outfiles, len ya va a ser == 1!!!
@@ -663,7 +663,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 	{
 		signal_code = WTERMSIG(last_exit_status);
 		if (signal_code == SIGINT)
-			write(1, "\n", 1);
+			write(1, "", 0); //write(1, "\n", 1);
 		else if (signal_code == SIGQUIT)
 			write(1, "Quit (core dumped)\n", 20);
 		last_exit_status = signal_code + 128;
