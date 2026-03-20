@@ -240,29 +240,17 @@ static int	read_prompt_line(const char *prompt, char **out_line)
 
 	line = readline(prompt);
 	//dprintf(2,"DEBUG: readline main devuelve = %p (%s) %d\n", line, line, g_sigint_received);
-<<<<<<< HEAD
-	if (!line)
-	{
-		*out_line = NULL;
-		return (0);
-	}
-	if (g_sigint_received && (!line || *line == '\0'))
-=======
 	/* if (g_sigint_received && (!line || *line == '\0'))
->>>>>>> main
 	{
 		free(line);
 		*out_line = NULL;
 		g_sigint_received = 0;
 		return (-1);
-<<<<<<< HEAD
-=======
 	} */
 	if (!line)
 	{
 		*out_line = NULL;
 		return (0);
->>>>>>> main
 	}
 		*out_line = line;
 		return (1);
