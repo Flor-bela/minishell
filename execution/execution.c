@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 02:59:00 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 10:38:00 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -218,9 +218,8 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 		len++;
 		data_tmp = data_tmp->next;
 	}
-	//printf("len is %d\n", len);
+	printf("len is %d\n", len);
 	//if (len > 0) // added this...in those cases where cmd is equal == 0
-	//printf("len is %d\n", len);
 	if (len > 1) // i) added this...in those cases where cmd is equal == 0 ii)len > 0 ->
 	{
 		arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1)); // len has the amount of commands - 1 is the correct number for pipes
@@ -236,7 +235,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 	data_tmp = *data;
 
 	// 🔥 BUILTINS SIN FORK (caso simple: 1 comando)
-	if (len == 1 && data_tmp->cmd != NULL)
+	/* if (len == 1 && data_tmp->cmd != NULL)
 	{
 		////printf("DEBUG entrando builtins sin forks1\n");
 		if (is_built_in(data_tmp->cmd))
@@ -299,7 +298,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				return (ret);
 			}
 		}
-	}
+	} */
 
 	// Only redirections without commands and without pipes!
 	if (len == 1 && (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0'))// (if (len == 0)) cambie esto porque solo con infiles o outfiles, len ya va a ser == 1!!!
@@ -563,13 +562,13 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 				close_fds(arr_fds, len);
 
 
-				// 🔥 FIX: no ejecutar si no hay comando (caso << sin cmd)
+				/* // 🔥 FIX: no ejecutar si no hay comando (caso << sin cmd)
 				if (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0')
 				{
 					ft_free_malloc();
 					exit(0);
 				}
-				
+				 */
 
 				int	return_value;
 				
