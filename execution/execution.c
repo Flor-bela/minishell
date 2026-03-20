@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 01:37:27 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 02:10:00 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,7 +128,10 @@ static void handle_infile_redirections(t_list_red **tmp_infiles,
             char *content = heredoc_with_fork((*tmp_infiles)->content, 1, envp);
 
             if (!content)
-                exit(1);
+			{
+				change_exit_value("130", &envp);
+				exit(130);
+			}
 
             int pipefd[2];
             pipe(pipefd);
@@ -240,19 +243,55 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 		{
 			////printf("DEBUG entrando builtins sin forks2\n");
 			if (ft_strcmp(data_tmp->cmd, "echo") == 0)
-				return (builtin_echo(data_tmp->phrase));
+			{
+				int ret = builtin_echo(data_tmp->phrase);
+				char *status = ft_itoa(ret);
+				change_exit_value(status, envp);
+				free(status);
+				return (ret);
+			}
 			else if (ft_strcmp(data_tmp->cmd, "pwd") == 0)
-				return (builtin_pwd());
+			{
+				int ret = builtin_pwd();
+				char *status = ft_itoa(ret);
+				change_exit_value(status, envp);
+				free(status);
+				return (ret);
+			}
 			else if (ft_strcmp(data_tmp->cmd, "env") == 0)
-				return (builtin_env(*envp));
+			{
+				int ret = builtin_env(*envp);
+				char *status = ft_itoa(ret);
+				change_exit_value(status, envp);
+				free(status);
+				return (ret);
+			}
 			else if (ft_strcmp(data_tmp->cmd, "export") == 0)
-				return (builtin_export(data_tmp->phrase, envp));
+			{
+				int ret = builtin_export(data_tmp->phrase, envp);
+				char *status = ft_itoa(ret);
+				change_exit_value(status, envp);
+				free(status);
+				return (ret);	
+			}
 			else if (ft_strcmp(data_tmp->cmd, "unset") == 0)
-				return (builtin_unset(data_tmp->phrase, envp));
+			{
+				int ret = builtin_unset(data_tmp->phrase, envp);
+				char *status = ft_itoa(ret);
+				change_exit_value(status, envp);
+				free(status);
+				return (ret);	
+			}
 			//else if (ft_strcmp(data_tmp->cmd, "cd") == 0)
 			//	return (builtin_cd(data_tmp->phrase, envp));
 			else if (ft_strcmp(data_tmp->cmd, "exit") == 0)
-				return (builtin_exit(data_tmp->phrase, 0));
+			{
+				int ret = builtin_exit(data_tmp->phrase, 0);
+				char *status = ft_itoa(ret);
+				change_exit_value(status, envp);
+				free(status);
+				return (ret);
+			}
 		}
 	}
 
@@ -285,6 +324,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 						
 						error = ft_strjoin_modif("minishell: ", (char *)tmp_infiles->content);
 						perror(error);
+						change_exit_value("1", envp);
 						return (1);
 					}
 					dup2(fd_file, STDIN_FILENO);
@@ -313,6 +353,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 					
 					error = ft_strjoin_modif("minishell: ", (char *)tmp_outfiles->content);
 					perror(error);
+					change_exit_value("1", envp);
 					return (1);
 				}
 				dup2(fd_file, STDOUT_FILENO);
@@ -331,7 +372,8 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 			dup2(saved_stdout, STDOUT_FILENO);
 			close(saved_stdout);
 		}
-		return (0); // si se ejecuta bien???
+		change_exit_value("0", envp);
+		return (0);
 	}
 	
 	// Only one command -> built-in!!!
@@ -418,7 +460,10 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 			dup2(saved_stdout, STDOUT_FILENO);
 			close(saved_stdout);
 		}
-		return(return_value);
+		char *status = ft_itoa(return_value);
+		change_exit_value(status, envp);
+		free(status);
+		return (return_value);
 	}
 	
 	else //// Pipeline!!!! 
@@ -617,5 +662,8 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 			write(1, "Quit (core dumped)\n", 20);
 		last_exit_status = signal_code + 128;
 	}
+	char *status_str = ft_itoa(last_exit_status);
+	change_exit_value(status_str, envp);
+	free(status_str);
 	return (last_exit_status);
 }

@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 01:23:36 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 02:13:03 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,7 @@ int		builtin_pwd(void);
 int		builtin_export(t_list *args, char ***envp);
 int		builtin_unset(t_list *args, char ***envp);
 int		builtin_env(char **envp);
-int		builtin_exit(t_list *args, int in_child);
+int		builtin_exit(t_list *args, int in_child, char ***envp);
 int		builtin_cd(t_list *args, char **envp);
 void	change_exit_value(char *args, char ***envp);
 

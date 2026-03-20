@@ -390,7 +390,10 @@ int	main(int argc, char **argv, char **envp)
 		else
 		{
 			if (!g_sigint_received)
-				write(2, "(parse error)\n", ft_strlen("(parse error)\n"));
+			{
+				write(2, "minishell: syntax error\n", 24);
+				change_exit_value("2", &shell_env);
+			}
 			g_sigint_received = 0;
 		}
 			//printf("DEBUG free-1\n");	

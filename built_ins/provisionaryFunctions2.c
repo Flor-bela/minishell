@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 01:37:57 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 02:11:33 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -679,6 +679,7 @@ char	*heredoc_with_fork(const char *delimiter,
 		
 		close(fd[0]);
 		g_sigint_received = 1;
+		change_exit_value("130", &env); // 🔥 AÑADIR
 		return (NULL);
 	}
 
@@ -743,10 +744,11 @@ static int	process_export_arg(char *arg, char ***envp)
 
 	if (!is_valid_identifier(arg))
 	{
-		write(2, "export: `", 9);
+		write(2, "minishell: export: `", 20);
 		write(2, arg, ft_strlen(arg));
 		write(2, "': not a valid identifier\n", 26);
-		return (0);
+		change_exit_value("1", envp);
+		return (1);
 	}
 	if (!strchr(arg, '='))
 		return (0);
@@ -754,12 +756,18 @@ static int	process_export_arg(char *arg, char ***envp)
 	if (idx >= 0)
 	{
 		if (replace_env_value(*envp, idx, arg) != 0)
+		{
+			change_exit_value("1", envp);
 			return (1);
+		}
 	}
 	else
 	{
 		if (append_env_value(envp, arg) != 0)
+		{
+			change_exit_value("1", envp);
 			return (1);
+		}
 	}
 	return (0);
 }
@@ -806,9 +814,10 @@ int	builtin_unset(t_list *args, char ***envp)
 		arg = (char *)curr->content;
 		if (!is_valid_identifier(arg))
 		{
-			write(2, "unset: `", 8);
+			write(2, "minishell: unset: `", 19);
 			write(2, arg, ft_strlen(arg));
 			write(2, "': not a valid identifier\n", 26);
+			change_exit_value("1", envp);
 			curr = curr->next;
 			continue ;
 		}
@@ -836,7 +845,7 @@ int	builtin_env(char **envp)
 	return (0);
 }
 
-int	builtin_exit(t_list *args, int in_child) // todos tienen aunque sea error que hacer exit!!!
+int	builtin_exit(t_list *args, int in_child, char ***envp) // todos tienen aunque sea error que hacer exit!!!
 {
 	if (args == NULL) // si sale deberia liberar todo aqui!!!
 		exit (0); ///asi por ahora
@@ -890,6 +899,7 @@ int	builtin_exit(t_list *args, int in_child) // todos tienen aunque sea error qu
 		if (in_child != 1)
 			write(1, "exit\n", 6);
 		write(2, "minishell: exit: too many arguments\n", 37);
+		change_exit_value("1", envp);
 		return (1);
 	}
 	
