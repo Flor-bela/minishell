@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/19 22:47:49 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 01:23:36 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,7 +103,7 @@ int		ft_isdigit(int c);
 int		ft_atoi(const char *nptr);
 
 char	*get_cmd_path(char **envp, char *cmd_name, int **arr_fds, int len);
-int		execute_cmds(t_cmdnode **data, char **envp);
+int		execute_cmds(t_cmdnode **data, char ***envp);
 void	close_fds(int **arr_fds, int len_cmds);
 
 int		is_built_in(char *cmd_name);

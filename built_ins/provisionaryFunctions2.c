@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 00:05:54 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 01:37:57 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,6 +75,7 @@ static int	find_env_index(char **envp, const char *key)
 		return (-1);
 	klen = key_len(key);
 	i = 0;
+	//printf("DEBUG envp[i]: %p -> %s\n", envp[i], envp[i]);
 	while (envp[i])
 	{
 		if (ft_strncmp(envp[i], key, klen) == 0
@@ -272,7 +273,7 @@ static char	*join_and_free(char *s1, const char *s2)
 	size_t	len2;
 	char	*res;
 	
-	//printf("DEBUG: join_and_free s1=%p s2=%p\n", s1, s2);
+	////printf("DEBUG join_and_free s1=%p s2=%p\n", s1, s2);
 	if (!s1)
 	{
 		res = ft_strdup(s2);
@@ -626,21 +627,21 @@ char	*heredoc_with_fork(const char *delimiter,
 	char	*content;
 	int		status;
 
-	//printf("DEBUG: entro heredoc\n");
+	////printf("DEBUG entro heredoc\n");
 	if (pipe(fd) == -1)
 		return (NULL);
 
 	pid = fork();
 	if (pid == -1)
 	{
-		//printf("DEBUG: padre heredoc\n");
+		////printf("DEBUG padre heredoc\n");
 		
 		return (NULL);
 	}
 
 	if (pid == 0)
 	{
-		//printf("DEBUG: hijo heredoc\n");
+		////printf("DEBUG hijo heredoc\n");
 		close(fd[0]);
 
 		content = read_heredoc_input(delimiter, expand_vars, env);
@@ -663,10 +664,10 @@ char	*heredoc_with_fork(const char *delimiter,
 
 	waitpid(pid, &status, 0);
 
-	//printf("DEBUG: status raw = %d\n", status);
-	//printf("DEBUG: WIFEXITED=%d WEXITSTATUS=%d\n",
-    //WIFEXITED(status), WEXITSTATUS(status));
-	//printf("DEBUG: WIFSIGNALED=%d WTERMSIG=%d\n",
+	////printf("DEBUG status raw = %d\n", status);
+	////printf("DEBUG WIFEXITED=%d WEXITSTATUS=%d\n",
+    ///WIFEXITED(status), WEXITSTATUS(status));
+	////printf("DEBUG WIFSIGNALED=%d WTERMSIG=%d\n",
     //WIFSIGNALED(status), WTERMSIG(status));
 
 	// 🔥 🔥 🔥 CLAVE
@@ -674,7 +675,7 @@ char	*heredoc_with_fork(const char *delimiter,
     (WIFEXITED(status) && WEXITSTATUS(status) == 130) ||
     (WIFSIGNALED(status) && WTERMSIG(status) == SIGINT))
 	{
-		//printf("DEBUG: heredoc cancelado\n");
+		////printf("DEBUG heredoc cancelado\n");
 		
 		close(fd[0]);
 		g_sigint_received = 1;
@@ -773,6 +774,7 @@ int	builtin_export(t_list *args, char ***envp)
 		print_export_env(*envp);
 		return (0);
 	}
+
 	curr = args;
 	while (curr)
 	{
@@ -783,9 +785,15 @@ int	builtin_export(t_list *args, char ***envp)
 		}
 
 		arg = (char *)curr->content;
-		return (0);
+
+		if (process_export_arg(arg, envp))
+			return (1);
+
+		curr = curr->next;
 	}
+	return (0);
 }
+
 int	builtin_unset(t_list *args, char ***envp)
 {
 	t_list	*curr;
@@ -902,7 +910,7 @@ void	change_exit_value(char *value, char ***envp)
 	char	*entry;
 
 	if (!value)
-		return ;
+		value = "0";
 	entry = ft_strjoin("return_value=", value);
 	if (!entry)
 		return ;

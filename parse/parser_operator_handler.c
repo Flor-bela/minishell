@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 23:18:31 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 01:37:27 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@ static int	handle_redirection(const char *line, t_parser *p, char **env)
 int	handle_operator(const char *line, t_parser *p,
 	t_intvec *codes, char **env)
 {
-	//printf("DEBUG: operador detectado\n");
+	////printf("DEBUG operador detectado\n");
 	intvec_push(codes, p->op_code);
 	p->i += p->op_len;
 	if (p->op_code == 5)

@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 00:04:50 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 01:37:27 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -191,7 +191,7 @@ static void	handle_outfile_redirections(t_list_red **tmp_outfiles,
 	}
 }
 
-int	execute_cmds(t_cmdnode **data, char **envp)
+int	execute_cmds(t_cmdnode **data, char ***envp)
 {
 	pid_t	*pids;
 	char	**args;
@@ -202,7 +202,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 	int		**arr_fds;
 	t_cmdnode *data_tmp;
 
-	//printf("DEBUG: entrando execute_cmds\n");
+	////printf("DEBUG entrando execute_cmds\n");
 	len = 0;
 	i = 0;
 	last_exit_status = 0;
@@ -225,12 +225,37 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		{
 			arr_fds[i] = (int *)ft_malloc(sizeof(int) * 2); 
 			if (pipe(arr_fds[i]) == -1)
-				error_pipe(envp);
+				error_pipe(*envp);
 			i++;
 		}
 	}
 	i = 0;
 	data_tmp = *data;
+
+	// 🔥 BUILTINS SIN FORK (caso simple: 1 comando)
+	if (len == 1 && data_tmp->cmd != NULL)
+	{
+		////printf("DEBUG entrando builtins sin forks1\n");
+		if (is_built_in(data_tmp->cmd))
+		{
+			////printf("DEBUG entrando builtins sin forks2\n");
+			if (ft_strcmp(data_tmp->cmd, "echo") == 0)
+				return (builtin_echo(data_tmp->phrase));
+			else if (ft_strcmp(data_tmp->cmd, "pwd") == 0)
+				return (builtin_pwd());
+			else if (ft_strcmp(data_tmp->cmd, "env") == 0)
+				return (builtin_env(*envp));
+			else if (ft_strcmp(data_tmp->cmd, "export") == 0)
+				return (builtin_export(data_tmp->phrase, envp));
+			else if (ft_strcmp(data_tmp->cmd, "unset") == 0)
+				return (builtin_unset(data_tmp->phrase, envp));
+			//else if (ft_strcmp(data_tmp->cmd, "cd") == 0)
+			//	return (builtin_cd(data_tmp->phrase, envp));
+			else if (ft_strcmp(data_tmp->cmd, "exit") == 0)
+				return (builtin_exit(data_tmp->phrase, 0));
+		}
+	}
+
 	// Only redirections without commands and without pipes!
 	if (len == 1 && (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0'))// (if (len == 0)) cambie esto porque solo con infiles o outfiles, len ya va a ser == 1!!!
 	{
@@ -329,7 +354,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				if (fd_file == -1)
 				{
 					close_fds(arr_fds, len);
-					error_fd_file(tmp_infiles->content, envp);
+					error_fd_file(tmp_infiles->content, *envp);
 				}
 				dup2(fd_file, STDIN_FILENO);
 				close(fd_file);
@@ -356,7 +381,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				if (fd_file == -1)
 				{
 					close_fds(arr_fds, len);
-					error_fd_file(tmp_outfiles->content, envp);
+					error_fd_file(tmp_outfiles->content, *envp);
 				}
 				dup2(fd_file, STDOUT_FILENO);
 				close (fd_file);
@@ -366,7 +391,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		
 		//ejecutar
 		int	return_value;
-		//printf("DEBUG: antes de execute_cmds\n");
+		////printf("DEBUG antes de execute_cmds\n");
 		return_value = 0;
 		if (data_tmp && (ft_strncmp (data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
 			return_value = builtin_echo(data_tmp->phrase);
@@ -375,11 +400,11 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
 			return_value = builtin_pwd();
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
-			return_value = builtin_export(data_tmp->phrase, &envp);
+			return_value = builtin_export(data_tmp->phrase, envp);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "unset", 5) == 0 && data_tmp->cmd[5] == '\0'))
-			return_value = builtin_unset(data_tmp->phrase, &envp);
+			return_value = builtin_unset(data_tmp->phrase, envp);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
-			return_value = builtin_env(envp);
+			return_value = builtin_env(*envp);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
 			return_value = builtin_exit(data_tmp->phrase, 0);
 		
@@ -407,7 +432,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 		{
 			pids[i] = fork();
 			if (pids[i] == -1)
-				error_fork(envp);
+				error_fork(*envp);
 			else if (pids[i] == 0) // in child process
 			{
 
@@ -421,7 +446,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 					args = NULL;
 				// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
 				if (data_tmp->cmd != NULL)
-					cmd_path = get_cmd_name_and_path(args, envp, data_tmp->cmd, arr_fds, len);
+					cmd_path = get_cmd_name_and_path(args, *envp, data_tmp->cmd, arr_fds, len);
 				else
 					cmd_path = NULL;
 				// 3rd: check if we are in the first command, in the "middle" or in the last command (they will be different)
@@ -432,14 +457,14 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 
 					tmp_infiles = data_tmp->infiles;
 					if (tmp_infiles != NULL)
-						handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
+						handle_infile_redirections(&tmp_infiles, arr_fds, len, *envp);
 
 					// outfiles >
 					t_list_red	*tmp_outfiles;
 
 					tmp_outfiles = data_tmp->outfiles;
 					if (tmp_outfiles != NULL)
-						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
+						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, *envp);
 					if (len > 1 && data_tmp->outfiles == NULL) // si existe pipe escribe en el pipe, si no que escriba en el terminal
 						dup2(arr_fds[0][1], STDOUT_FILENO);
 				}
@@ -450,7 +475,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 
 					tmp_infiles = data_tmp->infiles;
 					if (tmp_infiles != NULL)
-						handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
+						handle_infile_redirections(&tmp_infiles, arr_fds, len, *envp);
 					else // only reads from pipe if there are no infiles
 						dup2(arr_fds[i - 1][0], STDIN_FILENO); // lee del pipe
 					// escribe directamente en STDOUT -> o sea la terminal
@@ -460,7 +485,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 
 					tmp_outfiles = data_tmp->outfiles;
 					if (tmp_outfiles != NULL)
-						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
+						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, *envp);
 				}
 				else // in the middle
 				{
@@ -468,7 +493,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 
 					tmp_infiles = data_tmp->infiles;
 					if (tmp_infiles != NULL)
-						handle_infile_redirections(&tmp_infiles, arr_fds, len, envp);
+						handle_infile_redirections(&tmp_infiles, arr_fds, len, *envp);
 					else
 					{
 						dup2(arr_fds[i - 1][0], STDIN_FILENO); // take the reading part of the previous pipe as standard input
@@ -480,7 +505,7 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 
 					tmp_outfiles = data_tmp->outfiles;
 					if (tmp_outfiles != NULL)
-						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, envp);
+						handle_outfile_redirections(&tmp_outfiles, arr_fds, len, *envp);
 					else
 						dup2(arr_fds[i][1], STDOUT_FILENO);
 				}
@@ -507,17 +532,17 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
 					return_value = builtin_pwd();
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
-					return_value = builtin_export(data_tmp->phrase, &envp);
+					return_value = builtin_export(data_tmp->phrase, envp);
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "unset", 5) == 0 && data_tmp->cmd[5] == '\0'))
-					return_value = builtin_unset(data_tmp->phrase, &envp);
+					return_value = builtin_unset(data_tmp->phrase, envp);
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
-					return_value = builtin_env(envp);
+					return_value = builtin_env(*envp);
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
 					return_value = builtin_exit(data_tmp->phrase, 1);
 				
 				else // execute command:
 				{
-					//printf("DEBUG: ejecutando comando\n");
+					////printf("DEBUG ejecutando comando\n");
 			//		if (execve(cmd_path, args, envp) < 0)
 					if (data_tmp->cmd != NULL)
 						args = get_args(data_tmp->phrase);
@@ -525,14 +550,14 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 						args = NULL;
 					// 2nd: obtain the name of the command to add it do args[0] to execute with execve and gets command path
 					if (data_tmp->cmd != NULL)
-						cmd_path = get_cmd_name_and_path(args, envp, data_tmp->cmd, arr_fds, len);
+						cmd_path = get_cmd_name_and_path(args, *envp, data_tmp->cmd, arr_fds, len);
 					else
 						cmd_path = NULL;
 					if ((cmd_path != NULL && args != NULL))
 					{
 						// 1st count how many arguments we have:
 						
-						if (execve(cmd_path, args, envp) < 0)
+						if (execve(cmd_path, args, *envp) < 0)
 						{
 							char *error;
 						
@@ -541,19 +566,19 @@ int	execute_cmds(t_cmdnode **data, char **envp)
 							if (errno == EACCES)
 							{	
 								ft_free_malloc(); // ??
-								change_exit_value("126", &envp);
+								change_exit_value("126", envp);
 								exit(126);
 							}
 							else if (errno == ENOENT)
 							{
 								ft_free_malloc(); // ??
-								change_exit_value("127", &envp);
+								change_exit_value("127", envp);
 								exit(127);
 							}
 							else
 							{
 								ft_free_malloc(); // ??
-								change_exit_value("126", &envp);
+								change_exit_value("126", envp);
 								exit(126);
 							}
 						}

@@ -268,12 +268,12 @@ static char	*read_full_command()
 		if (!full_line)
 		{
 			status = read_prompt_line("minishell$ ", &line);
-			////printf("DEBUG: read_prompt_line minishell devuelve cmds = %p\n", status);
+			////printf("DEBUG read_prompt_line minishell devuelve cmds = %p\n", status);
 		}
 		else
 		{
 			status = read_prompt_line("> ", &line);
-		//	//printf("DEBUG: read_prompt_line > devuelve cmds = %p\n", status);
+			////printf("DEBUG read_prompt_line > devuelve cmds = %p\n", status);
 		}
 		if (status == -1)
 		{
@@ -336,10 +336,10 @@ int	main(int argc, char **argv, char **envp)
 		num = 0;
 		//write(2, "DEBUG: antes de parsear\n", 24);
 		line = read_full_command(&num);
-		//printf("DEBUG: despues de parsear\n");
+		////printf("DEBUG despues de parsear\n");
 		/*if (g_sigint_received)
 		{
-			//printf("DEBUG: Ctrl+C detectado → salto iteración\n");
+			//////printf("DEBUG Ctrl+C detectado → salto iteración\n");
 			g_sigint_received = 0;
 			free(line);
 			continue;
@@ -370,11 +370,10 @@ int	main(int argc, char **argv, char **envp)
 		list = NULL;
 		if (parse_line(line, &codes, &list, shell_env) == 0)
 		{
-			//printf("DEBUG infiles:\n");
 			//print_red_list(list->infiles);
 			/*if (g_sigint_received)
 			{
-				//printf("DEBUG: heredoc cancelado → no ejecutar\n");
+				//////printf("DEBUG heredoc cancelado → no ejecutar\n");
 				
 				g_sigint_received = 0;
 				cmd_list_destroy(list);
@@ -384,7 +383,8 @@ int	main(int argc, char **argv, char **envp)
 			}*/
 			//print_int_array(&codes);
 			//print_nodes(list);
-			exit_code = execute_cmds(&list, shell_env);
+			exit_code = execute_cmds(&list, &shell_env);
+			//printf("DEBUG salio de execute_cmds:\n");	
 			change_exit_value(ft_itoa(exit_code), &shell_env);
 		}
 		else
@@ -393,9 +393,12 @@ int	main(int argc, char **argv, char **envp)
 				write(2, "(parse error)\n", ft_strlen("(parse error)\n"));
 			g_sigint_received = 0;
 		}
+			//printf("DEBUG free-1\n");	
 		cmd_list_destroy(list);
+			//printf("DEBUG free0\n");	
 		intvec_destroy(&codes);
 		free(line);
+		//printf("DEBUG free1\n");	
 		/* if (exit_code == -11)  // ver esto!!!! como saber que entró a exit!
 		{
 			printf("exit\n");
