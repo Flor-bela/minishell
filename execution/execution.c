@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 02:48:48 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 02:59:00 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -468,7 +468,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 		}
 		char *status = ft_itoa(return_value);
 		change_exit_value(status, envp);
-		free(status);
+		//free(status);
 		return (return_value);
 	}
 	
@@ -670,6 +670,6 @@ int	execute_cmds(t_cmdnode **data, char ***envp)
 	}
 	char *status_str = ft_itoa(last_exit_status);
 	change_exit_value(status_str, envp);
-	free(status_str);
+	//free(status_str);
 	return (last_exit_status);
 }
