@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_cd.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 12:44:37 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 02:06:40 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 16:55:35 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,12 +53,12 @@ int	builtin_cd(t_list *args, char **envp)
 	if (args != NULL && args->next != NULL)
 	{
 		write(2, "minishell: cd: too many arguments\n", 35);
-		change_exit_value("1", &envp);
 		return (1);
 	}
 	oldpwd = getcwd(NULL, 0);
 	if (envp == NULL)
 		return (1);
+		
 	if (oldpwd == NULL)
 		oldpwd = ft_strdup("");
 	if (args == NULL)

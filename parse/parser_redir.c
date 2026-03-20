@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 10:32:37 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/20 17:50:04 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ static int	handle_heredoc(t_cmdnode *cmd,
 }
 
 static int	handle_pending_heredoc(t_parser *p,
-	const char *target, char **env)
+	const char *target, char **env, t_cmdnode **data, char *line, t_intvec *codes)
 {
 	char	*heredoc_content;
 	char	*real_delim;
@@ -56,7 +56,7 @@ static int	handle_pending_heredoc(t_parser *p,
 		return (-1);
 
 	// 🔥 CAMBIO CLAVE
-	heredoc_content = heredoc_with_fork(real_delim, expand_vars, env);
+	heredoc_content = heredoc_with_fork(real_delim, expand_vars, env, data, line, codes);
 	////printf("DEBUG heredoc devuelto = %p\n", heredoc_content);
 	free(real_delim);
 
@@ -84,12 +84,12 @@ int	add_redir_target(t_cmdnode *cmd, int op_code,
 }
 
 int	store_pending_redir(t_parser *p, int op_code,
-	const char *target, char **env)
+	const char *target, char **env, t_cmdnode **data, char *line, t_intvec *codes)
 {
 	if (op_code == 1)
 		red_list_push_back(&p->pending_in, target, 0);
 	else if (op_code == 3)
-		return (handle_pending_heredoc(p, target, env));
+		return (handle_pending_heredoc(p, target, env, data, line, codes));
 	else if (op_code == 2)
 		red_list_push_back(&p->pending_out, target, 0);
 	else if (op_code == 4)
