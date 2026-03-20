@@ -20,7 +20,7 @@ void	setup_signals_prompt(void)
 {
 	struct sigaction	sa;
 
-	memset(&sa, 0, sizeof(sa));
+	ft_memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = handle_sigint;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
@@ -40,7 +40,7 @@ void	setup_signals_heredoc(void)
 {
 	struct sigaction	sa;
 
-	memset(&sa, 0, sizeof(sa));
+	ft_memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = handle_sigint_heredoc;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0; // 🔥 MUY IMPORTANTE (sin SA_RESTART)
@@ -54,12 +54,12 @@ void	setup_signals_heredoc(void)
 	struct sigaction	sa_int;
 	struct sigaction	sa_quit;
 
-	memset(&sa_int, 0, sizeof(sa_int));
+	ft_memset(&sa_int, 0, sizeof(sa_int));
 	sa_int.sa_handler = handle_sigint;
 	sigemptyset(&sa_int.sa_mask);
 	sa_int.sa_flags = 0;   // ❌ quita SA_RESTART
 	sigaction(SIGINT, &sa_int, NULL);
-	memset(&sa_quit, 0, sizeof(sa_quit));
+	ft_memset(&sa_quit, 0, sizeof(sa_quit));
 	sa_quit.sa_handler = SIG_IGN;
 	sigemptyset(&sa_quit.sa_mask);
 	sa_quit.sa_flags = 0;
