@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 04:05:57 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 11:35:29 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -560,8 +560,11 @@ static int	process_heredoc_line(t_heredoc_ctx *ctx)
 	}
 	ctx->line = expand_line_if_needed(ctx->line,
 			ctx->expand, ctx->env);
-	if (!*ctx->line)
+	/*if (!*ctx->line)
+	{
+		free(ctx->line);   // 🔥 FIX
 		return (-1);
+	}*/
 	tmp = append_line_content(ctx->content, ctx->line);
 	free(ctx->line);
 	if (!tmp)
@@ -611,7 +614,10 @@ char	*read_heredoc_input(const char *delimiter,
 	if (!init_heredoc_ctx(&ctx, delimiter, expand_vars, shell_env))
 		return (NULL);
 	if (!heredoc_loop(&ctx))
+	{
+		free(ctx.content);
 		return (NULL);
+	}
 	return (ctx.content);
 }
 

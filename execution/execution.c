@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 08:10:45 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 11:22:27 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,50 +78,53 @@ char	**get_args(t_list *phrase)
 	return (args);
 }
 
-static char	*handle_direct_cmd(t_exec_pack *p, char *data_cmd)
+static void	exit_error(t_exec_pack *p, char *code, int exit_code)
+{
+	change_exit_value(code, &p->envp);
+	free_envp_copy(p->envp);
+	cmd_list_destroy(*p->data);
+	free(p->line);
+	intvec_destroy(p->codes);
+	exit(exit_code);
+}
+
+static void	handle_fok_error(t_exec_pack *p, char *data_cmd)
 {
 	char	*error;
 
-	if (access(data_cmd, F_OK) != 0)
-	{
-		error = ft_strjoin_modif("minishell: ", data_cmd);
-		perror(error);
-		close_fds(p->arr_fds, p->len);
-		ft_free_malloc();
-		if (errno == ENOTDIR)
-		{
-			change_exit_value("126", &p->envp);
-			free_envp_copy(p->envp);
-			cmd_list_destroy(*p->data);
-			free(p->line);
-			intvec_destroy(p->codes);
-			exit(126);
-		}
-		else if (errno == ENOENT)
-		{
-			change_exit_value("127", &p->envp);
-			free_envp_copy(p->envp);
-			cmd_list_destroy(*p->data);
-			free(p->line);
-			intvec_destroy(p->codes);
-			exit(127);
-		}
-	}
-	if (access(data_cmd, X_OK) != 0)
-	{
-		error = ft_strjoin_modif("minishell: ", data_cmd);
-		perror(error);
-		change_exit_value("126", &p->envp);
-		close_fds(p->arr_fds, p->len);
-		free_envp_copy(p->envp);
-		cmd_list_destroy(*p->data);
-		free(p->line);
-		intvec_destroy(p->codes);
-		exit(126);
-	}
-	return (data_cmd);
+	error = ft_strjoin_modif("minishell: ", data_cmd);
+	perror(error);
+	close_fds(p->arr_fds, p->len);
+	ft_free_malloc();
+	if (errno == ENOTDIR)
+		exit_error(p, "126", 126);
+	else if (errno == ENOENT)
+		exit_error(p, "127", 127);
 }
 
+static void	handle_xok_error(t_exec_pack *p, char *data_cmd)
+{
+	char	*error;
+
+	error = ft_strjoin_modif("minishell: ", data_cmd);
+	perror(error);
+	change_exit_value("126", &p->envp);
+	close_fds(p->arr_fds, p->len);
+	free_envp_copy(p->envp);
+	cmd_list_destroy(*p->data);
+	free(p->line);
+	intvec_destroy(p->codes);
+	exit(126);
+}
+
+static char	*handle_direct_cmd(t_exec_pack *p, char *data_cmd)
+{
+	if (access(data_cmd, F_OK) != 0)
+		handle_fok_error(p, data_cmd);
+	if (access(data_cmd, X_OK) != 0)
+		handle_xok_error(p, data_cmd);
+	return (data_cmd);
+}
 
 static char	*get_cmd_name_and_path(t_exec_pack *p,
 	char **args, char *data_cmd)
