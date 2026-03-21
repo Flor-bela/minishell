@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 12:50:43 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 13:08:20 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -266,102 +266,121 @@ static int	handle_empty_case(t_cmdnode *data_tmp, char ***envp)
 	return (0);
 }
 
-static int	exec_builtin_parent(t_cmdnode *data_tmp,
-	char ***envp, char *line, t_intvec *codes, t_cmdnode **data)
+static int	exec_simple_builtin(t_cmdnode *data_tmp, t_exec_pack *p)
 {
-	t_exit_ctx	ctx;
-	int			return_value;
-
-	return_value = 0;
 	if (data_tmp && !ft_strncmp(data_tmp->cmd, "echo", 4))
-		return_value = builtin_echo(data_tmp->phrase);
+		return (builtin_echo(data_tmp->phrase));
 	else if (data_tmp && !ft_strncmp(data_tmp->cmd, "cd", 2))
-		return_value = builtin_cd(data_tmp->phrase, *envp);
+		return (builtin_cd(data_tmp->phrase, p->envp));
 	else if (data_tmp && !ft_strncmp(data_tmp->cmd, "pwd", 3))
-		return_value = builtin_pwd();
+		return (builtin_pwd());
 	else if (data_tmp && !ft_strncmp(data_tmp->cmd, "export", 6))
-		return_value = builtin_export(data_tmp->phrase, envp);
+		return (builtin_export(data_tmp->phrase, &p->envp));
 	else if (data_tmp && !ft_strncmp(data_tmp->cmd, "unset", 5))
-		return_value = builtin_unset(data_tmp->phrase, envp);
+		return (builtin_unset(data_tmp->phrase, &p->envp));
 	else if (data_tmp && !ft_strncmp(data_tmp->cmd, "env", 3))
-		return_value = builtin_env(*envp);
-	else if (data_tmp && !ft_strncmp(data_tmp->cmd, "exit", 4))
-	{
-		ctx.args = data_tmp->phrase;
-		ctx.in_child = 0;
-		ctx.envp = envp;
-		ctx.data = data;
-		ctx.line = line;
-		ctx.codes = codes;
-		return_value = builtin_exit(&ctx);
-	}
-	return (return_value);
+		return (builtin_env(p->envp));
+	return (-1);
 }
 
-static void	child_exec(t_exec_pack *p, t_cmdnode *data_tmp,
-	int i, char ***envp, int len, int **arr_fds,
-	char *line, t_intvec *codes)
+static int	exec_exit_builtin(t_cmdnode *data_tmp, t_exec_pack *p)
 {
-	char		**args;
-	char		*cmd_path;
-	char		*error;
-	int			return_value;
 	t_exit_ctx	ctx;
+
+	ctx.args = data_tmp->phrase;
+	ctx.in_child = 0;
+	ctx.envp = &p->envp;
+	ctx.data = p->data;
+	ctx.line = p->line;
+	ctx.codes = p->codes;
+	return (builtin_exit(&ctx));
+}
+
+static int	exec_builtin_parent(t_cmdnode *data_tmp, t_exec_pack *p)
+{
+	int	return_value;
+
+	return_value = exec_simple_builtin(data_tmp, p);
+	if (return_value != -1)
+		return (return_value);
+	if (data_tmp && !ft_strncmp(data_tmp->cmd, "exit", 4))
+		return (exec_exit_builtin(data_tmp, p));
+	return (0);
+}
+
+static void	handle_first_cmd(t_exec_pack *p, t_cmdnode *data_tmp)
+{
 	t_list_red	*tmp_infiles;
 	t_list_red	*tmp_outfiles;
 
-	signal(SIGINT, SIG_DFL);
-	signal(SIGQUIT, SIG_DFL);
+	tmp_infiles = data_tmp->infiles;
+	if (tmp_infiles)
+		handle_infile_redirections(&tmp_infiles, p);
+	tmp_outfiles = data_tmp->outfiles;
+	if (tmp_outfiles)
+		handle_outfile_redirections(&tmp_outfiles, p);
+	if (p->len > 1 && data_tmp->outfiles == NULL)
+		dup2(p->arr_fds[0][1], STDOUT_FILENO);
+}
 
-	if (i == 0)
-	{
-		tmp_infiles = data_tmp->infiles;
-		if (tmp_infiles)
-			handle_infile_redirections(&tmp_infiles, p);
-		tmp_outfiles = data_tmp->outfiles;
-		if (tmp_outfiles)
-			handle_outfile_redirections(&tmp_outfiles, p);
-		if (len > 1 && data_tmp->outfiles == NULL)
-			dup2(arr_fds[0][1], STDOUT_FILENO);
-	}
-	else if (i == len - 1)
-	{
-		tmp_infiles = data_tmp->infiles;
-		if (tmp_infiles)
-			handle_infile_redirections(&tmp_infiles, p);
-		else
-			dup2(arr_fds[i - 1][0], STDIN_FILENO);
-		tmp_outfiles = data_tmp->outfiles;
-		if (tmp_outfiles)
-			handle_outfile_redirections(&tmp_outfiles, p);
-	}
+static void	handle_last_cmd(t_exec_pack *p, t_cmdnode *data_tmp, int i)
+{
+	t_list_red	*tmp_infiles;
+	t_list_red	*tmp_outfiles;
+
+	tmp_infiles = data_tmp->infiles;
+	if (tmp_infiles)
+		handle_infile_redirections(&tmp_infiles, p);
 	else
-	{
-		tmp_infiles = data_tmp->infiles;
-		if (tmp_infiles)
-			handle_infile_redirections(&tmp_infiles, p);
-		else
-			dup2(arr_fds[i - 1][0], STDIN_FILENO);
-		tmp_outfiles = data_tmp->outfiles;
-		if (tmp_outfiles)
-			handle_outfile_redirections(&tmp_outfiles, p);
-		else
-			dup2(arr_fds[i][1], STDOUT_FILENO);
-	}
+		dup2(p->arr_fds[i - 1][0], STDIN_FILENO);
+	tmp_outfiles = data_tmp->outfiles;
+	if (tmp_outfiles)
+		handle_outfile_redirections(&tmp_outfiles, p);
+}
 
-	close_fds(arr_fds, len);
+static void	handle_middle_cmd(t_exec_pack *p, t_cmdnode *data_tmp, int i)
+{
+	t_list_red	*tmp_infiles;
+	t_list_red	*tmp_outfiles;
+
+	tmp_infiles = data_tmp->infiles;
+	if (tmp_infiles)
+		handle_infile_redirections(&tmp_infiles, p);
+	else
+		dup2(p->arr_fds[i - 1][0], STDIN_FILENO);
+	tmp_outfiles = data_tmp->outfiles;
+	if (tmp_outfiles)
+		handle_outfile_redirections(&tmp_outfiles, p);
+	else
+		dup2(p->arr_fds[i][1], STDOUT_FILENO);
+}
+
+static void	setup_child_redirections(t_exec_pack *p,
+	t_cmdnode *data_tmp, int i)
+{
+	if (i == 0)
+		handle_first_cmd(p, data_tmp);
+	else if (i == p->len - 1)
+		handle_last_cmd(p, data_tmp, i);
+	else
+		handle_middle_cmd(p, data_tmp, i);
+}
+
+static int	exec_child_command(t_exec_pack *p, t_cmdnode *data_tmp)
+{
+	char	**args;
+	char	*cmd_path;
+	char	*error;
 
 	if (is_built_in(data_tmp->cmd))
-	{
-		return_value = exec_builtin_parent(data_tmp, envp, line, codes, p->data);
-	}
+		return (exec_builtin_parent(data_tmp, p));
 	else
 	{
 		args = data_tmp->cmd ? get_args(data_tmp->phrase) : NULL;
 		cmd_path = data_tmp->cmd ?
 			get_cmd_name_and_path(p, args, data_tmp->cmd) : NULL;
 
-		if (cmd_path && args && execve(cmd_path, args, *envp) < 0)
+		if (cmd_path && args && execve(cmd_path, args, p->envp) < 0)
 		{
 			error = ft_strjoin_modif("minishell: ", cmd_path);
 			perror(error);
@@ -373,12 +392,32 @@ static void	child_exec(t_exec_pack *p, t_cmdnode *data_tmp,
 				exit(126);
 		}
 	}
+	return (0);
+}
+
+static void	child_cleanup_and_exit(t_exec_pack *p, int return_value)
+{
 	ft_free_malloc();
-	free_envp_copy(*envp);
+	free_envp_copy(p->envp);
 	cmd_list_destroy(*p->data);
-	free(line);
-	intvec_destroy(codes);
+	free(p->line);
+	intvec_destroy(p->codes);
 	exit(return_value);
+}
+
+static void	child_exec(t_exec_pack *p, t_cmdnode *data_tmp, int i)
+{
+	int	return_value;
+
+	signal(SIGINT, SIG_DFL);
+	signal(SIGQUIT, SIG_DFL);
+
+	setup_child_redirections(p, data_tmp, i);
+	close_fds(p->arr_fds, p->len);
+
+	return_value = exec_child_command(p, data_tmp);
+
+	child_cleanup_and_exit(p, return_value);
 }
 
 static int	exec_forks(t_exec_pack *p, char ***envp,
@@ -399,8 +438,7 @@ static int	exec_forks(t_exec_pack *p, char ***envp,
 	{
 		pids[i] = fork();
 		if (pids[i] == 0)
-			child_exec(p, tmp, i, envp, p->len,
-				p->arr_fds, line, codes);
+			child_exec(p, tmp, i);
 		tmp = tmp->next;
 		i++;
 	}
@@ -443,7 +481,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp,
 		return (handle_empty_case(data_tmp, envp));
 
 	if (len == 1 && is_built_in(data_tmp->cmd))
-		return (exec_builtin_parent(data_tmp, envp, line, codes, data));
+		return (exec_builtin_parent(data_tmp, &p));
 
 	last_exit_status = exec_forks(&p, envp, line, codes);
 
