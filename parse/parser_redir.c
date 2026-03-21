@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_redir.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 13:23:33 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/21 19:14:15 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,8 +65,9 @@ static int	handle_pending_heredoc(t_heredoc_args *args)
 
 	if (init_heredoc_ctx(&ctx, args) == -1)
 		return (-1);
-	heredoc_content = heredoc_with_fork(&ctx);
+	heredoc_content = heredoc_with_fork(&ctx, args);
 	free(ctx.delimiter);
+	free((char *)args->target); ///
 	if (!heredoc_content)
 		return (0);
 	red_list_push_back(&args->parser->pending_in, heredoc_content, 1);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   provisionaryFunctions2.c                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 12:26:28 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/21 19:17:29 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -664,21 +664,23 @@ char	*read_fd_all(int fd)
 	return (result);
 }
 
-static void	heredoc_child(t_heredoc_fork *ctx, int fd[2])
+static void	heredoc_child(t_heredoc_fork *ctx, int fd[2], char *target)
 {
 	char	*content;
 
 	close(fd[0]);
 	content = read_heredoc_input(ctx->delimiter, ctx->expand, ctx->env);
+	free(target); //////////////ERA ESTO
 	if (!content)
 	{
-		close(fd[1]);
+		close(fd[1]); // solo puedo liberar aqui si estoy en el << como comando solo
 		ft_free_malloc();
 		free_envp_copy(ctx->env);
 		cmd_list_destroy(*ctx->data);
 		free(ctx->line);
 		//free((char *)ctx->delimiter); //////
 		intvec_destroy(ctx->codes);
+		//free(target);
 		exit(130);
 	}
 	write(fd[1], content, ft_strlen(content));
@@ -708,7 +710,7 @@ static int	check_heredoc_signal(int status, char ***env, int fd)
 	return (0);
 }
 
-char	*heredoc_with_fork(t_heredoc_fork *ctx)
+char	*heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args)
 {
 	int		fd[2];
 	pid_t	pid;
@@ -721,12 +723,16 @@ char	*heredoc_with_fork(t_heredoc_fork *ctx)
 	if (pid == -1)
 		return (NULL);
 	if (pid == 0)
-		heredoc_child(ctx, fd);
+		heredoc_child(ctx, fd, (char *)args->target);
 	close(fd[1]);
 	//free((char *)ctx->delimiter); ///
 	waitpid(pid, &status, 0);
 	if (check_heredoc_signal(status, &ctx->env, fd[0]))
+	{
+		free((char *)args->target);
 		return (NULL);
+	}	
+	
 	content = read_fd_all(fd[0]);
 	close(fd[0]);
 	return (content);

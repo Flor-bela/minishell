@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 11:22:27 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 19:16:36 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,7 +149,7 @@ static char	*get_cmd_name_and_path(t_exec_pack *p,
 
 
 static void	handle_infile_redirections(t_list_red **tmp_infiles,
-	t_exec_pack *p)
+	t_exec_pack *p, t_heredoc_args *args)
 {
 	int				fd_file;
 	t_heredoc_fork	ctx;
@@ -166,9 +166,11 @@ static void	handle_infile_redirections(t_list_red **tmp_infiles,
 			ctx.data = p->data;
 			ctx.line = p->line;
 			ctx.codes = p->codes;
-			content = heredoc_with_fork(&ctx);
+			content = heredoc_with_fork(&ctx, NULL);
+			//free((char *)args->target);
 			if (!content)
 			{
+				free((char *)args->target); ////
 				change_exit_value("130", &p->envp);
 				ft_free_malloc();
 				free_envp_copy(p->envp);
@@ -448,7 +450,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 				{
 					tmp_infiles = data_tmp->infiles;
 					if (tmp_infiles != NULL)
-						handle_infile_redirections(&tmp_infiles, &p);
+						handle_infile_redirections(&tmp_infiles, &p, NULL);
 					tmp_outfiles = data_tmp->outfiles;
 					if (tmp_outfiles != NULL)
 						handle_outfile_redirections(&tmp_outfiles, &p);
@@ -459,7 +461,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 				{
 					tmp_infiles = data_tmp->infiles;
 					if (tmp_infiles != NULL)
-						handle_infile_redirections(&tmp_infiles, &p);
+						handle_infile_redirections(&tmp_infiles, &p, NULL);
 					else
 						dup2(arr_fds[i - 1][0], STDIN_FILENO);
 					tmp_outfiles = data_tmp->outfiles;
@@ -470,7 +472,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 				{
 					tmp_infiles = data_tmp->infiles;
 					if (tmp_infiles != NULL)
-						handle_infile_redirections(&tmp_infiles, &p);
+						handle_infile_redirections(&tmp_infiles, &p, NULL);
 					else
 						dup2(arr_fds[i - 1][0], STDIN_FILENO);
 

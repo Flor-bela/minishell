@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   provisionaryFunctions.h                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 05:19:23 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 18:56:00 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,6 @@ int		builtin_cd(t_list *args, char **envp);
 size_t	env_len(char **envp);
 
 void	change_exit_value(char *args, char ***envp);
-char	*heredoc_with_fork(t_heredoc_fork *ctx);
+char	*heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args);
 
 #endif
