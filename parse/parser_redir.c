@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_redir.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 05:35:43 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 13:23:33 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,10 +26,12 @@ static int	handle_heredoc(t_cmdnode *cmd,
 	if (!node)
 	{
 		free(real_delim);
+		//free((char *)target); //
 		return (-1);
 	}
 	node->is_heredoc = 1;
 	free(real_delim);
+	//free((char *)target); //
 	return (0);
 }
 
@@ -41,8 +43,13 @@ static int	init_heredoc_ctx(t_heredoc_fork *ctx, t_heredoc_args *args)
 	if (strchr(args->target, '\'') || strchr(args->target, '"'))
 		ctx->expand = 0;
 	real_delim = remove_quotes_str(args->target);
+	//ctx->delimiter = remove_quotes_str(args->target);
 	if (!real_delim)
+	{
+		//free((char *)args->target); //
 		return (-1);
+	}	
+	
 	ctx->delimiter = real_delim;
 	ctx->env = args->env;
 	ctx->data = args->data;

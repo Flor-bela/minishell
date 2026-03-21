@@ -814,6 +814,7 @@ static int	init_heredoc_ctx(t_heredoc_ctx *ctx,
 	ctx->delimiter = delimiter;
 	ctx->expand = expand;
 	ctx->env = env;
+	//free((char *delimiter)); ///
 	return (1);
 }
 

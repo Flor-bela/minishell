@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_expand.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:20 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/17 12:25:20 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 12:45:02 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,7 @@ char	*expand_env_vars(const char *token, char **env)
 	if (!res)
 	{
 		perror("ft_strdup");
+		//free((char *)token); /////
 		exit(1);
 	}
 	quote = 0;
@@ -95,5 +96,6 @@ char	*expand_env_vars(const char *token, char **env)
 		res = append_char_dyn(res, token[i]);
 		i++;
 	}
+	//free((char *)token); //
 	return (res);
 }

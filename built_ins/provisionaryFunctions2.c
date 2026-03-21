@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   provisionaryFunctions2.c                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 11:35:29 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 12:26:28 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -556,6 +556,7 @@ static int	process_heredoc_line(t_heredoc_ctx *ctx)
 	if (ft_strcmp(ctx->line, ctx->delimiter) == 0)
 	{
 		free(ctx->line);
+		//free((char *)ctx->delimiter); //
 		return (1);
 	}
 	ctx->line = expand_line_if_needed(ctx->line,
@@ -567,6 +568,7 @@ static int	process_heredoc_line(t_heredoc_ctx *ctx)
 	}*/
 	tmp = append_line_content(ctx->content, ctx->line);
 	free(ctx->line);
+	//free((char *)ctx->delimiter); // mal
 	if (!tmp)
 		return (-1);
 	ctx->content = tmp;
@@ -618,6 +620,7 @@ char	*read_heredoc_input(const char *delimiter,
 		free(ctx.content);
 		return (NULL);
 	}
+	free((char *)delimiter);
 	return (ctx.content);
 }
 
@@ -674,16 +677,19 @@ static void	heredoc_child(t_heredoc_fork *ctx, int fd[2])
 		free_envp_copy(ctx->env);
 		cmd_list_destroy(*ctx->data);
 		free(ctx->line);
+		//free((char *)ctx->delimiter); //////
 		intvec_destroy(ctx->codes);
 		exit(130);
 	}
 	write(fd[1], content, ft_strlen(content));
 	free(content);
+	//free((char *)ctx->delimiter);//
 	close(fd[1]);
 	ft_free_malloc();
 	free_envp_copy(ctx->env);
 	cmd_list_destroy(*ctx->data);
 	free(ctx->line);
+	//free((char *)ctx->delimiter); //////
 	intvec_destroy(ctx->codes);
 	exit(0);
 }
@@ -717,6 +723,7 @@ char	*heredoc_with_fork(t_heredoc_fork *ctx)
 	if (pid == 0)
 		heredoc_child(ctx, fd);
 	close(fd[1]);
+	//free((char *)ctx->delimiter); ///
 	waitpid(pid, &status, 0);
 	if (check_heredoc_signal(status, &ctx->env, fd[0]))
 		return (NULL);
