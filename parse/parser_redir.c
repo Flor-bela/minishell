@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_redir.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 19:14:15 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/21 23:12:51 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,6 @@ static int	init_heredoc_ctx(t_heredoc_fork *ctx, t_heredoc_args *args)
 	if (strchr(args->target, '\'') || strchr(args->target, '"'))
 		ctx->expand = 0;
 	real_delim = remove_quotes_str(args->target);
-	//ctx->delimiter = remove_quotes_str(args->target);
 	if (!real_delim)
 	{
 		//free((char *)args->target); //
@@ -67,7 +66,7 @@ static int	handle_pending_heredoc(t_heredoc_args *args)
 		return (-1);
 	heredoc_content = heredoc_with_fork(&ctx, args);
 	free(ctx.delimiter);
-	free((char *)args->target); ///
+	free((char *)args->target); /// IMPORTANT------
 	if (!heredoc_content)
 		return (0);
 	red_list_push_back(&args->parser->pending_in, heredoc_content, 1);

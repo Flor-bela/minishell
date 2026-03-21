@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 22:35:37 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/21 23:26:57 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -509,6 +509,8 @@ static int	check_sigint(char *line, char *content)
 		g_sigint_received = 0;
 		free(line);
 		free(content);
+		line = NULL;
+		content = NULL;
 		return (1);
 	}
 	return (0);
@@ -617,7 +619,8 @@ char	*read_heredoc_input(const char *delimiter,
 		return (NULL);
 	if (!heredoc_loop(&ctx))
 	{
-		free(ctx.content);
+		
+		//free(ctx.content); // do not free here for ctrl C!!! double free!!!
 		return (NULL);
 	}
 	free((char *)delimiter);
@@ -670,22 +673,22 @@ static void	heredoc_child(t_heredoc_fork *ctx, int fd[2], char *target)
 
 	close(fd[0]);
 	content = read_heredoc_input(ctx->delimiter, ctx->expand, ctx->env);
-	free(target); //////////////ERA ESTO
 	if (!content)
 	{
-		close(fd[1]); // solo puedo liberar aqui si estoy en el << como comando solo
+		// solo puedo liberar todo aqui si estoy en el << como comando solo
+		close(fd[1]); 
+		free(target); ////// HACE$R FREE AQUI PARA QUE NO HAYA LEAK DE DELIMITER CON CTRL+C
+		free((char *)ctx->delimiter); ////// HACE$R FREE AQUI PARA QUE NO HAYA LEAK DE DELIMITER CON CTRL+C
 		ft_free_malloc();
 		free_envp_copy(ctx->env);
 		cmd_list_destroy(*ctx->data);
 		free(ctx->line);
-		//free((char *)ctx->delimiter); //////
 		intvec_destroy(ctx->codes);
-		//free(target);
 		exit(130);
 	}
+	free(target); //////////////ERA ESTO
 	write(fd[1], content, ft_strlen(content));
 	free(content);
-	//free((char *)ctx->delimiter);//
 	close(fd[1]);
 	ft_free_malloc();
 	free_envp_copy(ctx->env);
@@ -729,7 +732,7 @@ char	*heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args)
 	waitpid(pid, &status, 0);
 	if (check_heredoc_signal(status, &ctx->env, fd[0]))
 	{
-		free((char *)args->target);
+		//free((char *)args->target);
 		return (NULL);
 	}	
 	
