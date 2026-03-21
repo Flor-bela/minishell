@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/21 05:41:58 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 06:42:11 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,6 +103,16 @@ typedef struct s_parse_ctx
 	char		**env;
 	t_cmdnode	**data;
 }	t_parse_ctx;
+
+typedef struct s_exec_ctx
+{
+	char		**envp;
+	t_cmdnode	**data;
+	char		*line;
+	t_intvec	*codes;
+	int			**arr_fds;
+	int			len;
+}	t_exec_ctx;
 
 extern volatile sig_atomic_t	g_sigint_received;
 
