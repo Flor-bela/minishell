@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_operator_handler.c                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 17:58:58 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/21 22:31:49 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ static int	handle_redirection(t_parse_ctx *ctx)
 			return (-1);
 		}
 	}
-	free(target);
+	//free(target);
 	return (0);
 }
 
