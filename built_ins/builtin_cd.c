@@ -3,17 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_cd.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 12:44:37 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 16:55:35 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/21 04:05:03 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "provisionaryFunctions.h"
 
-//int	builtin_cd(char **args, **envp)
- 
 static int	update_env(char **envp, char *key, char *path)
 {
 	size_t	i;
@@ -23,7 +21,6 @@ static int	update_env(char **envp, char *key, char *path)
 
 	if (envp == NULL || key == NULL || path == NULL)
 		return (1);
-
 	len = ft_strlen(key);
 	i = 0;
 	while (envp[i] != NULL)
@@ -42,51 +39,70 @@ static int	update_env(char **envp, char *key, char *path)
 	return (0);
 }
 
-int	builtin_cd(t_list *args, char **envp)
+static char	*cd_get_path(t_list *args, char **envp, char *oldpwd)
 {
 	char	*path;
-	char	*oldpwd;
-	char	*newpwd;
 
-	oldpwd = NULL;
-	newpwd = NULL;
-	if (args != NULL && args->next != NULL)
-	{
-		write(2, "minishell: cd: too many arguments\n", 35);
-		return (1);
-	}
-	oldpwd = getcwd(NULL, 0);
-	if (envp == NULL)
-		return (1);
-		
-	if (oldpwd == NULL)
-		oldpwd = ft_strdup("");
-	if (args == NULL)
+	if (!args)
 	{
 		path = get_env_value(envp, "HOME");
-		if (path == NULL)
+		if (!path)
 		{
 			write(2, "minishell: cd: HOME not set\n", 29);
 			free(oldpwd);
-			return (1);
+			return (NULL);
 		}
 	}
 	else
 		path = args->content;
+	return (path);
+}
+
+static int	cd_change_dir(char *path, char *oldpwd)
+{
 	if (chdir(path) != 0)
 	{
 		perror("minishell: cd");
 		free(oldpwd);
 		return (1);
 	}
+	return (0);
+}
+
+static void	cd_update_env(char **envp, char *oldpwd)
+{
+	char	*newpwd;
+
 	newpwd = getcwd(NULL, 0);
-	if (newpwd == NULL)
+	if (!newpwd)
 		newpwd = ft_strdup("");
 	update_env(envp, "OLDPWD", oldpwd);
 	update_env(envp, "PWD", newpwd);
 	free(oldpwd);
 	free(newpwd);
-	return (0);
 }
 
+int	builtin_cd(t_list *args, char **envp)
+{
+	char	*path;
+	char	*oldpwd;
 
+	oldpwd = NULL;
+	if (args && args->next)
+	{
+		write(2, "minishell: cd: too many arguments\n", 35);
+		return (1);
+	}
+	oldpwd = getcwd(NULL, 0);
+	if (!envp)
+		return (1);
+	if (!oldpwd)
+		oldpwd = ft_strdup("");
+	path = cd_get_path(args, envp, oldpwd);
+	if (!path)
+		return (1);
+	if (cd_change_dir(path, oldpwd))
+		return (1);
+	cd_update_env(envp, oldpwd);
+	return (0);
+}

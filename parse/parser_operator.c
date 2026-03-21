@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:42 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 16:19:53 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 04:54:42 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ static int	handle_less(const char *s, size_t i, size_t *len, int *code)
 		{
 			write(2,
 				"Error: no se permiten mas de 2 redirecciones '<' seguidas.\n",
-				ft_strlen("Error: no se permiten mas de 2 redirecciones '<' seguidas.\n"));
+				59);
 			return (-1);
 		}
 		*len = 2;
@@ -40,7 +40,7 @@ static int	handle_greater(const char *s, size_t i, size_t *len, int *code)
 		{
 			write(2,
 				"Error: no se permiten mas de 2 redirecciones '>' seguidas.\n",
-				ft_strlen("Error: no se permiten mas de 2 redirecciones '>' seguidas.\n"));
+				59);
 			return (-1);
 		}
 		*len = 2;

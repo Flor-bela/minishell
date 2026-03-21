@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   provisionaryFunctions.h                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 16:58:38 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/21 04:07:31 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,26 @@
 # define PROVISIONARYFUNCTIONS_H
 
 # include "../minishell.h"
+
+typedef struct s_heredoc_ctx
+{
+	char		*line;
+	char		*content;
+	const char	*delimiter;
+	int			expand;
+	char		**env;
+	int			status;
+}	t_heredoc_ctx;
+
+typedef struct s_heredoc_fork
+{
+	const char	*delimiter;
+	int			expand;
+	char		**env;
+	t_cmdnode	**data;
+	char		*line;
+	t_intvec	*codes;
+}	t_heredoc_fork;
 
 char	**dup_envp(char **envp);
 char	*get_env_value(char **envp, const char *key);
@@ -28,12 +48,10 @@ int		builtin_pwd(void);
 int		builtin_export(t_list *args, char ***envp);
 int		builtin_unset(t_list *args, char ***envp);
 int		builtin_env(char **envp);
-int		builtin_exit(t_list *args, int in_child, char ***envp, t_cmdnode **data, char *line, t_intvec *codes);
 int		builtin_cd(t_list *args, char **envp);
 size_t	env_len(char **envp);
 
 void	change_exit_value(char *args, char ***envp);
-char	*heredoc_with_fork(const char *delimiter,
-			int expand_vars, char **env, t_cmdnode **data, char *line, t_intvec *codes);
+char	*heredoc_with_fork(t_heredoc_fork *ctx);
 
 #endif

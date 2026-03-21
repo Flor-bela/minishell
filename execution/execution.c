@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/10 15:35:41 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 18:06:44 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 04:44:28 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,8 +158,16 @@ static void handle_infile_redirections(t_list_red **tmp_infiles,
 	{
 		if ((*tmp_infiles)->doble == 1)
 		{
-			// 🔥 HEREDOC
-			char *content = heredoc_with_fork((*tmp_infiles)->content, 1, envp, data, line, codes);
+			t_heredoc_fork	ctx;
+
+			ctx.delimiter = (*tmp_infiles)->content;
+			ctx.expand = 1;
+			ctx.env = envp;
+			ctx.data = data;
+			ctx.line = line;
+			ctx.codes = codes;
+			char *content = heredoc_with_fork(&ctx);
+
 
 			if (!content)
 			{
@@ -498,7 +506,18 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
 			return_value = builtin_env(*envp);
 		else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
-			return_value = builtin_exit(data_tmp->phrase, 0, envp, data, line, codes);
+			{
+				t_exit_ctx	ctx;
+
+				ctx.args = data_tmp->phrase;
+				ctx.in_child = 0;
+				ctx.envp = envp;
+				ctx.data = data;
+				ctx.line = line;
+				ctx.codes = codes;
+
+				return_value = builtin_exit(&ctx);
+			}
 		
 		if (saved_stdin != -1)
 		{
@@ -626,7 +645,18 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
 					return_value = builtin_env(*envp);
 				else if (data_tmp && (ft_strncmp (data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
-					return_value = builtin_exit(data_tmp->phrase, 1, envp, data, line, codes);
+					{
+						t_exit_ctx	ctx;
+
+						ctx.args = data_tmp->phrase;
+						ctx.in_child = 1;
+						ctx.envp = envp;
+						ctx.data = data;
+						ctx.line = line;
+						ctx.codes = codes;
+
+						return_value = builtin_exit(&ctx);
+					}
 				
 				else // execute command:
 				{

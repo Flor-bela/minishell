@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 17:49:42 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 04:05:57 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,6 @@ static int	find_env_index(char **envp, const char *key)
 		return (-1);
 	klen = key_len(key);
 	i = 0;
-	//printf("DEBUG envp[i]: %p -> %s\n", envp[i], envp[i]);
 	while (envp[i])
 	{
 		if (ft_strncmp(envp[i], key, klen) == 0
@@ -98,22 +97,32 @@ static int	replace_env_value(char **envp, int idx, const char *new_value)
 	return (0);
 }
 
+static char	**copy_env(char **env, size_t len)
+{
+	size_t	i;
+	char	**new_env;
+
+	new_env = malloc(sizeof(char *) * (len + 2));
+	if (!new_env)
+		return (NULL);
+	i = 0;
+	while (i < len)
+	{
+		new_env[i] = env[i];
+		i++;
+	}
+	return (new_env);
+}
+
 static int	append_env_value(char ***envp, const char *new_value)
 {
 	size_t	len;
 	char	**new_env;
-	size_t	i;
 
 	len = env_len(*envp);
-	new_env = (char **)malloc(sizeof(char *) * (len + 2));
+	new_env = copy_env(*envp, len);
 	if (!new_env)
 		return (1);
-	i = 0;
-	while (i < len)
-	{
-		new_env[i] = (*envp)[i];
-		i++;
-	}
 	new_env[len] = ms_strdup(new_value);
 	if (!new_env[len])
 	{
@@ -126,17 +135,22 @@ static int	append_env_value(char ***envp, const char *new_value)
 	return (0);
 }
 
+static char	**alloc_env_minus_one(size_t len)
+{
+	return (malloc(sizeof(char *) * len));
+}
+
 static int	remove_env_index(char ***envp, int idx)
 {
 	size_t	len;
-	char	**new_env;
 	size_t	i;
 	size_t	j;
+	char	**new_env;
 
 	if (!envp || !*envp || idx < 0)
 		return (0);
 	len = env_len(*envp);
-	new_env = (char **)malloc(sizeof(char *) * len);
+	new_env = alloc_env_minus_one(len);
 	if (!new_env)
 		return (1);
 	i = 0;
@@ -272,8 +286,7 @@ static char	*join_and_free(char *s1, const char *s2)
 	size_t	len1;
 	size_t	len2;
 	char	*res;
-	
-	////printf("DEBUG join_and_free s1=%p s2=%p\n", s1, s2);
+
 	if (!s1)
 	{
 		res = ft_strdup(s2);
@@ -297,7 +310,7 @@ static char	*join_and_free(char *s1, const char *s2)
 }
 
 static void	handle_quote_char(const char *str, size_t *j,
-	char *quote, char *res)
+								char *quote, char *res)
 {
 	if (*quote == 0)
 		*quote = str[0];
@@ -415,7 +428,7 @@ static char	*get_var_value(const char *line, size_t *i, char **env)
 }
 
 static char	*expand_dollar(const char *line, size_t *i,
-	char *res, char **shell_env)
+							char *res, char **shell_env)
 {
 	char	*value;
 
@@ -464,138 +477,166 @@ static char	*expand_heredoc_line(const char *line, char **shell_env)
 	return (res);
 }
 
-/*static int	process_heredoc_line(char **line, char **content,
-	int expand_vars, char **shell_env)
+static char	*get_next_line(int fd)
 {
-	char	*tmp;
-	char	*expanded;
+	char	*buf;
+	int		i;
+	char	c;
 
-	if (expand_vars)
+	buf = malloc(1024);
+	i = 0;
+	if (!buf)
+		return (NULL);
+	while (read(fd, &c, 1) > 0)
 	{
-		expanded = expand_heredoc_line(*line, shell_env);
-		free(*line);
-		*line = expanded;
-		if (!*line)
-			return (1);
+		buf[i++] = c;
+		if (c == '\n')
+			break ;
 	}
-	tmp = join_and_free(*content, *line);
-	if (!tmp)
-		return (1);
-	*content = tmp;
-	tmp = join_and_free(*content, "\n");
-	if (!tmp)
-		return (1);
-	*content = tmp;
-	return (0);
-}*/
-
-static char *get_next_line(int fd)
-{
-    char *buf = malloc(1024);
-    int i = 0;
-    char c;
-
-    if (!buf)
-        return NULL;
-
-    while (read(fd, &c, 1) > 0)
-    {
-        buf[i++] = c;
-        if (c == '\n')
-            break;
-    }
-
-    if (i == 0)
-    {
-        free(buf);
-        return NULL;
-    }
-
-    buf[i] = '\0';
-    return buf;
+	if (i == 0)
+	{
+		free(buf);
+		return (NULL);
+	}
+	buf[i] = '\0';
+	return (buf);
 }
 
-char	*read_heredoc_input(const char *delimiter,
-			int expand_vars, char **shell_env)
+static int	check_sigint(char *line, char *content)
 {
-	char	*line;
-	char	*content;
-	char	*tmp;
+	if (g_sigint_received)
+	{
+		g_sigint_received = 0;
+		free(line);
+		free(content);
+		return (1);
+	}
+	return (0);
+}
+
+static void	trim_newline(char *line)
+{
+	size_t	len;
+
+	len = ft_strlen(line);
+	if (len > 0 && line[len - 1] == '\n')
+		line[len - 1] = '\0';
+}
+
+static char	*expand_line_if_needed(char *line, int expand, char **env)
+{
 	char	*expanded;
 
-	content = ft_strdup("");
-	if (!content)
+	if (!expand)
+		return (line);
+	expanded = expand_heredoc_line(line, env);
+	free(line);
+	return (expanded);
+}
+
+static char	*append_line_content(char *content, char *line)
+{
+	char	*tmp;
+
+	tmp = join_and_free(content, line);
+	if (!tmp)
 		return (NULL);
+	content = tmp;
+	tmp = join_and_free(content, "\n");
+	if (!tmp)
+		return (NULL);
+	return (tmp);
+}
 
-	g_sigint_received = 0;
-	setup_signals_heredoc();
+static int	process_heredoc_line(t_heredoc_ctx *ctx)
+{
+	char	*tmp;
 
+	trim_newline(ctx->line);
+	if (ft_strcmp(ctx->line, ctx->delimiter) == 0)
+	{
+		free(ctx->line);
+		return (1);
+	}
+	ctx->line = expand_line_if_needed(ctx->line,
+			ctx->expand, ctx->env);
+	if (!*ctx->line)
+		return (-1);
+	tmp = append_line_content(ctx->content, ctx->line);
+	free(ctx->line);
+	if (!tmp)
+		return (-1);
+	ctx->content = tmp;
+	return (0);
+}
+
+static int	init_heredoc_ctx(t_heredoc_ctx *ctx,
+	const char *delimiter, int expand, char **env)
+{
+	ctx->content = ft_strdup("");
+	if (!ctx->content)
+		return (0);
+	ctx->delimiter = delimiter;
+	ctx->expand = expand;
+	ctx->env = env;
+	return (1);
+}
+
+static int	heredoc_loop(t_heredoc_ctx *ctx)
+{
 	while (1)
 	{
 		write(1, "> ", 2);
-		line = get_next_line(STDIN_FILENO);
-
-		if (g_sigint_received)
-		{
-			g_sigint_received = 0;
-
-			free(line);
-			free(content);
-
-			return (NULL);
-		}
-
-		if (!line)
+		ctx->line = get_next_line(STDIN_FILENO);
+		if (check_sigint(ctx->line, ctx->content))
+			return (0);
+		if (!ctx->line)
 			break ;
-
-		if (line)
-		{
-			int len = ft_strlen(line);
-			if (len > 0 && line[len - 1] == '\n')
-				line[len - 1] = '\0';
-		}
-		if (ft_strcmp(line, delimiter) == 0)
-		{
-			free(line);
+		ctx->status = process_heredoc_line(ctx);
+		if (ctx->status == 1)
 			break ;
-		}
-
-		if (expand_vars)
-		{
-			expanded = expand_heredoc_line(line, shell_env);
-			free(line);
-			line = expanded;
-			if (!line)
-				return (NULL);
-		}
-
-		tmp = join_and_free(content, line);
-		if (!tmp)
-			return (NULL);
-		content = tmp;
-
-		tmp = join_and_free(content, "\n");
-		if (!tmp)
-			return (NULL);
-		content = tmp;
-
-		free(line);
+		if (ctx->status == -1)
+			return (0);
 	}
+	return (1);
+}
 
-	return (content);
+char	*read_heredoc_input(const char *delimiter,
+	int expand_vars, char **shell_env)
+{
+	t_heredoc_ctx	ctx;
+
+	g_sigint_received = 0;
+	setup_signals_heredoc();
+	if (!init_heredoc_ctx(&ctx, delimiter, expand_vars, shell_env))
+		return (NULL);
+	if (!heredoc_loop(&ctx))
+		return (NULL);
+	return (ctx.content);
+}
+
+static char	*append_buffer(char *result, char *buffer)
+{
+	char	*tmp;
+
+	tmp = join_and_free(result, buffer);
+	if (!tmp)
+	{
+		free(result);
+		return (NULL);
+	}
+	return (tmp);
 }
 
 char	*read_fd_all(int fd)
 {
 	char	buffer[1025];
 	char	*result;
-	char	*tmp;
 	ssize_t	bytes;
 
 	result = ft_strdup("");
 	if (!result)
 		return (NULL);
-
 	while (1)
 	{
 		bytes = read(fd, buffer, 1024);
@@ -607,101 +648,74 @@ char	*read_fd_all(int fd)
 		if (bytes == 0)
 			break ;
 		buffer[bytes] = '\0';
-
-		tmp = join_and_free(result, buffer);
-		if (!tmp)
-		{
-			free(result);
+		result = append_buffer(result, buffer);
+		if (!result)
 			return (NULL);
-		}
-		result = tmp;
 	}
 	return (result);
 }
 
-char	*heredoc_with_fork(const char *delimiter,
-			int expand_vars, char **env, t_cmdnode **data, char *line, t_intvec *codes)
+static void	heredoc_child(t_heredoc_fork *ctx, int fd[2])
+{
+	char	*content;
+
+	close(fd[0]);
+	content = read_heredoc_input(ctx->delimiter, ctx->expand, ctx->env);
+	if (!content)
+	{
+		close(fd[1]);
+		ft_free_malloc();
+		free_envp_copy(ctx->env);
+		cmd_list_destroy(*ctx->data);
+		free(ctx->line);
+		intvec_destroy(ctx->codes);
+		exit(130);
+	}
+	write(fd[1], content, ft_strlen(content));
+	free(content);
+	close(fd[1]);
+	ft_free_malloc();
+	free_envp_copy(ctx->env);
+	cmd_list_destroy(*ctx->data);
+	free(ctx->line);
+	intvec_destroy(ctx->codes);
+	exit(0);
+}
+
+static int	check_heredoc_signal(int status, char ***env, int fd)
+{
+	if (g_sigint_received == 1
+		|| (WIFEXITED(status) && WEXITSTATUS(status) == 130)
+		|| (WIFSIGNALED(status) && WTERMSIG(status) == SIGINT))
+	{
+		close(fd);
+		g_sigint_received = 1;
+		change_exit_value("130", env);
+		return (1);
+	}
+	return (0);
+}
+
+char	*heredoc_with_fork(t_heredoc_fork *ctx)
 {
 	int		fd[2];
 	pid_t	pid;
 	char	*content;
 	int		status;
 
-	////printf("DEBUG entro heredoc\n");
 	if (pipe(fd) == -1)
 		return (NULL);
-
 	pid = fork();
 	if (pid == -1)
-	{
-		////printf("DEBUG padre heredoc\n");
-		
 		return (NULL);
-	}
-
 	if (pid == 0)
-	{
-		////printf("DEBUG hijo heredoc\n");
-		close(fd[0]);
-
-		content = read_heredoc_input(delimiter, expand_vars, env);
-
-		if (!content)
-		{
-			close(fd[1]);
-			
-			ft_free_malloc();
-			free_envp_copy(env);
-			cmd_list_destroy(*data);
-			free(line);
-			intvec_destroy(codes);
-
-			
-			exit(130); // Ctrl+C
-			
-			//return 1;
-		}
-
-		write(fd[1], content, ft_strlen(content));
-		free(content);
-		close(fd[1]);
-
-		ft_free_malloc();
-		free_envp_copy(env);
-		cmd_list_destroy(*data);
-		free(line);
-		intvec_destroy(codes);
-		exit(0);
-	}
-
-	// 🔥 PARENT
+		heredoc_child(ctx, fd);
 	close(fd[1]);
-
 	waitpid(pid, &status, 0);
-
-	////printf("DEBUG status raw = %d\n", status);
-	////printf("DEBUG WIFEXITED=%d WEXITSTATUS=%d\n",
-    ///WIFEXITED(status), WEXITSTATUS(status));
-	////printf("DEBUG WIFSIGNALED=%d WTERMSIG=%d\n",
-    //WIFSIGNALED(status), WTERMSIG(status));
-
-	// 🔥 🔥 🔥 CLAVE
-	if (g_sigint_received == 1 ||
-    (WIFEXITED(status) && WEXITSTATUS(status) == 130) ||
-    (WIFSIGNALED(status) && WTERMSIG(status) == SIGINT))
-	{
-		////printf("DEBUG heredoc cancelado\n");
-		
-		close(fd[0]);
-		g_sigint_received = 1;
-		
-		change_exit_value("130", &env); // 🔥 AÑADIR
+	if (check_heredoc_signal(status, &ctx->env, fd[0]))
 		return (NULL);
-	}
-
 	content = read_fd_all(fd[0]);
 	close(fd[0]);
-
 	return (content);
 }
 
@@ -754,21 +768,8 @@ int	builtin_pwd(void)
 	return (0);
 }
 
-static int	process_export_arg(char *arg, char ***envp)
+static int	process_export_update(char *arg, char ***envp, int idx)
 {
-	int	idx;
-
-	if (!is_valid_identifier(arg))
-	{
-		write(2, "minishell: export: `", 20);
-		write(2, arg, ft_strlen(arg));
-		write(2, "': not a valid identifier\n", 26);
-		change_exit_value("1", envp);
-		return (1);
-	}
-	if (!strchr(arg, '='))
-		return (0);
-	idx = find_env_index(*envp, arg);
 	if (idx >= 0)
 	{
 		if (replace_env_value(*envp, idx, arg) != 0)
@@ -788,6 +789,24 @@ static int	process_export_arg(char *arg, char ***envp)
 	return (0);
 }
 
+static int	process_export_arg(char *arg, char ***envp)
+{
+	int	idx;
+
+	if (!is_valid_identifier(arg))
+	{
+		write(2, "minishell: export: `", 20);
+		write(2, arg, ft_strlen(arg));
+		write(2, "': not a valid identifier\n", 26);
+		change_exit_value("1", envp);
+		return (1);
+	}
+	if (!strchr(arg, '='))
+		return (0);
+	idx = find_env_index(*envp, arg);
+	return (process_export_update(arg, envp, idx));
+}
+
 int	builtin_export(t_list *args, char ***envp)
 {
 	t_list	*curr;
@@ -798,22 +817,39 @@ int	builtin_export(t_list *args, char ***envp)
 		print_export_env(*envp);
 		return (0);
 	}
-
 	curr = args;
 	while (curr)
 	{
 		if (!curr->content)
 		{
 			curr = curr->next;
-			continue;
+			continue ;
 		}
-
 		arg = (char *)curr->content;
-
 		if (process_export_arg(arg, envp))
 			return (1);
-
 		curr = curr->next;
+	}
+	return (0);
+}
+
+static int	process_unset_arg(char *arg, char ***envp)
+{
+	int	idx;
+
+	if (!is_valid_identifier(arg))
+	{
+		write(2, "minishell: unset: `", 19);
+		write(2, arg, ft_strlen(arg));
+		write(2, "': not a valid identifier\n", 26);
+		change_exit_value("1", envp);
+		return (1);
+	}
+	idx = find_env_index(*envp, arg);
+	if (idx >= 0)
+	{
+		if (remove_env_index(envp, idx) != 0)
+			return (-1);
 	}
 	return (0);
 }
@@ -822,27 +858,15 @@ int	builtin_unset(t_list *args, char ***envp)
 {
 	t_list	*curr;
 	char	*arg;
-	int		idx;
+	int		status;
 
 	curr = args;
 	while (curr)
 	{
 		arg = (char *)curr->content;
-		if (!is_valid_identifier(arg))
-		{
-			write(2, "minishell: unset: `", 19);
-			write(2, arg, ft_strlen(arg));
-			write(2, "': not a valid identifier\n", 26);
-			change_exit_value("1", envp);
-			curr = curr->next;
-			continue ;
-		}
-		idx = find_env_index(*envp, arg);
-		if (idx >= 0)
-		{
-			if (remove_env_index(envp, idx) != 0)
-				return (1);
-		}
+		status = process_unset_arg(arg, envp);
+		if (status == -1)
+			return (1);
 		curr = curr->next;
 	}
 	return (0);
@@ -861,91 +885,93 @@ int	builtin_env(char **envp)
 	return (0);
 }
 
-int	builtin_exit(t_list *args, int in_child, char ***envp, t_cmdnode **data, char *line, t_intvec *codes) // todos tienen aunque sea error que hacer exit!!!
+static void	exit_cleanup(t_exit_ctx *ctx)
 {
-	if (args == NULL) // si sale deberia liberar todo aqui!!!
-	{
-		ft_free_malloc();
-		free_envp_copy(*envp);
-		cmd_list_destroy(*data);
-		free(line);
-		intvec_destroy(codes);
-		exit (0); ///asi por ahora
-	}
-		
-	
-	int	i;
+	ft_free_malloc();
+	free_envp_copy(*ctx->envp);
+	cmd_list_destroy(*ctx->data);
+	free(ctx->line);
+	intvec_destroy(ctx->codes);
+}
+
+static int	count_args(t_list *args)
+{
+	int		i;
 	t_list	*tmp;
-	
+
 	i = 0;
 	tmp = args;
-	while (tmp != NULL)
+	while (tmp)
 	{
-		if (tmp->content != NULL)
+		if (tmp->content)
 			i++;
 		tmp = tmp->next;
 	}
-	// primero ver si son non-digit!!!! da ese error antes de que son muchos argumentos!
-	char	*str;
-	int		j;
-	int		flag;
+	return (i);
+}
 
-	tmp = args;
-	str = tmp->content;
+static int	is_numeric(char *str)
+{
+	int	j;
+
 	j = 0;
-	flag = 0;
-
-	while (str[j] != '\0')
+	while (str[j])
 	{
-		if (str[0] == '-' || str[0] == '+') // si es negativo continuar
+		if (str[0] == '-' || str[0] == '+')
 			j++;
-		if ((ft_isdigit(str[j]) == 0)) // significa que no es digito!!!
-		{
-			flag = 1;
-			break;
-		}
+		if (ft_isdigit(str[j]) == 0)
+			return (0);
 		j++;
 	}
-	if (flag == 1) // error numeric argument required -> return (2); -> primero error
+	return (1);
+}
+
+static void	exit_numeric_error(t_exit_ctx *ctx, char *str)
+{
+	char	*error;
+
+	if (ctx->in_child != 1)
+		write(1, "exit\n", 6);
+	error = ft_strjoin_modif("minishell: exit: ", str);
+	error = ft_strjoin_modif(error, ": numeric argument required\n");
+	write(2, error, ft_strlen(error));
+	exit_cleanup(ctx);
+	exit(2);
+}
+
+static int	exit_too_many_args(t_exit_ctx *ctx)
+{
+	if (ctx->in_child != 1)
+		write(1, "exit\n", 6);
+	write(2, "minishell: exit: too many arguments\n", 37);
+	change_exit_value("1", ctx->envp);
+	return (1);
+}
+
+int	builtin_exit(t_exit_ctx *ctx)
+{
+	char	*str;
+	int		i;
+	int		num;
+
+	if (!ctx->args)
 	{
-		char *error;
-		if (in_child != 1)
-			write(1, "exit\n", 6);
-		error = ft_strjoin_modif("minishell: exit: ", str);
-		error = ft_strjoin_modif(error, ": numeric argument required\n");
-		write(2, error, ft_strlen(error));
-		
-		ft_free_malloc();
-		free_envp_copy(*envp);
-		cmd_list_destroy(*data);
-		free(line);
-		intvec_destroy(codes);
-		// si sale deberia liberar todo aqui!!!
-		exit (2); /// aqui si sale!
-	} 
- 	if (i > 1)
-	{
-		if (in_child != 1)
-			write(1, "exit\n", 6);
-		write(2, "minishell: exit: too many arguments\n", 37);
-		change_exit_value("1", envp);
-		return (1);
+		exit_cleanup(ctx);
+		exit(0);
 	}
-	
-	// si llega aqui es que no tuvo errores antes!
-	int	num;
-	
-	num = ft_atoi((const char*)str);
+	i = count_args(ctx->args);
+	str = ctx->args->content;
+	if (!is_numeric(str))
+		exit_numeric_error(ctx, str);
+	if (i > 1)
+		return (exit_too_many_args(ctx));
+	num = ft_atoi(str);
 	if (num < 0 || num > 255)
-		num  = num % 256;
-	if (in_child != 1)
-			write(1, "exit\n", 6);
-	ft_free_malloc();
-	free_envp_copy(*envp);
-	cmd_list_destroy(*data);
-	free(line);
-	intvec_destroy(codes);
-	exit (num);
+		num = num % 256;
+	if (ctx->in_child != 1)
+		write(1, "exit\n", 6);
+	exit_cleanup(ctx);
+	exit(num);
 }
 
 void	change_exit_value(char *value, char ***envp)
