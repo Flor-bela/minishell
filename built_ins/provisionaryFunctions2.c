@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 11:47:08 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 13:18:36 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -558,11 +558,6 @@ static int	process_heredoc_line(t_heredoc_ctx *ctx)
 	}
 	ctx->line = expand_line_if_needed(ctx->line,
 			ctx->expand, ctx->env);
-	/*if (!*ctx->line)
-	{
-		free(ctx->line);   // 🔥 FIX
-		return (-1);
-	}*/
 	tmp = append_line_content(ctx->content, ctx->line);
 	free(ctx->line);
 	if (!tmp)
@@ -591,7 +586,7 @@ static int	heredoc_loop(t_heredoc_ctx *ctx)
 		ctx->line = get_next_line(STDIN_FILENO);
 		if (check_sigint())
 		{
-			free(ctx->line);      // liberar aquí
+			free(ctx->line);
 			return (0);
 		}
 		if (!ctx->line)
