@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.h                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:28:12 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 17:14:55 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/21 05:16:34 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,16 @@ typedef struct s_parser
 	t_list_red	*pending_in;
 	t_list_red	*pending_out;
 }	t_parser;
+
+typedef struct s_heredoc_args
+{
+	t_parser	*parser;
+	const char	*target;
+	char		**env;
+	t_cmdnode	**data;
+	char		*line;
+	t_intvec	*codes;
+}	t_heredoc_args;
 
 /* list utils */
 void		intvec_push(t_intvec *v, int x);

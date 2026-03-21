@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 04:07:31 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 05:19:23 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ typedef struct s_heredoc_ctx
 
 typedef struct s_heredoc_fork
 {
-	const char	*delimiter;
+	char		*delimiter;
 	int			expand;
 	char		**env;
 	t_cmdnode	**data;
