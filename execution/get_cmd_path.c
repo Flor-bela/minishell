@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/21 05:43:48 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 07:50:45 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,14 +54,13 @@ static char	*find_path(char **paths, char *cmd_name)
 	return (NULL);
 }
 
-char	*get_cmd_path(t_cmdnode **data, char **envp, char *cmd_name,
-						int **arr_fds, int len, char *line, t_intvec *codes)
+char	*get_cmd_path(t_exec_pack *p, char *cmd_name)
 {
 	char	**paths;
 	char	*cmd_path;
 	char	*error;
 
-	paths = get_all_paths(envp);
+	paths = get_all_paths(p->envp);
 	cmd_path = find_path(paths, cmd_name);
 	if (cmd_path == NULL)
 	{
@@ -71,12 +70,12 @@ char	*get_cmd_path(t_cmdnode **data, char **envp, char *cmd_name,
 			error = cmd_name;
 		error = ft_strjoin_modif(error, ": command not found\n");
 		write(2, error, ft_strlen(error));
-		close_fds(arr_fds, len);
+		close_fds(p->arr_fds, p->len);
 		ft_free_malloc();
-		free_envp_copy(envp);
-		cmd_list_destroy(*data);
-		free(line);
-		intvec_destroy(codes);
+		free_envp_copy(p->envp);
+		cmd_list_destroy(*p->data);
+		free(p->line);
+		intvec_destroy(p->codes);
 		exit(127);
 	}
 	return (cmd_path);

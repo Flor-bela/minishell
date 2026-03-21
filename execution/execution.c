@@ -5,20 +5,13 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
+/*   Updated: 2026/03/21 08:10:45 by oscar            ###   ########.fr       */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 #include "../built_ins/provisionaryFunctions.h"
-
-typedef struct s_exec_pack
-{
-	char		**envp;
-	t_cmdnode	**data;
-	char		*line;
-	t_intvec	*codes;
-	int			**arr_fds;
-	int			len;
-}	t_exec_pack;
 
 static void	error_fork(t_exec_pack *p)
 {
@@ -85,66 +78,72 @@ char	**get_args(t_list *phrase)
 	return (args);
 }
 
-static char	*get_cmd_name_and_path(t_exec_pack *p,
-	char **args, char *data_cmd)
+static char	*handle_direct_cmd(t_exec_pack *p, char *data_cmd)
 {
-	char	*cmd_name;
-	char	*cmd_path;
 	char	*error;
 
-	cmd_path = NULL;
-	if (find_chr(data_cmd, '/') == 1)
+	if (access(data_cmd, F_OK) != 0)
 	{
-		cmd_name = strchr_modif(data_cmd, '/');
-		cmd_path = data_cmd;
-		if (access(cmd_path, F_OK) != 0)
+		error = ft_strjoin_modif("minishell: ", data_cmd);
+		perror(error);
+		close_fds(p->arr_fds, p->len);
+		ft_free_malloc();
+		if (errno == ENOTDIR)
 		{
-			error = ft_strjoin_modif("minishell: ", data_cmd);
-			perror(error);
-			close_fds(p->arr_fds, p->len);
-			ft_free_malloc();
-			if (errno == ENOTDIR)
-			{
-				change_exit_value("126", &p->envp);
-				free_envp_copy(p->envp);
-				cmd_list_destroy(*p->data);
-				free(p->line);
-				intvec_destroy(p->codes);
-				exit(126);
-			}
-			else if (errno == ENOENT)
-			{
-				change_exit_value("127", &p->envp);
-				free_envp_copy(p->envp);
-				cmd_list_destroy(*p->data);
-				free(p->line);
-				intvec_destroy(p->codes);
-				exit(127);
-			}
-		}
-		if (access(cmd_path, X_OK) != 0)
-		{
-			error = ft_strjoin_modif("minishell: ", data_cmd);
-			perror(error);
 			change_exit_value("126", &p->envp);
-			close_fds(p->arr_fds, p->len);
 			free_envp_copy(p->envp);
 			cmd_list_destroy(*p->data);
 			free(p->line);
 			intvec_destroy(p->codes);
 			exit(126);
 		}
+		else if (errno == ENOENT)
+		{
+			change_exit_value("127", &p->envp);
+			free_envp_copy(p->envp);
+			cmd_list_destroy(*p->data);
+			free(p->line);
+			intvec_destroy(p->codes);
+			exit(127);
+		}
+	}
+	if (access(data_cmd, X_OK) != 0)
+	{
+		error = ft_strjoin_modif("minishell: ", data_cmd);
+		perror(error);
+		change_exit_value("126", &p->envp);
+		close_fds(p->arr_fds, p->len);
+		free_envp_copy(p->envp);
+		cmd_list_destroy(*p->data);
+		free(p->line);
+		intvec_destroy(p->codes);
+		exit(126);
+	}
+	return (data_cmd);
+}
+
+
+static char	*get_cmd_name_and_path(t_exec_pack *p,
+	char **args, char *data_cmd)
+{
+	char	*cmd_name;
+	char	*cmd_path;
+
+	cmd_path = NULL;
+	if (find_chr(data_cmd, '/') == 1)
+	{
+		cmd_name = strchr_modif(data_cmd, '/');
+		cmd_path = handle_direct_cmd(p, data_cmd);
 		args[0] = cmd_name;
 	}
 	else
 	{
-		cmd_path = get_cmd_path(p->data, p->envp,
-				data_cmd, p->arr_fds, p->len,
-				p->line, p->codes);
+		cmd_path = get_cmd_path(p, data_cmd);
 		args[0] = data_cmd;
 	}
 	return (cmd_path);
 }
+
 
 static void	handle_infile_redirections(t_list_red **tmp_infiles,
 	t_exec_pack *p)

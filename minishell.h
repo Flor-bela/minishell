@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/21 06:42:11 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 07:51:12 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,6 +114,16 @@ typedef struct s_exec_ctx
 	int			len;
 }	t_exec_ctx;
 
+typedef struct s_exec_pack
+{
+	char		**envp;
+	t_cmdnode	**data;
+	char		*line;
+	t_intvec	*codes;
+	int			**arr_fds;
+	int			len;
+}	t_exec_pack;
+
 extern volatile sig_atomic_t	g_sigint_received;
 
 int		builtin_echo(t_list *args);
@@ -158,8 +168,7 @@ char	*ft_strndup(const char *s, size_t n);
 int		ft_isdigit(int c);
 int		ft_atoi(const char *nptr);
 
-char	*get_cmd_path(t_cmdnode **data, char **envp, char *cmd_name,
-			int **arr_fds, int len, char *line, t_intvec *codes);
+char	*get_cmd_path(t_exec_pack *p, char *cmd_name);
 int		execute_cmds(t_cmdnode **data, char ***envp,
 			char *line, t_intvec *codes);
 void	close_fds(int **arr_fds, int len_cmds);
