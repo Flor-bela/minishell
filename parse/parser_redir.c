@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 05:25:30 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 05:35:43 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,12 +83,12 @@ int	add_redir_target(t_cmdnode *cmd, int op_code,
 
 int	store_pending_redir(t_parse_ctx *ctx, const char *target)
 {
+	t_heredoc_args	args;
+
 	if (ctx->p->op_code == 1)
 		red_list_push_back(&ctx->p->pending_in, target, 0);
 	else if (ctx->p->op_code == 3)
 	{
-		t_heredoc_args	args;
-
 		args.parser = ctx->p;
 		args.target = target;
 		args.env = ctx->env;

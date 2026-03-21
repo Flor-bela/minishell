@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 18:01:22 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 05:27:25 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 05:36:27 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,13 +50,10 @@ static int	parse_loop_line(t_parse_ctx *ctx)
 		skip_spaces(ctx->line, &ctx->p->i);
 		if (!ctx->line[ctx->p->i])
 			break ;
-
 		ctx->p->op_match = match_op(ctx->line,
 				ctx->p->i, &ctx->p->op_len, &ctx->p->op_code);
-
 		if (ctx->p->op_match == -1)
 			return (parser_error(ctx->p, ctx->codes));
-
 		if (ctx->p->op_match == 1)
 		{
 			if (handle_op_line(ctx))

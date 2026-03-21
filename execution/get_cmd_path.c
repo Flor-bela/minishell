@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_cmd_path.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/20 16:16:33 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/21 05:43:48 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,16 +47,15 @@ static char	*find_path(char **paths, char *cmd_name)
 	{
 		temp = ft_strjoin_modif(paths[i], "/");
 		cmd_path = ft_strjoin_modif(temp, cmd_name);
-		
 		if (access(cmd_path, X_OK) == 0)
 			return (cmd_path);
 		i++;
 	}
-
 	return (NULL);
 }
 
-char	*get_cmd_path(t_cmdnode **data, char **envp, char *cmd_name, int **arr_fds, int len, char *line, t_intvec *codes)
+char	*get_cmd_path(t_cmdnode **data, char **envp, char *cmd_name,
+						int **arr_fds, int len, char *line, t_intvec *codes)
 {
 	char	**paths;
 	char	*cmd_path;
@@ -82,5 +81,3 @@ char	*get_cmd_path(t_cmdnode **data, char **envp, char *cmd_name, int **arr_fds,
 	}
 	return (cmd_path);
 }
-
-

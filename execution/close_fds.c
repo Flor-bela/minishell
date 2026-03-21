@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   close_fds.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/02 17:56:01 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/18 19:28:55 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/21 05:38:32 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ void	close_fds(int **arr_fds, int len_cmds)
 
 	j = 0;
 	if (arr_fds == NULL)
-		return;
+		return ;
 	while (j < len_cmds - 1 && arr_fds != NULL)
 	{
 		close(arr_fds[j][0]);

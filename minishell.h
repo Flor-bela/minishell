@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/21 05:29:26 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 05:41:58 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,8 @@ typedef struct s_list
 typedef struct s_list_red
 {
 	void				*content;
-	int					doble; // si es doble << o >> entonces es == a 1; simples == 0;
-	int 				is_heredoc;
+	int					doble;
+	int					is_heredoc;
 	struct s_list_red	*prev;
 	struct s_list_red	*next;
 }					t_list_red;
@@ -48,8 +48,8 @@ typedef struct s_cmdnode
 {
 	char				*cmd;
 	t_list				*phrase;
-	t_list_red			*infiles; // < o << (redirecciones) -> pero yo no veo el <<
-	t_list_red			*outfiles; // > o >> (redirecciones)
+	t_list_red			*infiles;
+	t_list_red			*outfiles;
 	struct s_cmdnode	*next;
 }						t_cmdnode;
 
@@ -104,8 +104,7 @@ typedef struct s_parse_ctx
 	t_cmdnode	**data;
 }	t_parse_ctx;
 
-
-extern volatile sig_atomic_t g_sigint_received;
+extern volatile sig_atomic_t	g_sigint_received;
 
 int		builtin_echo(t_list *args);
 int		builtin_pwd(void);
@@ -116,7 +115,8 @@ int		builtin_exit(t_exit_ctx *ctx);
 int		builtin_cd(t_list *args, char **envp);
 void	change_exit_value(char *args, char ***envp);
 
-char	*read_heredoc_input(const char *delimiter, int expand_vars, char **shell_env);
+char	*read_heredoc_input(const char *delimiter,
+			int expand_vars, char **shell_env);
 char	*remove_quotes_str(const char *str);
 int		parse_line(const char *line, t_intvec *out_codes,
 			t_cmdnode **out_list, char **shell_env);
@@ -148,8 +148,10 @@ char	*ft_strndup(const char *s, size_t n);
 int		ft_isdigit(int c);
 int		ft_atoi(const char *nptr);
 
-char	*get_cmd_path(t_cmdnode **data, char **envp, char *cmd_name, int **arr_fds, int len, char *line, t_intvec *codes);
-int		execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes);
+char	*get_cmd_path(t_cmdnode **data, char **envp, char *cmd_name,
+			int **arr_fds, int len, char *line, t_intvec *codes);
+int		execute_cmds(t_cmdnode **data, char ***envp,
+			char *line, t_intvec *codes);
 void	close_fds(int **arr_fds, int len_cmds);
 
 int		is_built_in(char *cmd_name);
@@ -164,7 +166,6 @@ void	intvec_destroy(t_intvec *v);
 void	free_envp_copy(char **envp);
 
 #endif
-
 
 //pasar norminette
 // "" | ls

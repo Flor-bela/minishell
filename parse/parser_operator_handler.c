@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 05:25:07 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 05:38:15 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@ static char	*get_redir_target(const char *line, size_t *i, char **env)
 	target = read_token_grouped(line, i, &grouped);
 	if (!target)
 	{
-		//printf("minishell: syntax error\n");
 		change_exit_value("2", &env);
 		return (NULL);
 	}
@@ -38,25 +37,20 @@ void	redir_add_back(t_list_red **lst, char *content, int doble)
 
 	if (!content)
 		return ;
-
 	new = malloc(sizeof(t_list_red));
 	if (!new)
 		return ;
-
 	new->content = content;
 	new->doble = doble;
 	new->next = NULL;
-
 	if (*lst == NULL)
 	{
 		*lst = new;
 		return ;
 	}
-
 	tmp = *lst;
 	while (tmp->next != NULL)
 		tmp = tmp->next;
-
 	tmp->next = new;
 }
 
@@ -104,7 +98,6 @@ static int	handle_redirection(t_parse_ctx *ctx)
 	free(target);
 	return (0);
 }
-
 
 int	handle_operator(t_parse_ctx *ctx)
 {
