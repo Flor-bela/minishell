@@ -48,7 +48,7 @@ SOURCES = \
 OBJ_DIR = obj
 OBJECTS = $(SOURCES:%.c=$(OBJ_DIR)/%.o)
 
-FLAGS = -Wall -Werror -Wextra -g
+#FLAGS = -Wall -Werror -Wextra -g
 LDFLAGS = -lreadline -lhistory
 CC = cc
 
