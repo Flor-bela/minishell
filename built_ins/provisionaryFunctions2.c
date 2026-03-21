@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 11:35:29 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 11:47:08 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -502,13 +502,11 @@ static char	*get_next_line(int fd)
 	return (buf);
 }
 
-static int	check_sigint(char *line, char *content)
+static int	check_sigint(void)
 {
 	if (g_sigint_received)
 	{
 		g_sigint_received = 0;
-		free(line);
-		free(content);
 		return (1);
 	}
 	return (0);
@@ -591,8 +589,11 @@ static int	heredoc_loop(t_heredoc_ctx *ctx)
 	{
 		write(1, "> ", 2);
 		ctx->line = get_next_line(STDIN_FILENO);
-		if (check_sigint(ctx->line, ctx->content))
+		if (check_sigint())
+		{
+			free(ctx->line);      // liberar aquí
 			return (0);
+		}
 		if (!ctx->line)
 			break ;
 		ctx->status = process_heredoc_line(ctx);

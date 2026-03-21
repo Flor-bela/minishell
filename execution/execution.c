@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 11:22:27 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 12:20:11 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,54 +147,65 @@ static char	*get_cmd_name_and_path(t_exec_pack *p,
 	return (cmd_path);
 }
 
-
-static void	handle_infile_redirections(t_list_red **tmp_infiles,
-	t_exec_pack *p)
+static void	handle_heredoc_error(t_exec_pack *p)
 {
-	int				fd_file;
+	change_exit_value("130", &p->envp);
+	ft_free_malloc();
+	free_envp_copy(p->envp);
+	cmd_list_destroy(*p->data);
+	free(p->line);
+	intvec_destroy(p->codes);
+	exit(130);
+}
+
+static void	exec_heredoc(t_list_red *redir, t_exec_pack *p)
+{
 	t_heredoc_fork	ctx;
 	char			*content;
 	int				pipefd[2];
 
+	ctx.delimiter = redir->content;
+	ctx.expand = 1;
+	ctx.env = p->envp;
+	ctx.data = p->data;
+	ctx.line = p->line;
+	ctx.codes = p->codes;
+
+	content = heredoc_with_fork(&ctx);
+	if (!content)
+		handle_heredoc_error(p);
+
+	pipe(pipefd);
+	write(pipefd[1], content, ft_strlen(content));
+	close(pipefd[1]);
+	dup2(pipefd[0], STDIN_FILENO);
+	close(pipefd[0]);
+	free(content);
+}
+
+static void	exec_infile(t_list_red *redir, t_exec_pack *p)
+{
+	int	fd_file;
+
+	fd_file = open(redir->content, O_RDONLY);
+	if (fd_file == -1)
+	{
+		close_fds(p->arr_fds, p->len);
+		error_fd_file(redir->content, p);
+	}
+	dup2(fd_file, STDIN_FILENO);
+	close(fd_file);
+}
+
+static void	handle_infile_redirections(t_list_red **tmp_infiles,
+	t_exec_pack *p)
+{
 	while (*tmp_infiles != NULL)
 	{
 		if ((*tmp_infiles)->doble == 1)
-		{
-			ctx.delimiter = (*tmp_infiles)->content;
-			ctx.expand = 1;
-			ctx.env = p->envp;
-			ctx.data = p->data;
-			ctx.line = p->line;
-			ctx.codes = p->codes;
-			content = heredoc_with_fork(&ctx);
-			if (!content)
-			{
-				change_exit_value("130", &p->envp);
-				ft_free_malloc();
-				free_envp_copy(p->envp);
-				cmd_list_destroy(*p->data);
-				free(p->line);
-				intvec_destroy(p->codes);
-				exit(130);
-			}
-			pipe(pipefd);
-			write(pipefd[1], content, ft_strlen(content));
-			close(pipefd[1]);
-			dup2(pipefd[0], STDIN_FILENO);
-			close(pipefd[0]);
-			free(content);
-		}
+			exec_heredoc(*tmp_infiles, p);
 		else
-		{
-			fd_file = open((*tmp_infiles)->content, O_RDONLY);
-			if (fd_file == -1)
-			{
-				close_fds(p->arr_fds, p->len);
-				error_fd_file((*tmp_infiles)->content, p);
-			}
-			dup2(fd_file, STDIN_FILENO);
-			close(fd_file);
-		}
+			exec_infile(*tmp_infiles, p);
 		*tmp_infiles = (*tmp_infiles)->next;
 	}
 }
@@ -583,6 +594,12 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 	}
 
 	status_str = ft_itoa(last_exit_status);
+	if (g_sigint_received)
+	{
+		change_exit_value("130", envp);
+		g_sigint_received = 0;
+		return (130);
+	}
 	change_exit_value(status_str, envp);
 	return (last_exit_status);
 }
