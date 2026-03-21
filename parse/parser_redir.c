@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 05:18:38 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 05:25:30 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,26 +81,25 @@ int	add_redir_target(t_cmdnode *cmd, int op_code,
 	return (0);
 }
 
-int	store_pending_redir(t_parser *p, int op_code,
-	const char *target, char **env, t_cmdnode **data, char *line, t_intvec *codes)
+int	store_pending_redir(t_parse_ctx *ctx, const char *target)
 {
-	if (op_code == 1)
-		red_list_push_back(&p->pending_in, target, 0);
-	else if (op_code == 3)
+	if (ctx->p->op_code == 1)
+		red_list_push_back(&ctx->p->pending_in, target, 0);
+	else if (ctx->p->op_code == 3)
 	{
 		t_heredoc_args	args;
 
-		args.parser = p;
+		args.parser = ctx->p;
 		args.target = target;
-		args.env = env;
-		args.data = data;
-		args.line = line;
-		args.codes = codes;
+		args.env = ctx->env;
+		args.data = ctx->data;
+		args.line = (char *)ctx->line;
+		args.codes = ctx->codes;
 		return (handle_pending_heredoc(&args));
 	}
-	else if (op_code == 2)
-		red_list_push_back(&p->pending_out, target, 0);
-	else if (op_code == 4)
-		red_list_push_back(&p->pending_out, target, 1);
+	else if (ctx->p->op_code == 2)
+		red_list_push_back(&ctx->p->pending_out, target, 0);
+	else if (ctx->p->op_code == 4)
+		red_list_push_back(&ctx->p->pending_out, target, 1);
 	return (0);
 }

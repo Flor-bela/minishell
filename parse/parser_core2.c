@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 18:01:22 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 17:49:49 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 05:27:25 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,61 +18,58 @@ static int	error_pipe(t_parser *p, t_intvec *codes)
 	return (parser_error(p, codes));
 }
 
-static int	handle_op_line(const char *line, t_parser *p,
-	t_intvec *codes, char **env, t_cmdnode **data)
+static int	handle_op_line(t_parse_ctx *ctx)
 {
-	if (p->op_code == 5)
+	if (ctx->p->op_code == 5)
 	{
-		if (p->last_pipe)
-			return (error_pipe(p, codes));
-		p->last_pipe = 1;
+		if (ctx->p->last_pipe)
+			return (error_pipe(ctx->p, ctx->codes));
+		ctx->p->last_pipe = 1;
 	}
 	else
-		p->last_pipe = 0;
-	if (handle_operator(line, p, codes, env, data) == -1)
-		return (parser_error(p, codes));
+		ctx->p->last_pipe = 0;
+	if (handle_operator(ctx) == -1)
+		return (parser_error(ctx->p, ctx->codes));
 	return (0);
 }
 
-static int	handle_cmd_line(const char *line, t_parser *p,
-	t_intvec *codes, char **env)
+static int	handle_cmd_line(t_parse_ctx *ctx)
 {
-	p->last_pipe = 0;
-	if (handle_command(line, p, codes, env) == -1)
-		return (parser_error(p, codes));
+	ctx->p->last_pipe = 0;
+	if (handle_command(ctx->line,
+			ctx->p, ctx->codes, ctx->env) == -1)
+		return (parser_error(ctx->p, ctx->codes));
 	return (0);
 }
 
-static int	parse_loop_line(const char *line, t_parser *p,
-	t_intvec *codes, char **env, t_cmdnode **data)
+static int	parse_loop_line(t_parse_ctx *ctx)
 {
-	p->last_pipe = 1;
-	////printf("DEBUG entrando parser\n");
-	while (line[p->i])
+	ctx->p->last_pipe = 1;
+	while (ctx->line[ctx->p->i])
 	{
-		skip_spaces(line, &p->i);
-		if (!line[p->i])
+		skip_spaces(ctx->line, &ctx->p->i);
+		if (!ctx->line[ctx->p->i])
 			break ;
 
-		p->op_match = match_op(line, p->i, &p->op_len, &p->op_code);
+		ctx->p->op_match = match_op(ctx->line,
+				ctx->p->i, &ctx->p->op_len, &ctx->p->op_code);
 
-		if (p->op_match == -1)
-			return (parser_error(p, codes));
+		if (ctx->p->op_match == -1)
+			return (parser_error(ctx->p, ctx->codes));
 
-		if (p->op_match == 1)
+		if (ctx->p->op_match == 1)
 		{
-			if (handle_op_line(line, p, codes, env, data))
+			if (handle_op_line(ctx))
 				return (-1);
 		}
 		else
 		{
-			if (handle_cmd_line(line, p, codes, env))
+			if (handle_cmd_line(ctx))
 				return (-1);
 		}
 	}
-	if (p->last_pipe)
-		return (error_pipe(p, codes));
-
+	if (ctx->p->last_pipe)
+		return (error_pipe(ctx->p, ctx->codes));
 	return (0);
 }
 
@@ -80,9 +77,15 @@ int	parse_line(const char *line, t_intvec *codes,
 	t_cmdnode **out_list, char **env)
 {
 	t_parser	p;
+	t_parse_ctx	ctx;
 
 	parser_init(&p, out_list);
-	if (parse_loop_line(line, &p, codes, env, out_list) == -1)
+	ctx.line = line;
+	ctx.p = &p;
+	ctx.codes = codes;
+	ctx.env = env;
+	ctx.data = out_list;
+	if (parse_loop_line(&ctx) == -1)
 		return (-1);
 	finalize_pending(&p);
 	*out_list = p.head;

@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/21 04:08:59 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 05:29:26 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,41 @@ typedef struct s_exit_ctx
 	char		*line;
 	t_intvec	*codes;
 }	t_exit_ctx;
+
+typedef struct s_parser
+{
+	size_t		i;
+	size_t		j;
+	size_t		op_len;
+	int			op_code;
+	int			op_match;
+	int			last_pipe;
+	t_cmdnode	*head;
+	t_cmdnode	*tail;
+	t_cmdnode	*current_cmd;
+	t_list_red	*pending_in;
+	t_list_red	*pending_out;
+}	t_parser;
+
+typedef struct s_heredoc_args
+{
+	t_parser	*parser;
+	const char	*target;
+	char		**env;
+	t_cmdnode	**data;
+	char		*line;
+	t_intvec	*codes;
+}	t_heredoc_args;
+
+typedef struct s_parse_ctx
+{
+	const char	*line;
+	t_parser	*p;
+	t_intvec	*codes;
+	char		**env;
+	t_cmdnode	**data;
+}	t_parse_ctx;
+
 
 extern volatile sig_atomic_t g_sigint_received;
 

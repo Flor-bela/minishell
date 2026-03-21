@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_core.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:08 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 17:09:44 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/21 05:26:04 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,28 +49,29 @@ void	finalize_pending(t_parser *p)
 	p->current_cmd = p->head;
 }
 
-int	parse_loop(const char *line, t_parser *p,
-	t_intvec *codes, char **env, t_cmdnode **data)
+int	parse_loop(t_parse_ctx *ctx)
 {
-	while (line[p->i])
+	while (ctx->line[ctx->p->i])
 	{
-		skip_spaces(line, &p->i);
-		if (!line[p->i])
+		skip_spaces(ctx->line, &ctx->p->i);
+		if (!ctx->line[ctx->p->i])
 			break ;
-		p->op_match = match_op(line, p->i, &p->op_len, &p->op_code);
-		if (p->op_match == -1)
+		ctx->p->op_match = match_op(ctx->line,
+				ctx->p->i, &ctx->p->op_len, &ctx->p->op_code);
+		if (ctx->p->op_match == -1)
 			return (-1);
-		if (p->op_match == 1)
+		if (ctx->p->op_match == 1)
 		{
-			if (handle_operator(line, p, codes, env, data) == -1)
+			if (handle_operator(ctx) == -1)
 				return (-1);
 		}
 		else
 		{
-			if (handle_command(line, p, codes, env) == -1)
+			if (handle_command(ctx->line,
+					ctx->p, ctx->codes, ctx->env) == -1)
 				return (-1);
 		}
 	}
-	finalize_pending(p);
+	finalize_pending(ctx->p);
 	return (0);
 }

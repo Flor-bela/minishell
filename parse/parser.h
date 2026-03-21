@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:28:12 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 05:16:34 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 05:32:33 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,31 +15,6 @@
 
 # include "../minishell.h"
 # include "../built_ins/provisionaryFunctions.h"
-
-typedef struct s_parser
-{
-	size_t		i;
-	size_t		j;
-	size_t		op_len;
-	int			op_code;
-	int			op_match;
-	int			last_pipe;
-	t_cmdnode	*head;
-	t_cmdnode	*tail;
-	t_cmdnode	*current_cmd;
-	t_list_red	*pending_in;
-	t_list_red	*pending_out;
-}	t_parser;
-
-typedef struct s_heredoc_args
-{
-	t_parser	*parser;
-	const char	*target;
-	char		**env;
-	t_cmdnode	**data;
-	char		*line;
-	t_intvec	*codes;
-}	t_heredoc_args;
 
 /* list utils */
 void		intvec_push(t_intvec *v, int x);
@@ -73,12 +48,10 @@ int			match_op(const char *s, size_t i, size_t *len, int *code);
 /* redirections */
 int			add_redir_target(t_cmdnode *cmd, int op_code,
 				const char *target, char **env);
-int			store_pending_redir(t_parser *p, int op_code,
-				const char *target, char **env, t_cmdnode **data, char *line, t_intvec *codes);
+int	store_pending_redir(t_parse_ctx *ctx, const char *target);
 
 /* operator handler */
-int			handle_operator(const char *line, t_parser *p,
-				t_intvec *codes, char **env, t_cmdnode **data);
+int	handle_operator(t_parse_ctx *ctx);
 
 /* command */
 int			handle_command(const char *line, t_parser *p,
@@ -91,7 +64,7 @@ int			parse_line(const char *line, t_intvec *codes,
 void		parser_init(t_parser *p, t_cmdnode **out_list);
 int			parser_error(t_parser *p, t_intvec *codes);
 void		finalize_pending(t_parser *p);
-int			parse_loop(const char *line, t_parser *p, t_intvec *codes, char **env, t_cmdnode **data);
-char	*get_clean_token(const char *line, size_t *i, char **env);
+int			parse_loop(t_parse_ctx *ctx);
+char		*get_clean_token(const char *line, size_t *i, char **env);
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/20 17:49:51 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 05:25:07 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,16 +77,17 @@ static int	handle_pipe(t_parser *p)
 	return (0);
 }
 
-static int	handle_redirection(const char *line, t_parser *p, char **env, t_cmdnode **data, t_intvec *codes)
+static int	handle_redirection(t_parse_ctx *ctx)
 {
 	char	*target;
 
-	target = get_redir_target(line, &p->i, env);
+	target = get_redir_target(ctx->line, &ctx->p->i, ctx->env);
 	if (!target)
 		return (-1);
-	if (p->current_cmd)
+	if (ctx->p->current_cmd)
 	{
-		if (add_redir_target(p->current_cmd, p->op_code, target, env))
+		if (add_redir_target(ctx->p->current_cmd,
+				ctx->p->op_code, target, ctx->env))
 		{
 			free(target);
 			return (-1);
@@ -94,7 +95,7 @@ static int	handle_redirection(const char *line, t_parser *p, char **env, t_cmdno
 	}
 	else
 	{
-		if (store_pending_redir(p, p->op_code, target, env, data, (char *)line, codes))
+		if (store_pending_redir(ctx, target))
 		{
 			free(target);
 			return (-1);
@@ -105,13 +106,11 @@ static int	handle_redirection(const char *line, t_parser *p, char **env, t_cmdno
 }
 
 
-int	handle_operator(const char *line, t_parser *p,
-	t_intvec *codes, char **env, t_cmdnode **data)
+int	handle_operator(t_parse_ctx *ctx)
 {
-	////printf("DEBUG operador detectado\n");
-	intvec_push(codes, p->op_code);
-	p->i += p->op_len;
-	if (p->op_code == 5)
-		return (handle_pipe(p));
-	return (handle_redirection(line, p, env, data, codes));
+	intvec_push(ctx->codes, ctx->p->op_code);
+	ctx->p->i += ctx->p->op_len;
+	if (ctx->p->op_code == 5)
+		return (handle_pipe(ctx->p));
+	return (handle_redirection(ctx));
 }
