@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 11:22:27 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/21 20:41:01 by dkalgano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,7 +166,7 @@ static void	handle_infile_redirections(t_list_red **tmp_infiles,
 			ctx.data = p->data;
 			ctx.line = p->line;
 			ctx.codes = p->codes;
-			content = heredoc_with_fork(&ctx);
+			content = heredoc_with_fork(&ctx, NULL);
 			if (!content)
 			{
 				change_exit_value("130", &p->envp);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   provisionaryFunctions2.c                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 12:26:28 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/21 20:47:35 by dkalgano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -664,12 +664,13 @@ char	*read_fd_all(int fd)
 	return (result);
 }
 
-static void	heredoc_child(t_heredoc_fork *ctx, int fd[2])
+static void	heredoc_child(t_heredoc_fork *ctx, int fd[2], char *target)
 {
 	char	*content;
 
 	close(fd[0]);
 	content = read_heredoc_input(ctx->delimiter, ctx->expand, ctx->env);
+	free(target);
 	if (!content)
 	{
 		close(fd[1]);
@@ -708,7 +709,7 @@ static int	check_heredoc_signal(int status, char ***env, int fd)
 	return (0);
 }
 
-char	*heredoc_with_fork(t_heredoc_fork *ctx)
+char	*heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args)
 {
 	int		fd[2];
 	pid_t	pid;
@@ -721,7 +722,7 @@ char	*heredoc_with_fork(t_heredoc_fork *ctx)
 	if (pid == -1)
 		return (NULL);
 	if (pid == 0)
-		heredoc_child(ctx, fd);
+		heredoc_child(ctx, fd, (char *)args->target);
 	close(fd[1]);
 	//free((char *)ctx->delimiter); ///
 	waitpid(pid, &status, 0);
