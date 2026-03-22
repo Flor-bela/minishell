@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 19:16:36 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/22 19:13:09 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,7 +149,7 @@ static char	*get_cmd_name_and_path(t_exec_pack *p,
 
 
 static void	handle_infile_redirections(t_list_red **tmp_infiles,
-	t_exec_pack *p, t_heredoc_args *args)
+	t_exec_pack *p, t_heredoc_args *args) // only passing args to free the target in child process -> there is another heredoc_with_fork in parsing that has args!!!!!!!!
 {
 	int				fd_file;
 	t_heredoc_fork	ctx;
@@ -484,20 +484,32 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 				}
 
 				close_fds(arr_fds, len);
+				
+
+				/////////////////////////////////////////
+				if (!data_tmp->cmd) ////?????????????????
+				{
+					ft_free_malloc();
+					free_envp_copy(*envp);
+					cmd_list_destroy(*data);
+					free(line);
+					intvec_destroy(codes);
+					exit(0); 
+				}
 
 				return_value = 0;
 
-				if (data_tmp && (ft_strncmp(data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
+				if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
 					return_value = builtin_echo(data_tmp->phrase);
 				else if (data_tmp && (ft_strncmp(data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
 					return_value = builtin_cd(data_tmp->phrase, *envp);
-				else if (data_tmp && (ft_strncmp(data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
+				else if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
 					return_value = builtin_pwd();
-				else if (data_tmp && (ft_strncmp(data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
+				else if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
 					return_value = builtin_export(data_tmp->phrase, envp);
-				else if (data_tmp && (ft_strncmp(data_tmp->cmd, "unset", 5) == 0 && data_tmp->cmd[5] == '\0'))
+				else if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "unset", 5) == 0 && data_tmp->cmd[5] == '\0'))
 					return_value = builtin_unset(data_tmp->phrase, envp);
-				else if (data_tmp && (ft_strncmp(data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
+				else if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
 					return_value = builtin_env(*envp);
 				else if (data_tmp && (ft_strncmp(data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
 				{
@@ -545,13 +557,15 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 						}
 					}
 				}
-
+				
+				
 				ft_free_malloc();
 				free_envp_copy(*envp);
 				cmd_list_destroy(*data);
 				free(line);
 				intvec_destroy(codes);
 				exit(return_value);
+				
 			}
 			i++;
 			data_tmp = data_tmp->next;
