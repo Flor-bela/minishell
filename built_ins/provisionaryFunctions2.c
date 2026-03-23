@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 16:19:08 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/23 22:06:56 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -619,7 +619,7 @@ char	*read_heredoc_input(const char *delimiter,
 		return (NULL);
 	if (!heredoc_loop(&ctx))
 	{
-
+		//free((char *)delimiter);
 		//free(ctx.content); // do not free here for ctrl C!!! double free!!!
 		return (NULL);
 	}

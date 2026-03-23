@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 18:48:57 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/23 22:08:45 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ static int	handle_redirection(t_parse_ctx *ctx)
 		if (add_redir_target(ctx, ctx->p->current_cmd,
 				ctx->p->op_code, target, ctx->env))
 		{
-			free(target);
+			free(target); // only on failure
 			return (-1);
 		}
 	}
@@ -100,8 +100,7 @@ static int	handle_redirection(t_parse_ctx *ctx)
 			return (-1);
 		}
 	}
-	free(target); ////////////
-	//target = NULL;
+	//free(target); //////////// si lo dejo hay doble free con <<
 	return (0);
 }
 

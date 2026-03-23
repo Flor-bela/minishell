@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 18:34:25 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/23 21:59:56 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -241,7 +241,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 		len++;
 		data_tmp = data_tmp->next;
 	}
-	printf("len %d\n", len);
+	//printf("len %d\n", len);
 	if (len > 1)
 	{
 		arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1));
@@ -279,7 +279,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 		tmp_infiles = data_tmp->infiles;
 		printf("len %d\n", len);
 		printf("data_tmp_cmd %s\n", data_tmp->cmd);
-		if (data_tmp->infiles != NULL)
+		if (tmp_infiles != NULL)
 		{
 			if (tmp_infiles != NULL)
 				return_value = handle_infile_redirections(&tmp_infiles, &p, NULL, envp);

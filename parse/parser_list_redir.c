@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_list_redir.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:25 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 04:59:10 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/23 22:15:06 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,7 @@ t_list_red	*red_list_push_back(t_list_red **head, const char *s, int doble)
 		tail->next = new;
 		new->prev = tail;
 	}
+	free((char *)s); /////////////ERA ESTOOOOOOOOOOOOOO
 	return (new);
 }
 
