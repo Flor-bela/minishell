@@ -6,7 +6,7 @@
 /*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 15:37:36 by dkalgano         ###   ########.fr       */
+/*   Updated: 2026/03/23 15:46:46 by dkalgano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -231,8 +231,8 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 	arr_fds = NULL;
 	while (data_tmp != NULL)
 	{
-		if (data_tmp->cmd != NULL && data_tmp->cmd[0] != '\0')
-			len++;
+		//if (data_tmp->cmd != NULL && data_tmp->cmd[0] != '\0')
+		len++;
 		data_tmp = data_tmp->next;
 	}
 	if (len > 1)
