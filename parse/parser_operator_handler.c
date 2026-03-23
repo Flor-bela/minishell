@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 15:02:37 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/23 18:48:57 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ static char	*get_redir_target(const char *line, size_t *i, char **env)
 	char	*target;
 	char	*expanded;
 	int		grouped;
+	char	*clean;
 
 	grouped = 0;
 	target = read_token_grouped(line, i, &grouped);
@@ -27,7 +28,11 @@ static char	*get_redir_target(const char *line, size_t *i, char **env)
 	}
 	expanded = expand_env_vars(target, env);
 	free(target);
-	return (expanded);
+	if (!expanded)
+		return (NULL);
+	clean = remove_quotes_str(expanded);
+	free(expanded);
+	return (clean);
 }
 
 void	redir_add_back(t_list_red **lst, char *content, int doble)
@@ -95,7 +100,8 @@ static int	handle_redirection(t_parse_ctx *ctx)
 			return (-1);
 		}
 	}
-	//free(target);
+	free(target); ////////////
+	//target = NULL;
 	return (0);
 }
 
