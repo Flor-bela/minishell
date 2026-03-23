@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 22:06:56 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/23 22:32:31 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -842,7 +842,7 @@ static int	process_export_arg(char *arg, char ***envp)
 		change_exit_value("1", envp);
 		return (1);
 	}
-	if (!strchr(arg, '='))
+	if (!ft_strchr(arg, '='))
 		return (0);
 	idx = find_env_index(*envp, arg);
 	return (process_export_update(arg, envp, idx));

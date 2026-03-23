@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/23 15:01:23 by dkalgano         ###   ########.fr       */
+/*   Updated: 2026/03/23 22:34:04 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,6 +167,7 @@ int		ft_strcmp(const char *s1, const char *s2);
 char	*ft_strndup(const char *s, size_t n);
 int		ft_isdigit(int c);
 int		ft_atoi(const char *nptr);
+char	*ft_strchr(const char *s, int c);
 
 char	*get_cmd_path(t_exec_pack *p, char *cmd_name);
 int		execute_cmds(t_cmdnode **data, char ***envp,

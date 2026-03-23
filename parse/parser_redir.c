@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 19:12:01 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/23 22:35:49 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ static int	init_heredoc_ctx(t_heredoc_fork *ctx, t_heredoc_args *args)
 	char	*real_delim;
 
 	ctx->expand = 1;
-	if (strchr(args->target, '\'') || strchr(args->target, '"'))
+	if (ft_strchr(args->target, '\'') || ft_strchr(args->target, '"'))
 		ctx->expand = 0;
 	real_delim = remove_quotes_str(args->target);
 	if (!real_delim)
