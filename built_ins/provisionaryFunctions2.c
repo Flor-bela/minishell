@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   provisionaryFunctions2.c                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 15:11:51 by dkalgano         ###   ########.fr       */
+/*   Updated: 2026/03/23 16:19:08 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -727,7 +727,7 @@ static void free_red_list(t_list_red *h)
 }
 
 
-int	heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args)
+int	heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args, t_cmdnode *cmd)
 {
 	int		fd[2];
 	pid_t	pid;
@@ -740,6 +740,7 @@ int	heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args)
 		return (-1);
 	if (pid == 0)
 	{
+		cmd_list_destroy(cmd);
 		if (args && args->parser)
 		{
 			free_red_list(args->parser->pending_in); // esto libera todo cuando hacemos << here << abc << lol, pero puede que de problema cuando este en un pipeline....

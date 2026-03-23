@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 15:17:47 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/23 16:16:59 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ static int	handle_pending_heredoc(t_heredoc_args *args)
 
 	if (init_heredoc_ctx(&ctx, args) == -1)
 		return (-1);
-	fd = heredoc_with_fork(&ctx, args);
+	fd = heredoc_with_fork(&ctx, args, NULL); ///
 	free(ctx.delimiter);
 	free((char *)args->target); /// IMPORTANT------
 	red_list_push_back(&args->parser->pending_in, NULL, fd);
@@ -94,9 +94,9 @@ int	add_redir_target(t_parse_ctx *ctx, t_cmdnode *cmd, int op_code,
 
 		if (init_heredoc_ctx(&ctx2, &args) == -1)
 			return (-1);
-		fd = heredoc_with_fork(&ctx2, &args);
-		//free(ctx->delimiter);
-		//free((char *)args.target); /// IMPORTANT------
+		fd = heredoc_with_fork(&ctx2, &args, cmd);
+		free(ctx2.delimiter);
+		free((char *)args.target); /// IMPORTANT------
 		red_list_push_back(&cmd->infiles, NULL, fd);
 		//return (handle_heredoc(cmd, target, env));
 	}	
