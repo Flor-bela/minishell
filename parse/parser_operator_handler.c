@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 05:38:15 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/23 07:46:53 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ static int	handle_redirection(t_parse_ctx *ctx)
 			return (-1);
 		}
 	}
-	free(target);
+	//free(target);
 	return (0);
 }
 

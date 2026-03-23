@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   minishell.h                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/21 07:51:12 by oscar            ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef MINISHELL_H
 # define MINISHELL_H
 
@@ -28,12 +16,24 @@
 # include <sys/types.h>
 # include <sys/wait.h>
 
+/* ================= STRUCTS ================= */
+
 typedef struct s_list
 {
 	void			*content;
 	struct s_list	*prev;
 	struct s_list	*next;
-}					t_list;
+}	t_list;
+
+typedef struct s_heredoc_ctx
+{
+	char		*line;
+	char		*content;
+	const char	*delimiter;
+	int			expand;
+	char		**env;
+	int			status;
+}	t_heredoc_ctx;
 
 typedef struct s_list_red
 {
@@ -42,7 +42,7 @@ typedef struct s_list_red
 	int					is_heredoc;
 	struct s_list_red	*prev;
 	struct s_list_red	*next;
-}					t_list_red;
+}	t_list_red;
 
 typedef struct s_cmdnode
 {
@@ -51,14 +51,24 @@ typedef struct s_cmdnode
 	t_list_red			*infiles;
 	t_list_red			*outfiles;
 	struct s_cmdnode	*next;
-}						t_cmdnode;
+}	t_cmdnode;
 
 typedef struct s_intvec
 {
 	int		*data;
 	size_t	len;
 	size_t	cap;
-}			t_intvec;
+}	t_intvec;
+
+typedef struct s_heredoc_fork
+{
+	char		*delimiter;
+	int			expand;
+	char		**env;
+	t_cmdnode	**data;
+	char		*line;
+	t_intvec	*codes;
+}	t_heredoc_fork;
 
 typedef struct s_exit_ctx
 {
@@ -95,25 +105,6 @@ typedef struct s_heredoc_args
 	t_intvec	*codes;
 }	t_heredoc_args;
 
-typedef struct s_parse_ctx
-{
-	const char	*line;
-	t_parser	*p;
-	t_intvec	*codes;
-	char		**env;
-	t_cmdnode	**data;
-}	t_parse_ctx;
-
-typedef struct s_exec_ctx
-{
-	char		**envp;
-	t_cmdnode	**data;
-	char		*line;
-	t_intvec	*codes;
-	int			**arr_fds;
-	int			len;
-}	t_exec_ctx;
-
 typedef struct s_exec_pack
 {
 	char		**envp;
@@ -124,7 +115,18 @@ typedef struct s_exec_pack
 	int			len;
 }	t_exec_pack;
 
+typedef struct s_parse_ctx
+{
+	const char	*line;
+	t_parser	*p;
+	t_intvec	*codes;
+	char		**env;
+	t_cmdnode	**data;
+}	t_parse_ctx;
+
 extern volatile sig_atomic_t	g_sigint_received;
+
+/* ================= BUILTINS ================= */
 
 int		builtin_echo(t_list *args);
 int		builtin_pwd(void);
@@ -133,22 +135,54 @@ int		builtin_unset(t_list *args, char ***envp);
 int		builtin_env(char **envp);
 int		builtin_exit(t_exit_ctx *ctx);
 int		builtin_cd(t_list *args, char **envp);
-void	change_exit_value(char *args, char ***envp);
 
-char	*read_heredoc_input(const char *delimiter,
-			int expand_vars, char **shell_env);
-char	*remove_quotes_str(const char *str);
-int		parse_line(const char *line, t_intvec *out_codes,
-			t_cmdnode **out_list, char **shell_env);
+/* ================= ENV ================= */
+
+void	change_exit_value(char *args, char ***envp);
 char	*get_env_value(char **envp, const char *key);
 char	**dup_envp(char **envp);
 void	free_envp_copy(char **envp);
+size_t	env_len(char **envp);
+
+/* ================= HEREDOC ================= */
+
+char	*read_heredoc_input(const char *delimiter,
+			int expand_vars, char **shell_env);
+char	*heredoc_with_fork(t_heredoc_fork *ctx,
+			t_heredoc_args *args);
+
+/* ================= PARSER ================= */
+
+int		parse_line(const char *line, t_intvec *out_codes,
+			t_cmdnode **out_list, char **shell_env);
+
+/* ================= EXECUTION ================= */
+
+int		execute_cmds(t_cmdnode **data, char ***envp,
+			char *line, t_intvec *codes);
+
+void	handle_infile_redirections(t_list_red **in, t_exec_pack *p);
+void	handle_outfile_redirections(t_list_red **out, t_exec_pack *p);
+void	exec_heredoc(t_list_red *redir, t_exec_pack *p);
+
+int		init_len_and_pipes(t_exec_pack *p);
+int		exec_forks(t_exec_pack *p);
+
+int		process_exit_status(int status);
+int		update_exit_value(int status, char ***envp);
+
+/* ================= PATH ================= */
+
+char	*get_cmd_path(t_exec_pack *p, char *cmd_name);
+char	*get_cmd_name_and_path(t_exec_pack *p,
+			char **args, char *cmd);
+
+/* ================= UTILS ================= */
 
 t_list	*ft_lstnew(void *content);
 void	ft_lstadd_back(t_list **lst, t_list *new);
 void	*ft_malloc(size_t size);
 void	ft_free_malloc(void);
-size_t	env_len(char **envp);
 
 char	**ft_split(char const *s, char c);
 size_t	ft_strlen(const char *s);
@@ -168,25 +202,36 @@ char	*ft_strndup(const char *s, size_t n);
 int		ft_isdigit(int c);
 int		ft_atoi(const char *nptr);
 
-char	*get_cmd_path(t_exec_pack *p, char *cmd_name);
-int		execute_cmds(t_cmdnode **data, char ***envp,
-			char *line, t_intvec *codes);
-void	close_fds(int **arr_fds, int len_cmds);
+/* ================= EXEC UTILS ================= */
 
+void	close_fds(int **arr_fds, int len_cmds);
 int		is_built_in(char *cmd_name);
 
-void	handle_sigint(int sig);
+/* ================= SIGNALS ================= */
 
+void	handle_sigint(int sig);
 void	handle_sigint_heredoc(int sig);
 void	setup_signals_heredoc(void);
 
+/* ================= CLEANUP ================= */
+
 void	cmd_list_destroy(t_cmdnode *h);
 void	intvec_destroy(t_intvec *v);
-void	free_envp_copy(char **envp);
+
+void	error_fd_file(char *name_infile, t_exec_pack *p);
+int		exec_builtin_parent(t_cmdnode *data_tmp, t_exec_pack *p);
+int		exec_exit_builtin(t_cmdnode *data_tmp, t_exec_pack *p);
+void	child_exec(t_exec_pack *p, t_cmdnode *data_tmp, int i);
+int		init_exec_pack(t_exec_pack *p);
+void	handle_heredoc_error(t_exec_pack *p);
+char	**get_args_safe(t_cmdnode *data_tmp);
+char	*get_cmd_path_safe(t_exec_pack *p,
+			t_cmdnode *data_tmp, char **args);
+void	exec_external(char *cmd_path, char **args, char **envp);
+int		handle_empty_case(char ***envp);
+void	setup_child_redirections(t_exec_pack *p,
+			t_cmdnode *data_tmp, int i);
+char	**get_args(t_list *phrase);
 
 #endif
 
-//pasar norminette
-// "" | ls
-//ls | | ls
-//exit 999999999999999999999

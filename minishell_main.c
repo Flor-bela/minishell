@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/20 23:52:06 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 11:55:13 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/23 07:45:47 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,10 +100,11 @@ void	cmd_list_destroy(t_cmdnode *h)
 	while (h)
 	{
 		nx = h->next;
-		free(h->cmd);
 		str_list_destroy(h->phrase);
 		red_list_destroy(h->infiles);
 		red_list_destroy(h->outfiles);
+		if (h->cmd)
+			free(h->cmd);
 		free(h);
 		h = nx;
 	}

@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:28:12 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 05:34:49 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/23 10:08:21 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,5 +66,7 @@ int			parser_error(t_parser *p, t_intvec *codes);
 void		finalize_pending(t_parser *p);
 int			parse_loop(t_parse_ctx *ctx);
 char		*get_clean_token(const char *line, size_t *i, char **env);
+int			error_pipe(t_parser *p, t_intvec *codes);
+void		error_pipe2(t_exec_pack *p);
 
 #endif

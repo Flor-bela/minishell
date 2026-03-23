@@ -6,16 +6,27 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 18:01:22 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 05:36:27 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/23 10:23:38 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "parser.h"
 
-static int	error_pipe(t_parser *p, t_intvec *codes)
+int	error_pipe(t_parser *p, t_intvec *codes)
 {
 	write(2, "syntax error near unexpected token `|'\n", 40);
 	return (parser_error(p, codes));
+}
+
+void	error_pipe2(t_exec_pack *p)
+{
+	perror("minishell: pipe");
+	change_exit_value("1", &p->envp);
+	free_envp_copy(p->envp);
+	cmd_list_destroy(*p->data);
+	free(p->line);
+	intvec_destroy(p->codes);
+	exit(1);
 }
 
 static int	handle_op_line(t_parse_ctx *ctx)

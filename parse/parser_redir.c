@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 05:35:43 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/23 07:59:21 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,8 +58,9 @@ static int	handle_pending_heredoc(t_heredoc_args *args)
 
 	if (init_heredoc_ctx(&ctx, args) == -1)
 		return (-1);
-	heredoc_content = heredoc_with_fork(&ctx);
+	heredoc_content = heredoc_with_fork(&ctx, args);
 	free(ctx.delimiter);
+	free((char *)args->target);
 	if (!heredoc_content)
 		return (0);
 	red_list_push_back(&args->parser->pending_in, heredoc_content, 1);
