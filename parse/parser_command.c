@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_command.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:03 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 23:13:15 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/23 14:37:39 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,6 +62,11 @@ int	handle_command(const char *line, t_parser *p,
 	{
 		p->current_cmd = node_new(NULL);
 		cmd_list_append(&p->head, &p->tail, p->current_cmd);
+		if (p->pending_in || p->pending_out)
+		{
+			move_red_list_to_back(&p->current_cmd->infiles, &p->pending_in);
+			move_red_list_to_back(&p->current_cmd->outfiles, &p->pending_out);
+		}
 	}
 	if (add_command_token(line, p, env))
 		return (1);
