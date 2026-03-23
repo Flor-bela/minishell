@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   provisionaryFunctions2.c                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/22 19:16:07 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/23 15:11:51 by dkalgano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -619,7 +619,7 @@ char	*read_heredoc_input(const char *delimiter,
 		return (NULL);
 	if (!heredoc_loop(&ctx))
 	{
-		
+
 		//free(ctx.content); // do not free here for ctrl C!!! double free!!!
 		return (NULL);
 	}
@@ -676,9 +676,9 @@ static void	heredoc_child(t_heredoc_fork *ctx, int fd[2], char *target)
 	if (!content)
 	{
 		// solo puedo liberar todo aqui si estoy en el << como comando solo
-		close(fd[1]); 
+		close(fd[1]);
 		free(target); ////// HACE$R FREE AQUI PARA QUE NO HAYA LEAK DE DELIMITER CON CTRL+C
-		//free((char *)ctx->delimiter); ////// HACE$R FREE AQUI PARA QUE NO HAYA LEAK DE DELIMITER CON CTRL+C
+		free((char *)ctx->delimiter); ////// HACE$R FREE AQUI PARA QUE NO HAYA LEAK DE DELIMITER CON CTRL+C
 		ft_free_malloc();
 		free_envp_copy(ctx->env);
 		cmd_list_destroy(*ctx->data);
@@ -727,50 +727,36 @@ static void free_red_list(t_list_red *h)
 }
 
 
-char	*heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args)
+int	heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args)
 {
 	int		fd[2];
 	pid_t	pid;
-	char	*content;
 	int		status;
 
 	if (pipe(fd) == -1)
-		return (NULL);
+		return (-1);
 	pid = fork();
 	if (pid == -1)
-		return (NULL);
+		return (-1);
 	if (pid == 0)
 	{
-		////
 		if (args && args->parser)
 		{
 			free_red_list(args->parser->pending_in); // esto libera todo cuando hacemos << here << abc << lol, pero puede que de problema cuando este en un pipeline....
 			free_red_list(args->parser->pending_out);
-			//if (args->parser->head)
-				//cmd_list_destroy(args->parser->head); // creo que no hace falta???
 		}
-		//ctx->delimiter if args is NULL:
 		char *target_str;
 		if (args != NULL)
 			target_str = (char *)args->target;
 		else
 			target_str = NULL;
-		//
 		heredoc_child(ctx, fd, target_str);
 	}
-	
 	close(fd[1]);
-	//free((char *)ctx->delimiter); ///
 	waitpid(pid, &status, 0);
 	if (check_heredoc_signal(status, &ctx->env, fd[0]))
-	{
-		//free((char *)args->target);
-		return (NULL);
-	}	
-	
-	content = read_fd_all(fd[0]);
-	close(fd[0]);
-	return (content);
+		return (-1);
+	return (fd[0]);
 }
 
 int	builtin_echo(t_list *args)

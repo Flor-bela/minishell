@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/22 19:13:09 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/23 15:37:36 by dkalgano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,42 +152,18 @@ static void	handle_infile_redirections(t_list_red **tmp_infiles,
 	t_exec_pack *p, t_heredoc_args *args) // only passing args to free the target in child process -> there is another heredoc_with_fork in parsing that has args!!!!!!!!
 {
 	int				fd_file;
-	t_heredoc_fork	ctx;
-	char			*content;
-	int				pipefd[2];
-
+	(void)args;
 	while (*tmp_infiles != NULL)
 	{
-		if ((*tmp_infiles)->doble == 1)
+		if ((*tmp_infiles)->doble != 0)
 		{
-			ctx.delimiter = (*tmp_infiles)->content;
-			ctx.expand = 1;
-			ctx.env = p->envp;
-			ctx.data = p->data;
-			ctx.line = p->line;
-			ctx.codes = p->codes;
-			content = heredoc_with_fork(&ctx, NULL);
-			//free((char *)args->target);
-			if (!content)
-			{
-				free((char *)args->target); ////
-				change_exit_value("130", &p->envp);
-				ft_free_malloc();
-				free_envp_copy(p->envp);
-				cmd_list_destroy(*p->data);
-				free(p->line);
-				intvec_destroy(p->codes);
-				exit(130);
-			}
-			pipe(pipefd);
-			write(pipefd[1], content, ft_strlen(content));
-			close(pipefd[1]);
-			dup2(pipefd[0], STDIN_FILENO);
-			close(pipefd[0]);
-			free(content);
+			printf("fd is %d\n", (*tmp_infiles)->doble);
+			dup2((*tmp_infiles)->doble, STDIN_FILENO);
+			close((*tmp_infiles)->doble);
 		}
 		else
 		{
+			printf("otro\n");
 			fd_file = open((*tmp_infiles)->content, O_RDONLY);
 			if (fd_file == -1)
 			{
@@ -255,7 +231,8 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 	arr_fds = NULL;
 	while (data_tmp != NULL)
 	{
-		len++;
+		if (data_tmp->cmd != NULL && data_tmp->cmd[0] != '\0')
+			len++;
 		data_tmp = data_tmp->next;
 	}
 	if (len > 1)
@@ -286,19 +263,20 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 
 	i = 0;
 	data_tmp = *data;
-
 	if (len == 1 && (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0'))
 	{
 		saved_stdin = -1;
 		saved_stdout = -1;
+		printf("len %d\n", len);
+		printf("data_tmp_cmd %s\n", data_tmp->cmd);
 		if (data_tmp->infiles != NULL)
 		{
 			tmp_infiles = data_tmp->infiles;
 			saved_stdin = dup(STDIN_FILENO);
 			while (tmp_infiles != NULL)
 			{
-				if (tmp_infiles->doble == 1)
-					tmp_infiles = tmp_infiles->next;
+				if (tmp_infiles->doble != 0)
+					handle_infile_redirections(&tmp_infiles, &p, NULL);
 				else
 				{
 					fd_file = open(tmp_infiles->content, O_RDONLY);
@@ -484,7 +462,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 				}
 
 				close_fds(arr_fds, len);
-				
+
 
 				/////////////////////////////////////////
 				if (!data_tmp->cmd) ////?????????????????
@@ -494,7 +472,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 					cmd_list_destroy(*data);
 					free(line);
 					intvec_destroy(codes);
-					exit(0); 
+					exit(0);
 				}
 
 				return_value = 0;
@@ -535,6 +513,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 
 					if (cmd_path && args)
 					{
+						printf("Entrado a ejecutarse\n");
 						if (execve(cmd_path, args, *envp) < 0)
 						{
 							error = ft_strjoin_modif("minishell: ", cmd_path);
@@ -557,15 +536,15 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 						}
 					}
 				}
-				
-				
+
+
 				ft_free_malloc();
 				free_envp_copy(*envp);
 				cmd_list_destroy(*data);
 				free(line);
 				intvec_destroy(codes);
 				exit(return_value);
-				
+
 			}
 			i++;
 			data_tmp = data_tmp->next;
