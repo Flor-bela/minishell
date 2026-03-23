@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.h                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:28:12 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 05:34:49 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/23 15:04:35 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ char		*append_str_dyn(char *base, const char *add);
 int			match_op(const char *s, size_t i, size_t *len, int *code);
 
 /* redirections */
-int			add_redir_target(t_cmdnode *cmd, int op_code,
+int			add_redir_target(t_parse_ctx *ctx, t_cmdnode *cmd, int op_code,
 				const char *target, char **env);
 int			store_pending_redir(t_parse_ctx *ctx, const char *target);
 
