@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 11:12:04 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 22:32:31 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 14:39:05 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -712,26 +712,13 @@ static int	check_heredoc_signal(int status, char ***env, int fd)
 	}
 	return (0);
 }
-static void free_red_list(t_list_red *h)
-{
-	t_list_red *nx;
-
-	while (h)
-	{
-		nx = h->next;
-		if (h->content)
-			free(h->content);
-		free(h);
-		h = nx;
-	}
-}
-
 
 int	heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args, t_cmdnode *cmd)
 {
 	int		fd[2];
 	pid_t	pid;
 	int		status;
+	(void)cmd;
 
 	if (pipe(fd) == -1)
 		return (-1);
@@ -740,12 +727,7 @@ int	heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args, t_cmdnode *cmd)
 		return (-1);
 	if (pid == 0)
 	{
-		cmd_list_destroy(cmd);
-		if (args && args->parser)
-		{
-			free_red_list(args->parser->pending_in); // esto libera todo cuando hacemos << here << abc << lol, pero puede que de problema cuando este en un pipeline....
-			free_red_list(args->parser->pending_out);
-		}
+		cmd_list_destroy(args->parser->head);
 		char *target_str;
 		if (args != NULL)
 			target_str = (char *)args->target;
