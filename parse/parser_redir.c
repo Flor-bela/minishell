@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 17:45:59 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 18:05:38 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ static int	handle_pending_heredoc(t_heredoc_args *args)
 	fd = heredoc_with_fork(&ctx, args);
 	freedom((void **)&ctx.delimiter);
 	freedom((void **)&args->target);
-	if(fd == -1)
+	if (fd == -1)
 		return (-1);
 	red_list_push_back(&args->parser->pending_in, NULL, fd);
 	return (0);
@@ -65,7 +65,7 @@ static int	handle_redir_heredoc(t_redir_params *p)
 	fd = heredoc_with_fork(&ctx2, &args);
 	freedom((void **)&ctx2.delimiter);
 	freedom((void **)&args.target);
-	if(fd == -1)
+	if (fd == -1)
 		return (-1);
 	red_list_push_back(&p->cmd->infiles, NULL, fd);
 	return (0);

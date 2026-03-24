@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/24 17:45:30 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 18:06:09 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -285,7 +285,7 @@ char		*read_heredoc_input(const char *delimiter,
 				int expand_vars, char **shell_env);
 char		*read_fd_all(int fd);
 
-int	heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args);
+int			heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args);
 
 /* ===================== BUILTINS ===================== */
 
