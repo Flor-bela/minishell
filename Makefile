@@ -22,6 +22,13 @@ SOURCES = \
 	execution/get_cmd_path.c \
 	execution/close_fds.c \
 	execution/is_built_in.c \
+	execution/execution8.c \
+	execution/execution7.c \
+	execution/execution6.c \
+	execution/execution5.c \
+	execution/execution4.c \
+	execution/execution3.c \
+	execution/execution2.c \
 	\
 	parse/parser_list_redir.c \
 	parse/parser_cmd_utils.c \

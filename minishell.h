@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/24 19:53:31 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 20:29:52 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -391,5 +391,85 @@ int			is_quoted(const char *s);
 void		freedom(void **ptr);
 int			ft_isalpha(int c);
 int			ft_isalnum(int c);
+
+/* ===== EXECUTION ===== */
+int			execute_cmds(t_cmdnode **data, char ***envp,
+				char *line, t_intvec *codes);
+
+/* ===== BUILTINS ===== */
+int			execute_built_ins(t_cmdnode *data_tmp,
+				char ***envp, t_exit_ctx *ctx);
+
+/* ===== REDIRECTIONS ===== */
+int			handle_infile_redirections(t_list_red **tmp_infiles);
+int			handle_outfile_redirections(t_list_red **tmp_outfiles);
+
+/* ===== SINGLE CMD ===== */
+int			handle_single_cmd_parent(t_cmdnode *data_tmp,
+				t_cmdnode **data, char ***envp, t_exit_ctx *ctx);
+
+/* ===== PIPELINE HELPERS ===== */
+int			execute_red_first_cmd(t_list_red *data_infiles,
+				t_list_red *data_outfiles, int len, int **arr_fds);
+
+int			execute_red_last_cmd(t_list_red *data_infiles,
+				t_list_red *data_outfiles, int **arr_fds, int i);
+
+int			execute_other_cmds(t_list_red *data_infiles,
+				t_list_red *data_outfiles, int **arr_fds, int i);
+
+/* ===== WAIT ===== */
+int			wait_and_signals(int len, pid_t *pids,
+				int last_exit_status, char **envp);
+
+/* ===== EXECVE ===== */
+void		execute_execve(t_cmdnode *data_tmp,
+				char **envp, t_exec_pack p);
+
+/* ===== UTILS ===== */
+char		**get_args(t_list *phrase);
+
+/* ===== EXECUTION CORE ===== */
+void		execute_pipeline(t_exec_pipe_ctx c);
+int			init_exec(t_exec_init_ctx c);
+void		exec_loop(t_cmdnode *data_tmp, t_exec_pack *p,
+				t_exit_ctx ctx, pid_t *pids);
+
+/* ===== EXECUTION HELPERS ===== */
+int			setup_and_redirect(t_exec_pipe_ctx *c);
+void		handle_exec_error(t_exec_pipe_ctx *c, int return_value);
+int			execute_cmd_or_builtin(t_exec_pipe_ctx *c);
+void		clean_execution(char **envp,
+				t_cmdnode **data, char *line, t_intvec *codes);
+
+/* ===== INIT ===== */
+int			len_data(t_cmdnode *data);
+t_exit_ctx	init_variable_ctx(char ***envp,
+				t_cmdnode **data, char *line, t_intvec *codes);
+t_exec_pack	init_variable_p(t_exec_args a);
+
+/* ===== PIPE ===== */
+int			**execute_pipe(t_cmdnode **data,
+				t_intvec **codes, char *line, char **envp);
+
+/* ===== ERRORS ===== */
+void		error_fork(t_exec_pack *p);
+
+/* ===== CHECK ===== */
+int			check_if_single_cmd_parent(char *data_tmp_cmd);
+char		*get_cmd_name_and_path(t_exec_pack *p,
+				char	**args, char *data_cmd);
+void		error_execve(char **envp, char *cmd_path);
+void		handle_fok_error(t_exec_pack *p, char *data_cmd);
+void		handle_xok_error(t_exec_pack *p, char *data_cmd);
+void		error_pipe(t_cmdnode **data,
+				t_intvec **codes, char *line, char **envp);
+int			handle_redirects_builtin(t_builtin_ctx *c,
+				int *saved_stdout);
+int			execute_builtin_if_needed(t_builtin_ctx *c,
+				int return_value);
+void		restore_fds(int saved_stdin, int saved_stdout);
+int			execute_only_redirect(t_list_red *data_infiles,
+				t_list_red *data_outfiles);
 
 #endif

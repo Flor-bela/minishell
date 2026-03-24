@@ -6,13 +6,13 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 18:01:22 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 07:05:33 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 20:28:25 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-static int	error_pipe(t_parser *p, t_intvec *codes)
+int	error_pipe2(t_parser *p, t_intvec *codes)
 {
 	write(2, "syntax error near unexpected token `|'\n", 40);
 	return (parser_error(p, codes));
@@ -23,7 +23,7 @@ static int	handle_op_line(t_parse_ctx *ctx)
 	if (ctx->p->op_code == 5)
 	{
 		if (ctx->p->last_pipe)
-			return (error_pipe(ctx->p, ctx->codes));
+			return (error_pipe2(ctx->p, ctx->codes));
 		ctx->p->last_pipe = 1;
 	}
 	else
@@ -66,7 +66,7 @@ static int	parse_loop_line(t_parse_ctx *ctx)
 		}
 	}
 	if (ctx->p->last_pipe)
-		return (error_pipe(ctx->p, ctx->codes));
+		return (error_pipe2(ctx->p, ctx->codes));
 	return (0);
 }
 
