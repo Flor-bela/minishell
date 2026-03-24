@@ -6,12 +6,11 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 18:14:39 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 19:21:06 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
-#include "../built_ins/provisionaryFunctions.h"
 
 static int	len_data(t_cmdnode *data)
 {
@@ -39,16 +38,16 @@ static t_exit_ctx	init_variable_ctx(char ***envp, t_cmdnode **data, char *line, 
 	return (ctx);
 }
 
-static t_exec_pack	init_variable_p(char **envp, t_cmdnode **data, char *line, t_intvec *codes, int **arr_fds, int len)
+static t_exec_pack	init_variable_p(t_exec_args a)
 {
 	t_exec_pack	p;
 
-	p.envp = envp;
-	p.data = data;
-	p.line = line;
-	p.codes = codes;
-	p.arr_fds = arr_fds;
-	p.len = len;
+	p.envp = *a.envp;
+	p.data = a.data;
+	p.line = a.line;
+	p.codes = a.codes;
+	p.arr_fds = a.arr_fds;
+	p.len = a.len;
 	return (p);
 }
 
@@ -472,7 +471,7 @@ static void	execute_execve(t_cmdnode *data_tmp, char **envp, t_exec_pack p)
 	}
 }
 
-static void execute_pipeline(int i, int len, t_cmdnode *data_tmp, int **arr_fds, char ***envp, t_cmdnode **data, char *line, t_intvec *codes, t_exit_ctx ctx, t_exec_pack p)
+/*static void execute_pipeline(int i, int len, t_cmdnode *data_tmp, int **arr_fds, char ***envp, t_cmdnode **data, char *line, t_intvec *codes, t_exit_ctx ctx, t_exec_pack p)
 {
 	int	return_value;
 
@@ -499,6 +498,38 @@ static void execute_pipeline(int i, int len, t_cmdnode *data_tmp, int **arr_fds,
 		execute_execve(data_tmp, *envp, p);
 	clean_execution(*envp, data, line, codes);
 	exit(return_value);
+}*/
+
+static void	execute_pipeline(t_exec_pipe_ctx c)
+{
+	int	return_value;
+
+	return_value = 0;
+	signal(SIGINT, SIG_DFL);
+	signal(SIGQUIT, SIG_DFL);
+	c.ctx.args = c.data_tmp->phrase;
+	c.ctx.in_child = 1;
+	if (c.i == 0)
+		return_value = execute_red_first_cmd(c.data_tmp->infiles,
+				c.data_tmp->outfiles, c.p->len, c.p->arr_fds);
+	else if (c.i == c.p->len - 1)
+		return_value = execute_red_last_cmd(c.data_tmp->infiles,
+				c.data_tmp->outfiles, c.p->arr_fds, c.i);
+	else
+		return_value = execute_other_cmds(c.data_tmp->infiles,
+				c.data_tmp->outfiles, c.p->arr_fds, c.i);
+	close_fds(c.p->arr_fds, c.p->len);
+	if (return_value != 0 || !c.data_tmp->cmd)
+	{
+		clean_execution(c.p->envp, c.p->data, c.p->line, c.p->codes);
+		exit(return_value);
+	}
+	if (is_built_in(c.data_tmp->cmd) == 1)
+		return_value = execute_built_ins(c.data_tmp, &c.p->envp, &c.ctx);
+	else
+		execute_execve(c.data_tmp, c.p->envp, *c.p);
+	clean_execution(c.p->envp, c.p->data, c.p->line, c.p->codes);
+	exit(return_value);
 }
 
 int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
@@ -511,6 +542,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 	t_exec_pack	p;
 	t_exit_ctx	ctx;
 	int			last_exit_status;
+	//t_exec_pipe_ctx	c;
 
 	len = 0;
 	i = 0;
@@ -522,7 +554,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 	data_tmp = *data;
 	if (len > 1) /// > 1 comando
 		arr_fds = execute_pipe(data, &codes, line, *envp);
-	p = init_variable_p(*envp, data, line, codes, arr_fds, len);
+	p = init_variable_p((t_exec_args){envp, data, line, codes, arr_fds, len});
 	if (len == 1 && (check_if_single_cmd_parent(data_tmp->cmd) == 1))
 		return (handle_single_cmd_parent(data_tmp, data, envp, &ctx));
 	else // pipeline
@@ -536,7 +568,17 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 			if (pids[i] == -1)
 				error_fork(&p);
 			else if (pids[i] == 0)
-				execute_pipeline(i, len, data_tmp, arr_fds, envp, data, line, codes, ctx, p);
+			{
+				t_exec_pipe_ctx	c;
+
+				c.i = i;
+				c.data_tmp = data_tmp;
+				c.ctx = ctx;
+				c.p = &p;
+
+				execute_pipeline(c);
+				//execute_pipeline(i, len, data_tmp, arr_fds, envp, data, line, codes, ctx, p);
+			}
 			i++;
 			data_tmp = data_tmp->next;
 		}

@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/24 18:06:09 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 19:20:45 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,6 +148,24 @@ typedef struct s_add_redir_locals
 	t_heredoc_fork	ctx2;
 	int				fd;
 }	t_add_redir_locals;
+
+typedef struct s_exec_pipe_ctx
+{
+	int			i;
+	t_cmdnode	*data_tmp;
+	t_exit_ctx	ctx;
+	t_exec_pack	*p;
+}	t_exec_pipe_ctx;
+
+typedef struct s_exec_args
+{
+	char		***envp;
+	t_cmdnode	**data;
+	char		*line;
+	t_intvec	*codes;
+	int			**arr_fds;
+	int			len;
+}	t_exec_args;
 
 extern volatile sig_atomic_t	g_sigint_received;
 
@@ -334,10 +352,10 @@ char		*append_line(char *full, char *line, char *quote);
 int			handle_pipe1(t_parser *p);
 int			handle_redirection(t_parse_ctx *ctx);
 
-int			handle_infile_redirections(t_list_red **tmp_infiles,
-				t_exec_pack *p, t_heredoc_args *args, char ***envp);
-void		handle_outfile_redirections(t_list_red **tmp_outfiles,
-				t_exec_pack *p);
+//int			handle_infile_redirections(t_list_red **tmp_infiles,
+//				t_exec_pack *p, t_heredoc_args *args, char ***envp);
+//void		handle_outfile_redirections(t_list_red **tmp_outfiles,
+//				t_exec_pack *p);
 int			is_quoted(const char *s);
 void		freedom(void **ptr);
 int			ft_isalpha(int c);
