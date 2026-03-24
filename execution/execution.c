@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 17:30:51 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 17:47:11 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -541,6 +541,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 			if (pids[i] == -1)
 				error_fork(&p);
 			else if (pids[i] == 0)
+			// dos funciones
 				execute_pipeline(i, len, data_tmp, arr_fds, envp, data, line, codes, ctx, p);
 			i++;
 			data_tmp = data_tmp->next;
