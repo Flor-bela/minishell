@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 15:40:08 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 17:22:41 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,32 @@ static int	len_data(t_cmdnode *data)
 	}
 	return(len);
 }
+
+static t_exit_ctx	init_variable_ctx(char ***envp, t_cmdnode **data, char *line, t_intvec *codes)
+{
+	t_exit_ctx	ctx;
+	
+	ctx.args = (*data)->phrase;
+	ctx.in_child = 0;
+	ctx.envp = envp;
+	ctx.data = data;
+	ctx.line = line;
+	ctx.codes = codes;
+	return (ctx);
+}
+
+static t_exec_pack	init_variable_p(char **envp, t_cmdnode **data, char *line, t_intvec *codes, int **arr_fds, int len)
+{
+	t_exec_pack	p;
+	
+	p.envp = envp;
+	p.data = data;
+	p.line = line;
+	p.codes = codes;
+	p.arr_fds = arr_fds;
+	p.len = len;
+	return (p);
+}	
 
 static void	clean_execution(char **envp, t_cmdnode **data, char *line, t_intvec *codes)
 {
@@ -272,6 +298,15 @@ static void error_execve(char **envp, char *cmd_path)
 	}
 }
 
+static int check_if_single_cmd_parent(char *data_tmp_cmd)
+{
+	if (data_tmp_cmd == NULL || data_tmp_cmd[0] == '\0')
+		return (1);
+	if (is_built_in(data_tmp_cmd) == 1)
+		return (1);
+	return(0);
+}
+
 static int	execute_only_redirect(t_list_red *data_infiles, t_list_red *data_outfiles)
 {
 	int	saved_stdin;
@@ -334,6 +369,15 @@ static int execute_only_built_in(t_list_red *data_infiles, t_list_red *data_outf
 	return (return_value);
 }
 
+static int	handle_single_cmd_parent(t_cmdnode *data_tmp, t_cmdnode **data, char **envp,  t_exit_ctx *ctx)
+{
+	if ((data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0')) // solo redirecciones
+		return(execute_only_redirect(data_tmp->infiles, data_tmp->outfiles));
+	if ((is_built_in(data_tmp->cmd) == 1)) // solo 1 built_in
+		return(execute_only_built_in(data_tmp->infiles, data_tmp->outfiles, data, envp, ctx));
+	return(0);
+}
+
 static int execute_red_first_cmd(t_list_red *data_infiles, t_list_red *data_outfiles, int len, int **arr_fds)
 {
 	int	return_value;
@@ -341,10 +385,10 @@ static int execute_red_first_cmd(t_list_red *data_infiles, t_list_red *data_outf
 	return_value = 0;
 	if (data_infiles != NULL)
 		return_value = handle_infile_redirections(&data_infiles);
-	if (data_outfiles != NULL)
-		return_value = handle_outfile_redirections(&data_outfiles);
 	if (len > 1 && data_outfiles == NULL)
 		dup2(arr_fds[0][1], STDOUT_FILENO);
+	if (data_outfiles != NULL)
+		return_value = handle_outfile_redirections(&data_outfiles);
 	return(return_value);
 }
 
@@ -437,6 +481,8 @@ static void execute_pipeline(int i, int len, t_cmdnode *data_tmp, int **arr_fds,
 	return_value = 0;
 	signal(SIGINT, SIG_DFL);
 	signal(SIGQUIT, SIG_DFL);
+	ctx.args = data_tmp->phrase;
+	ctx.in_child = 1;
 	if (i == 0) // first command
 		return_value = execute_red_first_cmd(data_tmp->infiles, data_tmp->outfiles, len, arr_fds);
 	else if (i == len - 1) // last command
@@ -449,6 +495,7 @@ static void execute_pipeline(int i, int len, t_cmdnode *data_tmp, int **arr_fds,
 		clean_execution(envp, data, line, codes);
 		exit(return_value);
 	}
+	
 	if (is_built_in(data_tmp->cmd) == 1)
 		return_value = execute_built_ins(data_tmp, envp, &ctx);
 	else
@@ -472,36 +519,17 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 	len = 0;
 	i = 0;
 	last_exit_status = 0;
-	data_tmp = *data;
 	pids = NULL;
 	arr_fds = NULL;
-	
-	// For built_in exit!!!!!!
-	ctx.args = data_tmp->phrase;
-	ctx.in_child = 0;
-	ctx.envp = envp;
-	ctx.data = data;
-	ctx.line = line;
-	ctx.codes = codes;
-	
+	ctx = init_variable_ctx(envp, data, line, codes);
 	len = len_data(*data);
-	if (len > 1) /// 1 comando
-		arr_fds = execute_pipe(data, &codes, line, *envp);
-	
-	// for errors:
-	p.envp = *envp;
-	p.data = data;
-	p.line = line;
-	p.codes = codes;
-	p.arr_fds = arr_fds;
-	p.len = len;
-
-	i = 0;
 	data_tmp = *data;
-	if (len == 1 && (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0')) // solo redirecciones
-		return(execute_only_redirect((*data)->infiles, (*data)->outfiles));
-	if (len == 1 && (is_built_in(data_tmp->cmd) == 1)) // solo 1 built_in
-		return (execute_only_built_in((*data)->infiles, (*data)->outfiles, data, *envp, &ctx));
+	
+	if (len > 1) /// > 1 comando
+		arr_fds = execute_pipe(data, &codes, line, *envp);
+	p = init_variable_p(*envp, data, line, codes, arr_fds, len);
+	if (len == 1 && (check_if_single_cmd_parent(data_tmp->cmd) == 1))
+		return (handle_single_cmd_parent(data_tmp, data, *envp, &ctx));
 	else // pipeline
 	{
 		pids = ft_malloc(sizeof(pid_t) * len);
