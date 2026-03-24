@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 12:46:23 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 13:07:08 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -279,6 +279,37 @@ static void error_execve(char **envp, char *cmd_path)
 		exit(126);
 	}
 }
+
+static int	execute_only_redirect(t_list_red *data_infiles, t_list_red *data_outfiles)
+{
+	int	saved_stdin;
+	int	saved_stdout;
+	int	return_value;
+	
+	return_value = 0;
+	saved_stdin = -1;
+	saved_stdout = -1;
+	saved_stdin = dup(STDIN_FILENO);
+	if (data_infiles != NULL)
+		return_value = handle_infile_redirections(&data_infiles);
+	if (data_outfiles != NULL)
+	{
+		saved_stdout = dup(STDOUT_FILENO);
+		return_value = handle_outfile_redirections(&data_outfiles);
+	}
+	if (saved_stdin != -1)
+	{
+		dup2(saved_stdin, STDIN_FILENO);
+		close(saved_stdin);
+	}
+	if (saved_stdout != -1)
+	{
+		dup2(saved_stdout, STDOUT_FILENO);
+		close(saved_stdout);
+	}
+	return (return_value);
+}
+
 int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 {
 	pid_t		*pids;
@@ -292,8 +323,6 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 	int			saved_stdin;
 	int			saved_stdout;
 	t_list_red	*tmp_infiles;
-	//int			fd_file;
-	//char		*error;
 	t_list_red	*tmp_outfiles;
 	int			return_value;
 	t_exit_ctx	ctx;
@@ -332,34 +361,9 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 	i = 0;
 	data_tmp = *data;
 	if (len == 1 && (data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0')) // solo redirecciones
-	{
-		saved_stdin = -1;
-	
-		saved_stdin = dup(STDIN_FILENO);
-		tmp_infiles = data_tmp->infiles;
-		if (tmp_infiles != NULL)
-			return_value = handle_infile_redirections(&tmp_infiles);
-		saved_stdout = -1;
-		tmp_outfiles = data_tmp->outfiles;
-		if (tmp_outfiles != NULL)
-		{
-			saved_stdout = dup(STDOUT_FILENO);
-			return_value = handle_outfile_redirections(&tmp_outfiles);
-		}
-		if (saved_stdin != -1)
-		{
-			dup2(saved_stdin, STDIN_FILENO);
-			close(saved_stdin);
-		}
-		if (saved_stdout != -1)
-		{
-			dup2(saved_stdout, STDOUT_FILENO);
-			close(saved_stdout);
-		}
-		return (return_value);
-	}
+		return(execute_only_redirect((*data)->infiles, (*data)->outfiles));
 
-	if (len == 1 && (is_built_in(data_tmp->cmd) == 1))
+	if (len == 1 && (is_built_in(data_tmp->cmd) == 1)) // solo 1 built_in
 	{
 		saved_stdin = -1;
 		saved_stdin = dup(STDIN_FILENO);
