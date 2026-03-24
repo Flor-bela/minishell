@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 17:22:41 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 17:30:51 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,7 +235,7 @@ static int	handle_outfile_redirections(t_list_red **tmp_outfiles)
 	return (0);
 }
 
-static int execute_built_ins(t_cmdnode *data_tmp, char **envp, t_exit_ctx *ctx)
+static int execute_built_ins(t_cmdnode *data_tmp, char ***envp, t_exit_ctx *ctx)
 {
 	int	return_value;
 
@@ -243,15 +243,15 @@ static int execute_built_ins(t_cmdnode *data_tmp, char **envp, t_exit_ctx *ctx)
 	if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "echo", 4) == 0 && data_tmp->cmd[4] == '\0'))
 			return_value = builtin_echo(data_tmp->phrase);
 	else if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "cd", 2) == 0 && data_tmp->cmd[2] == '\0'))
-		return_value = builtin_cd(data_tmp->phrase, envp);
+		return_value = builtin_cd(data_tmp->phrase, *envp);
 	else if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "pwd", 3) == 0 && data_tmp->cmd[3] == '\0'))
 		return_value = builtin_pwd();
 	else if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "export", 6) == 0 && data_tmp->cmd[6] == '\0'))
-		return_value = builtin_export(data_tmp->phrase, &envp);
+		return_value = builtin_export(data_tmp->phrase, envp);
 	else if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "unset", 5) == 0 && data_tmp->cmd[5] == '\0'))
-		return_value = builtin_unset(data_tmp->phrase, &envp);
+		return_value = builtin_unset(data_tmp->phrase, envp);
 	else if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
-		return_value = builtin_env(envp);
+		return_value = builtin_env(*envp);
 	else if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
 			return_value = builtin_exit(ctx);
 	return(return_value);
@@ -337,7 +337,7 @@ static int	execute_only_redirect(t_list_red *data_infiles, t_list_red *data_outf
 	return (return_value);
 }
 
-static int execute_only_built_in(t_list_red *data_infiles, t_list_red *data_outfiles, t_cmdnode **data_tmp, char **envp, t_exit_ctx *ctx)
+static int execute_only_built_in(t_list_red *data_infiles, t_list_red *data_outfiles, t_cmdnode **data_tmp, char ***envp, t_exit_ctx *ctx)
 {
 	int	saved_stdin;
 	int	saved_stdout;
@@ -369,7 +369,7 @@ static int execute_only_built_in(t_list_red *data_infiles, t_list_red *data_outf
 	return (return_value);
 }
 
-static int	handle_single_cmd_parent(t_cmdnode *data_tmp, t_cmdnode **data, char **envp,  t_exit_ctx *ctx)
+static int	handle_single_cmd_parent(t_cmdnode *data_tmp, t_cmdnode **data, char ***envp,  t_exit_ctx *ctx)
 {
 	if ((data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0')) // solo redirecciones
 		return(execute_only_redirect(data_tmp->infiles, data_tmp->outfiles));
@@ -474,7 +474,7 @@ static void	execute_execve(t_cmdnode *data_tmp, char **envp, t_exec_pack p)
 	}
 }
 
-static void execute_pipeline(int i, int len, t_cmdnode *data_tmp, int **arr_fds, char **envp, t_cmdnode **data, char *line, t_intvec *codes, t_exit_ctx ctx, t_exec_pack p)
+static void execute_pipeline(int i, int len, t_cmdnode *data_tmp, int **arr_fds, char ***envp, t_cmdnode **data, char *line, t_intvec *codes, t_exit_ctx ctx, t_exec_pack p)
 {
 	int	return_value;
 	
@@ -492,15 +492,15 @@ static void execute_pipeline(int i, int len, t_cmdnode *data_tmp, int **arr_fds,
 	close_fds(arr_fds, len);
 	if (return_value != 0 || !data_tmp->cmd)
 	{
-		clean_execution(envp, data, line, codes);
+		clean_execution(*envp, data, line, codes);
 		exit(return_value);
 	}
 	
 	if (is_built_in(data_tmp->cmd) == 1)
 		return_value = execute_built_ins(data_tmp, envp, &ctx);
 	else
-		execute_execve(data_tmp, envp, p);
-	clean_execution(envp, data, line, codes);
+		execute_execve(data_tmp, *envp, p);
+	clean_execution(*envp, data, line, codes);
 	exit(return_value);
 }
 
@@ -529,7 +529,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 		arr_fds = execute_pipe(data, &codes, line, *envp);
 	p = init_variable_p(*envp, data, line, codes, arr_fds, len);
 	if (len == 1 && (check_if_single_cmd_parent(data_tmp->cmd) == 1))
-		return (handle_single_cmd_parent(data_tmp, data, *envp, &ctx));
+		return (handle_single_cmd_parent(data_tmp, data, envp, &ctx));
 	else // pipeline
 	{
 		pids = ft_malloc(sizeof(pid_t) * len);
@@ -541,7 +541,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 			if (pids[i] == -1)
 				error_fork(&p);
 			else if (pids[i] == 0)
-				execute_pipeline(i, len, data_tmp, arr_fds, *envp, data, line, codes, ctx, p);
+				execute_pipeline(i, len, data_tmp, arr_fds, envp, data, line, codes, ctx, p);
 			i++;
 			data_tmp = data_tmp->next;
 		}
