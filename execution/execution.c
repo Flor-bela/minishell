@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 17:47:11 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 19:45:51 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -474,15 +474,15 @@ static void	execute_execve(t_cmdnode *data_tmp, char **envp, t_exec_pack p)
 	}
 }
 
-static void execute_pipeline(int i, int len, t_cmdnode *data_tmp, int **arr_fds, char ***envp, t_cmdnode **data, char *line, t_intvec *codes, t_exit_ctx ctx, t_exec_pack p)
+static int	execute_pipeline_1stpart(int i, int len, int **arr_fds, t_cmdnode *data_tmp, char ***envp, t_cmdnode **data, char *line, t_intvec *codes, t_exit_ctx *ctx)
 {
 	int	return_value;
-	
 	return_value = 0;
+	
 	signal(SIGINT, SIG_DFL);
 	signal(SIGQUIT, SIG_DFL);
-	ctx.args = data_tmp->phrase;
-	ctx.in_child = 1;
+	ctx->args = data_tmp->phrase;
+	ctx->in_child = 1;
 	if (i == 0) // first command
 		return_value = execute_red_first_cmd(data_tmp->infiles, data_tmp->outfiles, len, arr_fds);
 	else if (i == len - 1) // last command
@@ -495,59 +495,68 @@ static void execute_pipeline(int i, int len, t_cmdnode *data_tmp, int **arr_fds,
 		clean_execution(*envp, data, line, codes);
 		exit(return_value);
 	}
-	
-	if (is_built_in(data_tmp->cmd) == 1)
-		return_value = execute_built_ins(data_tmp, envp, &ctx);
-	else
-		execute_execve(data_tmp, *envp, p);
-	clean_execution(*envp, data, line, codes);
-	exit(return_value);
+	return (return_value);
 }
 
+static int	execute_pipeline_2ndpart(t_cmdnode *data_tmp, char ***envp, t_exit_ctx *ctx, t_exec_pack p)
+{
+	int	return_value;
+	return_value = 0;
+	
+	if (is_built_in(data_tmp->cmd) == 1)
+	return_value = execute_built_ins(data_tmp, envp, ctx);
+	else
+		execute_execve(data_tmp, *envp, p);
+	return(return_value);
+}
 
 int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 {
-	pid_t		*pids;
-	int			len;
-	int			i;
 	int			**arr_fds;
-	t_cmdnode	*data_tmp;
-	t_exec_pack	p;
-	t_exit_ctx	ctx;
-	int			last_exit_status;
+	t_exit_ctx	ctx; // clean
+	t_exec_pack        p; // execute
+	t_pipeline_state    s; // pipelineeeeeee
 
-	len = 0;
-	i = 0;
-	last_exit_status = 0;
-	pids = NULL;
+	// t_pipeline_state    s; // crearla aquí
+	s.i = 0;
+	s.len = len_data(*data);
+	s.pids = NULL;
+	s.data_tmp = *data;
+	s.last_exit_status = 0;
+	s.return_value = 0;
+	
+
 	arr_fds = NULL;
 	ctx = init_variable_ctx(envp, data, line, codes);
-	len = len_data(*data);
-	data_tmp = *data;
 	
-	if (len > 1) /// > 1 comando
+	
+	if (s.len > 1)
 		arr_fds = execute_pipe(data, &codes, line, *envp);
-	p = init_variable_p(*envp, data, line, codes, arr_fds, len);
-	if (len == 1 && (check_if_single_cmd_parent(data_tmp->cmd) == 1))
-		return (handle_single_cmd_parent(data_tmp, data, envp, &ctx));
+	p = init_variable_p(*envp, data, line, codes, arr_fds, s.len);
+	if (s.len == 1 && (check_if_single_cmd_parent(s.data_tmp->cmd) == 1))
+		return (handle_single_cmd_parent(s.data_tmp, data, envp, &ctx));
 	else // pipeline
 	{
-		pids = ft_malloc(sizeof(pid_t) * len);
+		s.pids = ft_malloc(sizeof(pid_t) * s.len);
 		signal(SIGINT, handle_sigint);
 		signal(SIGQUIT, SIG_IGN);
-		while (i < len)
+		while (s.i < s.len)
 		{
-			pids[i] = fork();
-			if (pids[i] == -1)
+			s.pids[s.i] = fork();
+			if (s.pids[s.i] == -1)
 				error_fork(&p);
-			else if (pids[i] == 0)
-			// dos funciones
-				execute_pipeline(i, len, data_tmp, arr_fds, envp, data, line, codes, ctx, p);
-			i++;
-			data_tmp = data_tmp->next;
+			else if (s.pids[s.i] == 0)
+			{
+				s.return_value = execute_pipeline_1stpart(s.i, s.len, arr_fds, s.data_tmp, envp, data, line, codes, &ctx);
+				s.return_value = execute_pipeline_2ndpart(s.data_tmp, envp, &ctx, p);
+				clean_execution(*envp, data, line, codes);
+				exit(s.return_value);
+			}
+			s.i++;
+			s.data_tmp = s.data_tmp->next;
 		}
-		close_fds(arr_fds, len);
+		close_fds(arr_fds, s.len);
 	}
-	last_exit_status = wait_and_signals(len, pids, last_exit_status, *envp);
-	return (last_exit_status);
+	s.last_exit_status = wait_and_signals(s.len, s.pids, s.last_exit_status, *envp);
+	return (s.last_exit_status);
 }

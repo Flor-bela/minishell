@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/24 11:56:59 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 19:26:21 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,6 +123,17 @@ typedef struct s_exec_pack
 	int			**arr_fds;
 	int			len;
 }	t_exec_pack;
+
+typedef struct s_pipeline_state
+{
+	int         i;
+	int         len;
+	pid_t       *pids;
+	t_cmdnode   *data_tmp;
+	int         last_exit_status;
+	int         return_value;
+}  				 t_pipeline_state;
+
 
 extern volatile sig_atomic_t	g_sigint_received;
 
