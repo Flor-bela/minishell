@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/03 19:07:30 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/13 11:46:04 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 14:49:39 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,4 +23,14 @@ t_list	*ft_lstnew(void *content)
 	lst->prev = NULL;
 	lst->next = NULL;
 	return (lst);
+}
+
+int	ft_isalpha(int c)
+{
+	return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'));
+}
+
+int	ft_isalnum(int c)
+{
+	return (ft_isalpha(c) || (c >= '0' && c <= '9'));
 }

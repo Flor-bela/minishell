@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/24 06:00:32 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 17:45:21 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,8 +73,7 @@ char	*read_heredoc_input(const char *delimiter,
 	return (ctx.content);
 }
 
-int	heredoc_with_fork(t_heredoc_fork *ctx,
-		t_heredoc_args *args, t_cmdnode *cmd)
+int	heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args)
 {
 	int		fd[2];
 	pid_t	pid;
@@ -86,7 +85,7 @@ int	heredoc_with_fork(t_heredoc_fork *ctx,
 	if (pid == -1)
 		return (-1);
 	if (pid == 0)
-		heredoc_child_process(ctx, args, cmd, fd);
+		heredoc_child_process(ctx, args, fd);
 	close(fd[1]);
 	waitpid(pid, &status, 0);
 	if (check_heredoc_signal(status, &ctx->env, fd[0]))

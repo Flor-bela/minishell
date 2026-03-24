@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/24 05:46:24 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 07:09:08 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 14:49:25 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,12 +28,12 @@ int	is_valid_identifier(const char *s)
 
 	if (!s || !s[0])
 		return (0);
-	if (!(isalpha((unsigned char)s[0]) || s[0] == '_'))
+	if (!(ft_isalpha((unsigned char)s[0]) || s[0] == '_'))
 		return (0);
 	i = 1;
 	while (s[i] && s[i] != '=')
 	{
-		if (!(isalnum((unsigned char)s[i]) || s[i] == '_'))
+		if (!(ft_isalnum((unsigned char)s[i]) || s[i] == '_'))
 			return (0);
 		i++;
 	}

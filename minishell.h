@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/24 12:55:19 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 17:45:30 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -285,8 +285,7 @@ char		*read_heredoc_input(const char *delimiter,
 				int expand_vars, char **shell_env);
 char		*read_fd_all(int fd);
 
-int			heredoc_with_fork(t_heredoc_fork *ctx,
-				t_heredoc_args *args, t_cmdnode *cmd);
+int	heredoc_with_fork(t_heredoc_fork *ctx, t_heredoc_args *args);
 
 /* ===================== BUILTINS ===================== */
 
@@ -311,7 +310,7 @@ char		*get_var_value(const char *line, size_t *i, char **env);
 int			init_heredoc_ctx(t_heredoc_ctx *ctx,
 				const char *delimiter, int expand, char **env);
 void		heredoc_child_process(t_heredoc_fork *ctx,
-				t_heredoc_args *args, t_cmdnode *cmd, int fd[2]);
+				t_heredoc_args *args, int fd[2]);
 int			check_sigint(char *line, char *content);
 int			process_heredoc_line(t_heredoc_ctx *ctx);
 int			check_heredoc_signal(int status, char ***env, int fd);
@@ -340,6 +339,8 @@ int			handle_infile_redirections(t_list_red **tmp_infiles,
 void		handle_outfile_redirections(t_list_red **tmp_outfiles,
 				t_exec_pack *p);
 int			is_quoted(const char *s);
-void		freedom(void** ptr);
+void		freedom(void **ptr);
+int			ft_isalpha(int c);
+int			ft_isalnum(int c);
 
 #endif

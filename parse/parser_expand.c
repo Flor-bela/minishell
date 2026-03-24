@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:20 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 14:49:25 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,12 @@
 
 static int	is_var_start(char c)
 {
-	return (isalpha((unsigned char)c) || c == '_');
+	return (ft_isalpha((unsigned char)c) || c == '_');
 }
 
 static int	is_var_char(char c)
 {
-	return (isalnum((unsigned char)c) || c == '_');
+	return (ft_isalnum((unsigned char)c) || c == '_');
 }
 
 static char	*expand_variable(const char *token, size_t *i,

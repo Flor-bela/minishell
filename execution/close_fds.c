@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/02 17:56:01 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/24 13:06:09 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 15:10:54 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,11 +27,11 @@ void	close_fds(int **arr_fds, int len_cmds)
 	}
 }
 
-void freedom(void** ptr)
+void	freedom(void **ptr)
 {
-	if(ptr && *ptr)
+	if (ptr && *ptr)
 	{
-		free(*ptr);
-		*ptr=NULL;
+		free (*ptr);
+		*ptr = NULL;
 	}
 }
