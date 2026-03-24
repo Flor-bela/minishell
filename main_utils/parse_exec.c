@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse_exec.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/24 08:04:08 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 18:18:19 by dkalgano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,13 +29,16 @@ int	handle_parse(char *line, t_intvec *codes,
 	if (parse_line(line, codes, list, *env) == 0)
 	{
 		exit_code = execute_cmds(list, env, line, codes);
-		change_exit_value(ft_itoa(exit_code), env);
+		char *exit_str = ft_itoa(exit_code);
+		change_exit_value(exit_str, env);
+		free(exit_str);
 		return (0);
 	}
 	if (!g_sigint_received)
 		change_exit_value("2", env);
 	g_sigint_received = 0;
 	return (1);
+
 }
 
 void	cleanup_iteration(t_cmdnode *list,

@@ -6,7 +6,7 @@
 /*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 15:43:50 by dkalgano         ###   ########.fr       */
+/*   Updated: 2026/03/24 17:14:13 by dkalgano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,8 @@ static int	handle_pending_heredoc(t_heredoc_args *args)
 	fd = heredoc_with_fork(&ctx, args);
 	freedom((void **)&ctx.delimiter);
 	freedom((void **)&args->target);
+	if (fd == -1)
+		return (-1);
 	red_list_push_back(&args->parser->pending_in, NULL, fd);
 	return (0);
 }

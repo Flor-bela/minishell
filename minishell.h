@@ -6,7 +6,7 @@
 /*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/24 15:43:27 by dkalgano         ###   ########.fr       */
+/*   Updated: 2026/03/24 15:57:51 by dkalgano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -335,10 +335,6 @@ char		*append_line(char *full, char *line, char *quote);
 int			handle_pipe1(t_parser *p);
 int			handle_redirection(t_parse_ctx *ctx);
 
-int			handle_infile_redirections(t_list_red **tmp_infiles,
-				t_exec_pack *p, t_heredoc_args *args, char ***envp);
-void		handle_outfile_redirections(t_list_red **tmp_outfiles,
-				t_exec_pack *p);
 int			is_quoted(const char *s);
 void		freedom(void** ptr);
 

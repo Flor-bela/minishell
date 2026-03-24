@@ -6,7 +6,7 @@
 /*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/24 06:00:32 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 15:43:10 by dkalgano         ###   ########.fr       */
+/*   Updated: 2026/03/24 16:17:27 by dkalgano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,9 +66,7 @@ char	*read_heredoc_input(const char *delimiter,
 	if (!init_heredoc_ctx(&ctx, delimiter, expand_vars, shell_env))
 		return (NULL);
 	if (!heredoc_loop(&ctx))
-	{
 		return (NULL);
-	}
 	freedom((void **)&delimiter);
 	return (ctx.content);
 }
