@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 13:07:08 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 14:12:22 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -217,7 +217,7 @@ static int	handle_outfile_redirections(t_list_red **tmp_outfiles)
 	return (0);
 }
 
-static int execute_built_ins(t_cmdnode *data_tmp, char **envp, t_exit_ctx ctx)
+static int execute_built_ins(t_cmdnode *data_tmp, char **envp, t_exit_ctx *ctx)
 {
 	int	return_value;
 
@@ -235,7 +235,7 @@ static int execute_built_ins(t_cmdnode *data_tmp, char **envp, t_exit_ctx ctx)
 	else if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "env", 3) == 0 && data_tmp->cmd[3] == '\0'))
 		return_value = builtin_env(envp);
 	else if (data_tmp->cmd && (ft_strncmp(data_tmp->cmd, "exit", 4) == 0 && data_tmp->cmd[4] == '\0'))
-			return_value = builtin_exit(&ctx);
+			return_value = builtin_exit(ctx);
 	return(return_value);
 }
 
@@ -310,6 +310,110 @@ static int	execute_only_redirect(t_list_red *data_infiles, t_list_red *data_outf
 	return (return_value);
 }
 
+static int execute_only_built_in(t_list_red *data_infiles, t_list_red *data_outfiles, t_cmdnode **data_tmp, char **envp, t_exit_ctx *ctx)
+{
+	int	saved_stdin;
+	int	saved_stdout;
+	int	return_value;
+	
+	saved_stdin = -1;
+	saved_stdout = -1;
+	return_value = 0;
+	saved_stdin = dup(STDIN_FILENO);
+	if (data_infiles != NULL)
+		return_value = handle_infile_redirections(&data_infiles);
+	if (data_outfiles != NULL)
+	{
+		saved_stdout = dup(STDOUT_FILENO);
+		return_value = handle_outfile_redirections(&data_outfiles);
+	}
+	if (is_built_in((*data_tmp)->cmd) == 1)
+		return_value = execute_built_ins(*data_tmp, envp, ctx); //////////////
+	if (saved_stdin != -1)
+	{
+		dup2(saved_stdin, STDIN_FILENO);
+		close(saved_stdin);
+	}
+	if (saved_stdout != -1)
+	{
+		dup2(saved_stdout, STDOUT_FILENO);
+		close(saved_stdout);
+	}
+	return (return_value);
+}
+
+static int execute_red_first_cmd(t_list_red *data_infiles, t_list_red *data_outfiles, int len, int **arr_fds)
+{
+	int	return_value;
+
+	return_value = 0;
+	if (data_infiles != NULL)
+		return_value = handle_infile_redirections(&data_infiles);
+	if (data_outfiles != NULL)
+		return_value = handle_outfile_redirections(&data_outfiles);
+	if (len > 1 && data_outfiles == NULL)
+		dup2(arr_fds[0][1], STDOUT_FILENO);
+	return(return_value);
+}
+
+static int execute_red_last_cmd(t_list_red *data_infiles, t_list_red *data_outfiles, int **arr_fds, int i)
+{
+	int	return_value;
+
+	return_value = 0;
+	if (data_infiles != NULL)
+		return_value = handle_infile_redirections(&data_infiles);
+	else
+		dup2(arr_fds[i - 1][0], STDIN_FILENO);
+	if (data_outfiles != NULL)
+		return_value = handle_outfile_redirections(&data_outfiles);
+	return (return_value);
+}
+
+static int execute_other_cmds(t_list_red *data_infiles, t_list_red *data_outfiles, int **arr_fds, int i)
+{
+	int	return_value;
+	
+	return_value = 0;
+	if (data_infiles != NULL)
+		return_value = handle_infile_redirections(&data_infiles);
+	else
+		dup2(arr_fds[i - 1][0], STDIN_FILENO);
+
+	if (data_outfiles != NULL)
+		return_value = handle_outfile_redirections(&data_outfiles);
+	else
+		dup2(arr_fds[i][1], STDOUT_FILENO);
+	return(return_value);
+}
+
+/* static void	wait_and_signals()
+{
+	i = 0;
+	while (i < len)
+	{
+		waitpid(pids[i], &last_exit_status, 0);
+		i++;
+	}
+	signal(SIGINT, handle_sigint);
+	signal(SIGQUIT, SIG_IGN);
+
+	signal_code = 0;
+	if (WIFEXITED(last_exit_status))
+		last_exit_status = WEXITSTATUS(last_exit_status);
+	else if (WIFSIGNALED(last_exit_status))
+	{
+		signal_code = WTERMSIG(last_exit_status);
+		if (signal_code == SIGINT)
+			write(1, "", 0);
+		else if (signal_code == SIGQUIT)
+			write(1, "Quit (core dumped)\n", 20);
+		last_exit_status = signal_code + 128;
+	}
+	change_exit_value(ft_itoa(last_exit_status), envp);
+	
+} */
+
 int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 {
 	pid_t		*pids;
@@ -320,14 +424,12 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 	int			last_exit_status;
 	int			**arr_fds;
 	t_cmdnode	*data_tmp;
-	int			saved_stdin;
-	int			saved_stdout;
-	t_list_red	*tmp_infiles;
-	t_list_red	*tmp_outfiles;
+	//t_list_red	*tmp_infiles;
+	//t_list_red	*tmp_outfiles;
 	int			return_value;
 	t_exit_ctx	ctx;
 	int			signal_code;
-	char		*status_str;
+	//char		*status_str;
 	t_exec_pack	p;
 
 	len = 0;
@@ -364,37 +466,9 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 		return(execute_only_redirect((*data)->infiles, (*data)->outfiles));
 
 	if (len == 1 && (is_built_in(data_tmp->cmd) == 1)) // solo 1 built_in
-	{
-		saved_stdin = -1;
-		saved_stdin = dup(STDIN_FILENO);
-		tmp_infiles = data_tmp->infiles;
-		if (tmp_infiles != NULL)
-		{
-			if (tmp_infiles != NULL)
-					return_value = handle_infile_redirections(&tmp_infiles);
-		}
-		saved_stdout = -1;
-		tmp_outfiles = data_tmp->outfiles;
-		if (tmp_outfiles != NULL)
-		{
-			saved_stdout = dup(STDOUT_FILENO);
-			return_value = handle_outfile_redirections(&tmp_outfiles);
-		}
-		if (is_built_in(data_tmp->cmd) == 1)
-			return_value = execute_built_ins(data_tmp, *envp, ctx);
-		if (saved_stdin != -1)
-		{
-			dup2(saved_stdin, STDIN_FILENO);
-			close(saved_stdin);
-		}
-		if (saved_stdout != -1)
-		{
-			dup2(saved_stdout, STDOUT_FILENO);
-			close(saved_stdout);
-		}
-		return (return_value);
-	}
-	else
+		return (execute_only_built_in((*data)->infiles, (*data)->outfiles, data, *envp, &ctx));
+	
+	else // pipeline
 	{
 		pids = ft_malloc(sizeof(pid_t) * len);
 		signal(SIGINT, handle_sigint);
@@ -409,45 +483,14 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 				signal(SIGINT, SIG_DFL);
 				signal(SIGQUIT, SIG_DFL);
 
-				if (i == 0)
-				{
-					tmp_infiles = data_tmp->infiles;
-					if (tmp_infiles != NULL)
-						return_value = handle_infile_redirections(&tmp_infiles);
-					tmp_outfiles = data_tmp->outfiles;
-					if (tmp_outfiles != NULL)
-						return_value = handle_outfile_redirections(&tmp_outfiles);
-					if (len > 1 && data_tmp->outfiles == NULL)
-						dup2(arr_fds[0][1], STDOUT_FILENO);
-				}
-				else if (i == len - 1)
-				{
-					tmp_infiles = data_tmp->infiles;
-					if (tmp_infiles != NULL)
-						return_value = handle_infile_redirections(&tmp_infiles);
-					else
-						dup2(arr_fds[i - 1][0], STDIN_FILENO);
-					tmp_outfiles = data_tmp->outfiles;
-					if (tmp_outfiles != NULL)
-						return_value = handle_outfile_redirections(&tmp_outfiles);
-				}
-				else
-				{
-					tmp_infiles = data_tmp->infiles;
-					if (tmp_infiles != NULL)
-						return_value = handle_infile_redirections(&tmp_infiles);
-					else
-						dup2(arr_fds[i - 1][0], STDIN_FILENO);
-
-					tmp_outfiles = data_tmp->outfiles;
-					if (tmp_outfiles != NULL)
-						return_value = handle_outfile_redirections(&tmp_outfiles);
-					else
-						dup2(arr_fds[i][1], STDOUT_FILENO);
-				}
-
+				if (i == 0) // first command
+					return_value = execute_red_first_cmd((*data)->infiles, (*data)->outfiles, len, arr_fds);
+				else if (i == len - 1) // last command
+					return_value = execute_red_last_cmd((*data)->infiles, (*data)->outfiles, arr_fds, i);
+				else // middle
+					return_value = execute_other_cmds((*data)->infiles, (*data)->outfiles, arr_fds, i);
 				close_fds(arr_fds, len);
-				
+
 				
 				/////////////////////////////////////////
 				if (return_value != 0)
@@ -471,7 +514,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 				}
 								
 				if (is_built_in(data_tmp->cmd) == 1)
-					return_value = execute_built_ins(data_tmp, *envp, ctx);
+					return_value = execute_built_ins(data_tmp, *envp, &ctx);
 				else
 				{
 					if (data_tmp->cmd != NULL)
@@ -501,16 +544,17 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 			data_tmp = data_tmp->next;
 		}
 		close_fds(arr_fds, len);
-
-		i = 0;
-		while (i < len)
-		{
-			waitpid(pids[i], &last_exit_status, 0);
-			i++;
-		}
-		signal(SIGINT, handle_sigint);
-		signal(SIGQUIT, SIG_IGN);
 	}
+
+	
+	i = 0;
+	while (i < len)
+	{
+		waitpid(pids[i], &last_exit_status, 0);
+		i++;
+	}
+	signal(SIGINT, handle_sigint);
+	signal(SIGQUIT, SIG_IGN);
 
 	signal_code = 0;
 	if (WIFEXITED(last_exit_status))
@@ -524,7 +568,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 			write(1, "Quit (core dumped)\n", 20);
 		last_exit_status = signal_code + 128;
 	}
-	status_str = ft_itoa(last_exit_status);
-	change_exit_value(status_str, envp);
+	change_exit_value(ft_itoa(last_exit_status), envp);
+	
 	return (last_exit_status);
 }
