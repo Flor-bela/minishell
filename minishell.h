@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/02 13:34:51 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/24 19:20:45 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 19:53:31 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,6 +166,37 @@ typedef struct s_exec_args
 	int			**arr_fds;
 	int			len;
 }	t_exec_args;
+
+typedef struct s_builtin_ctx
+{
+	t_list_red	*data_infiles;
+	t_list_red	*data_outfiles;
+	t_cmdnode	**data_tmp;
+	char		***envp;
+	t_exit_ctx	*ctx;
+}	t_builtin_ctx;
+
+typedef struct s_exec_init_ctx
+{
+	t_cmdnode	**data;
+	char		***envp;
+	char		*line;
+	t_intvec	*codes;
+	t_exec_pack	*p;
+	t_exit_ctx	*ctx;
+	int			***arr_fds;
+}	t_exec_init_ctx;
+
+typedef struct s_exec_cmds_ctx
+{
+	pid_t		*pids;
+	int			len;
+	t_cmdnode	*data_tmp;
+	t_exec_pack	p;
+	t_exit_ctx	ctx;
+	int			last_exit_status;
+	int			**arr_fds;
+}	t_exec_cmds_ctx;
 
 extern volatile sig_atomic_t	g_sigint_received;
 
