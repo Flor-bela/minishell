@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_redir.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 15:43:50 by dkalgano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ static int	handle_pending_heredoc(t_heredoc_args *args)
 
 	if (init_heredoc_ctx2(&ctx, args) == -1)
 		return (-1);
-	fd = heredoc_with_fork(&ctx, args, NULL);
+	fd = heredoc_with_fork(&ctx, args);
 	freedom((void **)&ctx.delimiter);
 	freedom((void **)&args->target);
 	red_list_push_back(&args->parser->pending_in, NULL, fd);
@@ -60,7 +60,7 @@ static int	handle_redir_heredoc(t_redir_params *p)
 	args.codes = p->ctx->codes;
 	if (init_heredoc_ctx2(&ctx2, &args) == -1)
 		return (-1);
-	fd = heredoc_with_fork(&ctx2, &args, p->cmd);
+	fd = heredoc_with_fork(&ctx2, &args);
 	freedom((void **)&ctx2.delimiter);
 	freedom((void **)&args.target);
 	red_list_push_back(&p->cmd->infiles, NULL, fd);

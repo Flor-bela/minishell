@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   heredoc_fork.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/24 06:16:08 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 15:42:21 by dkalgano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,16 +77,11 @@ void	free_red_list(t_list_red *h)
 }
 
 void	heredoc_child_process(t_heredoc_fork *ctx,
-		t_heredoc_args *args, t_cmdnode *cmd, int fd[2])
+		t_heredoc_args *args, int fd[2])
 {
 	char	*target_str;
 
-	cmd_list_destroy(cmd);
-	if (args && args->parser)
-	{
-		free_red_list(args->parser->pending_in);
-		free_red_list(args->parser->pending_out);
-	}
+	cmd_list_destroy(args->parser->head);
 	if (args != NULL)
 		target_str = (char *)args->target;
 	else

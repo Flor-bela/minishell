@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execution.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 13:24:09 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 15:40:16 by dkalgano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -472,7 +472,7 @@ void	child_process(int i, int len, t_cmdnode *data_tmp, t_exec_pack *p, char ***
 			}
 		}
 	}
-	
+
 	ft_free_malloc();
 	free_envp_copy(*envp);
 	cmd_list_destroy(*data);
@@ -605,20 +605,16 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 {
 	pid_t		*pids;
 	int			len;
-	int			i;
 	int			last_exit_status;
 	int			**arr_fds;
 	t_cmdnode	*data_tmp;
-	int			return_value;
 	t_exec_pack	p;
 	char		*status_str;
 
-	i = 0;
 	last_exit_status = 0;
 	data_tmp = *data;
 	pids = NULL;
 	arr_fds = NULL;
-	return_value = 0;
 
 	len = count_cmds(data_tmp);
 

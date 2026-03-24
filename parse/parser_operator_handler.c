@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_operator_handler.c                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: dkalgano <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 15:40:23 by dkalgano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,6 @@ int	handle_redirection(t_parse_ctx *ctx)
 {
 	char			*target;
 	t_redir_params	p;
-	int				traduce;
 
 	target = get_redir_target(ctx->line, &ctx->p->i, ctx->env, ctx->p->op_code);
 	if (!target)

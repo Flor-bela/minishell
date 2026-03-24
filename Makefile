@@ -64,11 +64,11 @@ SOURCES = \
 	main_utils/parse_exec.c \
 	\
 	minishell_main.c
-	
+
 OBJ_DIR = obj
 OBJECTS = $(SOURCES:%.c=$(OBJ_DIR)/%.o)
 
-#FLAGS = -Wall -Werror -Wextra -g
+FLAGS = -Wall -Werror -Wextra -g
 LDFLAGS = -lreadline -lhistory
 CC = cc
 
