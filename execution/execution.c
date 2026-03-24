@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 15:03:44 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 15:40:08 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -430,6 +430,34 @@ static void	execute_execve(t_cmdnode *data_tmp, char **envp, t_exec_pack p)
 	}
 }
 
+static void execute_pipeline(int i, int len, t_cmdnode *data_tmp, int **arr_fds, char **envp, t_cmdnode **data, char *line, t_intvec *codes, t_exit_ctx ctx, t_exec_pack p)
+{
+	int	return_value;
+	
+	return_value = 0;
+	signal(SIGINT, SIG_DFL);
+	signal(SIGQUIT, SIG_DFL);
+	if (i == 0) // first command
+		return_value = execute_red_first_cmd(data_tmp->infiles, data_tmp->outfiles, len, arr_fds);
+	else if (i == len - 1) // last command
+		return_value = execute_red_last_cmd(data_tmp->infiles, data_tmp->outfiles, arr_fds, i);
+	else // middle
+		return_value = execute_other_cmds(data_tmp->infiles, data_tmp->outfiles, arr_fds, i);
+	close_fds(arr_fds, len);
+	if (return_value != 0 || !data_tmp->cmd)
+	{
+		clean_execution(envp, data, line, codes);
+		exit(return_value);
+	}
+	if (is_built_in(data_tmp->cmd) == 1)
+		return_value = execute_built_ins(data_tmp, envp, &ctx);
+	else
+		execute_execve(data_tmp, envp, p);
+	clean_execution(envp, data, line, codes);
+	exit(return_value);
+}
+
+
 int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 {
 	pid_t		*pids;
@@ -439,7 +467,6 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 	t_cmdnode	*data_tmp;
 	t_exec_pack	p;
 	t_exit_ctx	ctx;
-	int			return_value;
 	int			last_exit_status;
 
 	len = 0;
@@ -448,8 +475,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 	data_tmp = *data;
 	pids = NULL;
 	arr_fds = NULL;
-	return_value = 0;
-
+	
 	// For built_in exit!!!!!!
 	ctx.args = data_tmp->phrase;
 	ctx.in_child = 0;
@@ -487,29 +513,7 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 			if (pids[i] == -1)
 				error_fork(&p);
 			else if (pids[i] == 0)
-			{
-				signal(SIGINT, SIG_DFL);
-				signal(SIGQUIT, SIG_DFL);
-				if (i == 0) // first command
-					return_value = execute_red_first_cmd((*data)->infiles, (*data)->outfiles, len, arr_fds);
-				else if (i == len - 1) // last command
-					return_value = execute_red_last_cmd((*data)->infiles, (*data)->outfiles, arr_fds, i);
-				else // middle
-					return_value = execute_other_cmds((*data)->infiles, (*data)->outfiles, arr_fds, i);
-				close_fds(arr_fds, len);
-				if (return_value != 0 || !data_tmp->cmd)
-				{
-					clean_execution(*envp, data, line, codes);
-					exit(return_value);
-				}
-
-				if (is_built_in(data_tmp->cmd) == 1)
-					return_value = execute_built_ins(data_tmp, *envp, &ctx);
-				else
-					execute_execve(data_tmp, *envp, p);
-				clean_execution(*envp, data, line, codes);
-				exit(return_value);
-			}
+				execute_pipeline(i, len, data_tmp, arr_fds, *envp, data, line, codes, ctx, p);
 			i++;
 			data_tmp = data_tmp->next;
 		}
