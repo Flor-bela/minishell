@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/03 18:00:32 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/17 12:58:37 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,8 @@ static void	ft_free(t_list *mallocs_list)
 	while (mallocs_list != NULL)
 	{
 		temp = mallocs_list->next;
-		free(mallocs_list->content);
-		free(mallocs_list);
+		freedom((void **)&mallocs_list->content);
+		freedom((void **)&mallocs_list);
 		mallocs_list = temp;
 	}
 }
@@ -32,7 +32,7 @@ static void	*register_malloc(void *ptr, t_list **lst)
 	node = ft_lstnew(ptr);
 	if (!node)
 	{
-		free(ptr);
+		freedom((void **)&ptr);
 		ft_free(*lst);
 		exit(1);
 	}

@@ -3,35 +3,40 @@
 /*                                                        :::      ::::::::   */
 /*   parser_operator_handler.c                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 22:08:45 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parser.h"
+#include "../minishell.h"
 
-static char	*get_redir_target(const char *line, size_t *i, char **env)
+static char	*get_redir_target(const char *line, size_t *i,
+				char **env, int op_code)
 {
 	char	*target;
 	char	*expanded;
 	int		grouped;
 	char	*clean;
 
+	expanded = NULL;
 	grouped = 0;
 	target = read_token_grouped(line, i, &grouped);
 	if (!target)
+		return (change_exit_value("2", &env), NULL);
+	if (op_code == 3 && is_quoted(target))
 	{
-		change_exit_value("2", &env);
-		return (NULL);
+		clean = ft_strdup(target);
+		freedom((void **)&target);
+		return (clean);
 	}
 	expanded = expand_env_vars(target, env);
-	free(target);
+	freedom((void **)&target);
 	if (!expanded)
 		return (NULL);
-	clean = remove_quotes_str(expanded);
-	free(expanded);
+	clean = ft_strdup(expanded);
+	freedom((void **)&expanded);
 	return (clean);
 }
 
@@ -59,7 +64,7 @@ void	redir_add_back(t_list_red **lst, char *content, int doble)
 	tmp->next = new;
 }
 
-static int	handle_pipe(t_parser *p)
+int	handle_pipe1(t_parser *p)
 {
 	if (p->pending_in || p->pending_out)
 	{
@@ -76,39 +81,31 @@ static int	handle_pipe(t_parser *p)
 	return (0);
 }
 
-static int	handle_redirection(t_parse_ctx *ctx)
+static int	handle_redir_error(char *target)
 {
-	char	*target;
+	freedom((void **)&target);
+	return (-1);
+}
 
-	target = get_redir_target(ctx->line, &ctx->p->i, ctx->env);
+int	handle_redirection(t_parse_ctx *ctx)
+{
+	char			*target;
+	t_redir_params	p;
+	int				traduce;
+
+	target = get_redir_target(ctx->line, &ctx->p->i, ctx->env, ctx->p->op_code);
 	if (!target)
 		return (-1);
 	if (ctx->p->current_cmd)
 	{
-		if (add_redir_target(ctx, ctx->p->current_cmd,
-				ctx->p->op_code, target, ctx->env))
-		{
-			free(target); // only on failure
-			return (-1);
-		}
+		p.ctx = ctx;
+		p.cmd = ctx->p->current_cmd;
+		p.op_code = ctx->p->op_code;
+		p.target = target;
+		if (add_redir_target(&p))
+			return (handle_redir_error(target));
 	}
-	else
-	{
-		if (store_pending_redir(ctx, target))
-		{
-			free(target);
-			return (-1);
-		}
-	}
-	//free(target); //////////// si lo dejo hay doble free con <<
+	else if (store_pending_redir(ctx, target))
+		return (handle_redir_error(target));
 	return (0);
-}
-
-int	handle_operator(t_parse_ctx *ctx)
-{
-	intvec_push(ctx->codes, ctx->p->op_code);
-	ctx->p->i += ctx->p->op_len;
-	if (ctx->p->op_code == 5)
-		return (handle_pipe(ctx->p));
-	return (handle_redirection(ctx));
 }

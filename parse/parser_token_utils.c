@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   parser_token_utils.c                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:54 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 22:07:15 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 11:29:21 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parser.h"
+#include "../minishell.h"
 
 void	skip_spaces(const char *s, size_t *i)
 {
@@ -49,4 +49,20 @@ void	update_token_quote(const char *s, size_t *i,
 			*grouped_out = 1;
 	}
 	(*i)++;
+}
+
+int	is_quoted(const char *s)
+{
+	size_t	len;
+
+	if (!s)
+		return (0);
+	len = ft_strlen(s);
+	if (len >= 2)
+	{
+		if ((s[0] == '\'' && s[len - 1] == '\'')
+			|| (s[0] == '"' && s[len - 1] == '"'))
+			return (1);
+	}
+	return (0);
 }

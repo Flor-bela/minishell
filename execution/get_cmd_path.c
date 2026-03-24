@@ -6,7 +6,7 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/04 23:02:00 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/21 07:50:45 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ char	*get_cmd_path(t_exec_pack *p, char *cmd_name)
 		ft_free_malloc();
 		free_envp_copy(p->envp);
 		cmd_list_destroy(*p->data);
-		free(p->line);
+		freedom((void **)&p->line);
 		intvec_destroy(p->codes);
 		exit(127);
 	}

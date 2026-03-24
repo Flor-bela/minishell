@@ -6,11 +6,11 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:08 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 05:26:04 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 07:05:33 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parser.h"
+#include "../minishell.h"
 
 void	parser_init(t_parser *p, t_cmdnode **out_list)
 {

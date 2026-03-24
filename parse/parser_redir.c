@@ -3,39 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   parser_redir.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:49 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 22:35:49 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parser.h"
+#include "../minishell.h"
 
-/* static int	handle_heredoc(t_cmdnode *cmd,
-	const char *target, char **env)
-{
-	char		*real_delim;
-	t_list_red	*node;
-
-	(void)env;
-	real_delim = remove_quotes_str(target);
-	if (!real_delim)
-		return (-1);
-	node = red_list_push_back(&cmd->infiles, real_delim, 1);
-	if (!node)
-	{
-		free(real_delim);
-		//free((char *)target); //
-		return (-1);
-	}
-	node->is_heredoc = 1;
-	free(real_delim);
-	//free((char *)target); //
-	return (0);
-} */
-
-static int	init_heredoc_ctx(t_heredoc_fork *ctx, t_heredoc_args *args)
+int	init_heredoc_ctx2(t_heredoc_fork *ctx, t_heredoc_args *args)
 {
 	char	*real_delim;
 
@@ -45,10 +22,8 @@ static int	init_heredoc_ctx(t_heredoc_fork *ctx, t_heredoc_args *args)
 	real_delim = remove_quotes_str(args->target);
 	if (!real_delim)
 	{
-		//free((char *)args->target); //
 		return (-1);
-	}	
-	
+	}
 	ctx->delimiter = real_delim;
 	ctx->env = args->env;
 	ctx->data = args->data;
@@ -60,50 +35,48 @@ static int	init_heredoc_ctx(t_heredoc_fork *ctx, t_heredoc_args *args)
 static int	handle_pending_heredoc(t_heredoc_args *args)
 {
 	t_heredoc_fork	ctx;
-	//char			*heredoc_content;
-	int	fd;
+	int				fd;
 
-	if (init_heredoc_ctx(&ctx, args) == -1)
+	if (init_heredoc_ctx2(&ctx, args) == -1)
 		return (-1);
-	fd = heredoc_with_fork(&ctx, args, NULL); ///
-	free(ctx.delimiter);
-	free((char *)args->target); /// IMPORTANT------
+	fd = heredoc_with_fork(&ctx, args, NULL);
+	freedom((void **)&ctx.delimiter);
+	freedom((void **)&args->target);
 	red_list_push_back(&args->parser->pending_in, NULL, fd);
 	return (0);
 }
 
-int	add_redir_target(t_parse_ctx *ctx, t_cmdnode *cmd, int op_code,
-	const char *target, char **env)
+static int	handle_redir_heredoc(t_redir_params *p)
 {
 	t_heredoc_args	args;
-	(void)env;
-	if (op_code == 1)
-		red_list_push_back(&cmd->infiles, target, 0);
-	else if (op_code == 3)
-	{
-		t_heredoc_fork	ctx2;
-		//char			*heredoc_content;
-		int	fd;
+	t_heredoc_fork	ctx2;
+	int				fd;
 
-		args.parser = ctx->p;
-		args.target = target;
-		args.env = ctx->env;
-		args.data = ctx->data;
-		args.line = (char *)ctx->line;
-		args.codes = ctx->codes;
+	args.parser = p->ctx->p;
+	args.target = p->target;
+	args.env = p->ctx->env;
+	args.data = p->ctx->data;
+	args.line = (char *)p->ctx->line;
+	args.codes = p->ctx->codes;
+	if (init_heredoc_ctx2(&ctx2, &args) == -1)
+		return (-1);
+	fd = heredoc_with_fork(&ctx2, &args, p->cmd);
+	freedom((void **)&ctx2.delimiter);
+	freedom((void **)&args.target);
+	red_list_push_back(&p->cmd->infiles, NULL, fd);
+	return (0);
+}
 
-		if (init_heredoc_ctx(&ctx2, &args) == -1)
-			return (-1);
-		fd = heredoc_with_fork(&ctx2, &args, cmd);
-		free(ctx2.delimiter);
-		free((char *)args.target); /// IMPORTANT------
-		red_list_push_back(&cmd->infiles, NULL, fd);
-		//return (handle_heredoc(cmd, target, env));
-	}	
-	else if (op_code == 2)
-		red_list_push_back(&cmd->outfiles, target, 0);
-	else if (op_code == 4)
-		red_list_push_back(&cmd->outfiles, target, 1);
+int	add_redir_target(t_redir_params *p)
+{
+	if (p->op_code == 1)
+		red_list_push_back(&p->cmd->infiles, p->target, 0);
+	else if (p->op_code == 3)
+		return (handle_redir_heredoc(p));
+	else if (p->op_code == 2)
+		red_list_push_back(&p->cmd->outfiles, p->target, 0);
+	else if (p->op_code == 4)
+		red_list_push_back(&p->cmd->outfiles, p->target, 1);
 	return (0);
 }
 

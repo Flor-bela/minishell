@@ -6,11 +6,11 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:59 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 16:18:00 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 07:00:08 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parser.h"
+#include "../minishell.h"
 
 static int	handle_no_quote(const char *s, size_t *i,
 	char *quote, int *grouped_out)

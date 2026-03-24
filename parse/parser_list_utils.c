@@ -6,11 +6,11 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:30 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/19 16:20:23 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parser.h"
+#include "../minishell.h"
 
 void	intvec_push(t_intvec *v, int x)
 {
@@ -39,7 +39,7 @@ void	intvec_push(t_intvec *v, int x)
 
 void	intvec_free(t_intvec *v)
 {
-	free(v->data);
+	freedom((void **)&v->data);
 	v->data = NULL;
 	v->len = 0;
 	v->cap = 0;

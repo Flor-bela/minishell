@@ -6,11 +6,11 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 12:44:37 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/21 04:05:03 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "provisionaryFunctions.h"
+#include "../minishell.h"
 
 static int	update_env(char **envp, char *key, char *path)
 {
@@ -27,10 +27,10 @@ static int	update_env(char **envp, char *key, char *path)
 	{
 		if (ft_strncmp(envp[i], key, len) == 0 && envp[i][len] == '=')
 		{
-			free(envp[i]);
+			freedom((void **)&envp[i]);
 			new_entry = ft_strjoin(key, "=");
 			final_entry = ft_strjoin(new_entry, path);
-			free(new_entry);
+			freedom((void **)&new_entry);
 			envp[i] = final_entry;
 			return (0);
 		}
@@ -49,7 +49,7 @@ static char	*cd_get_path(t_list *args, char **envp, char *oldpwd)
 		if (!path)
 		{
 			write(2, "minishell: cd: HOME not set\n", 29);
-			free(oldpwd);
+			freedom((void **)&oldpwd);
 			return (NULL);
 		}
 	}
@@ -63,7 +63,7 @@ static int	cd_change_dir(char *path, char *oldpwd)
 	if (chdir(path) != 0)
 	{
 		perror("minishell: cd");
-		free(oldpwd);
+		freedom((void **)&oldpwd);
 		return (1);
 	}
 	return (0);
@@ -78,8 +78,8 @@ static void	cd_update_env(char **envp, char *oldpwd)
 		newpwd = ft_strdup("");
 	update_env(envp, "OLDPWD", oldpwd);
 	update_env(envp, "PWD", newpwd);
-	free(oldpwd);
-	free(newpwd);
+	freedom((void **)&oldpwd);
+	freedom((void **)&newpwd);
 }
 
 int	builtin_cd(t_list *args, char **envp)

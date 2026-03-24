@@ -6,11 +6,11 @@
 /*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:12:54 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/17 12:24:33 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parser.h"
+#include "../minishell.h"
 
 void	move_red_list_to_back(t_list_red **dst, t_list_red **src)
 {
@@ -78,11 +78,11 @@ void	cmd_list_free(t_cmdnode *h)
 	while (h)
 	{
 		nx = h->next;
-		free(h->cmd);
+		freedom((void **)&h->cmd);
 		str_list_free(h->phrase);
 		red_list_free(h->infiles);
 		red_list_free(h->outfiles);
-		free(h);
+		freedom((void **)&h);
 		h = nx;
 	}
 }

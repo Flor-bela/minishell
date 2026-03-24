@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   parser_command.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:03 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 16:11:56 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parser.h"
+#include "../minishell.h"
 
 char	*get_clean_token(const char *line, size_t *i, char **env)
 {
@@ -24,11 +24,11 @@ char	*get_clean_token(const char *line, size_t *i, char **env)
 	if (!tok)
 		return (NULL);
 	expanded = expand_env_vars(tok, env);
-	free(tok);
+	freedom((void **)&tok);
 	if (!expanded)
 		return (NULL);
 	clean = remove_quotes_str(expanded);
-	free(expanded);
+	freedom((void **)&expanded);
 	return (clean);
 }
 
@@ -41,14 +41,14 @@ static int	add_command_token(const char *line, t_parser *p, char **env)
 		return (1);
 	if (clean[0] == '\0')
 	{
-		free(clean);
+		freedom((void **)&clean);
 		return (0);
 	}
 	if (!p->current_cmd->cmd)
 		p->current_cmd->cmd = ft_strdup(clean);
 	else
 		str_list_push_back(&p->current_cmd->phrase, clean);
-	free(clean);
+	freedom((void **)&clean);
 	return (0);
 }
 

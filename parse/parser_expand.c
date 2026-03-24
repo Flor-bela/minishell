@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   parser_expand.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:20 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 22:48:00 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parser.h"
+#include "../minishell.h"
 
 static int	is_var_start(char c)
 {
@@ -46,7 +46,7 @@ static char	*expand_variable(const char *token, size_t *i,
 		(*i)++;
 	var_name = dup_range(token, start, *i);
 	value = get_env_value(env, var_name);
-	free(var_name);
+	freedom((void **)&var_name);
 	if (value)
 		res = append_str_dyn(res, value);
 	return (res);
@@ -80,7 +80,6 @@ char	*expand_env_vars(const char *token, char **env)
 	if (!res)
 	{
 		perror("ft_strdup");
-		//free((char *)token); /////
 		exit(1);
 	}
 	quote = 0;
@@ -96,6 +95,5 @@ char	*expand_env_vars(const char *token, char **env)
 		res = append_char_dyn(res, token[i]);
 		i++;
 	}
-	//free((char *)token); //
 	return (res);
 }

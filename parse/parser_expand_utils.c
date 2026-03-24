@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   parser_expand_utils.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:15 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/21 12:35:17 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parser.h"
+#include "../minishell.h"
 
 static char	*append_char_new(char c)
 {
@@ -39,7 +39,7 @@ char	*append_char_dyn(char *base, char c)
 	if (!res)
 	{
 		perror("malloc");
-		free(base);
+		freedom((void **)&base);
 		exit(1);
 	}
 	else
@@ -47,7 +47,7 @@ char	*append_char_dyn(char *base, char c)
 		ft_memcpy(res, base, len);
 		res[len] = c;
 		res[len + 1] = 0;
-		free(base);
+		freedom((void **)&base);
 	}
 	return (res);
 }
@@ -81,7 +81,7 @@ char	*append_str_dyn(char *base, const char *add)
 	if (!res)
 	{
 		perror("malloc");
-		free(base);
+		freedom((void **)&base);
 		exit(1);
 	}
 	else
@@ -89,7 +89,7 @@ char	*append_str_dyn(char *base, const char *add)
 		ft_memcpy(res, base, len1);
 		ft_memcpy(res + len1, add, len2);
 		res[len1 + len2] = 0;
-		free(base);
+		freedom((void **)&base);
 	}
 	return (res);
 }

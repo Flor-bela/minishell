@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   parser_list_redir.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
+/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:25 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/23 22:15:06 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 13:02:24 by oscar            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parser.h"
+#include "../minishell.h"
 
 void	str_list_free(t_list *lst)
 {
@@ -19,8 +19,8 @@ void	str_list_free(t_list *lst)
 	while (lst)
 	{
 		next = lst->next;
-		free(lst->content);
-		free(lst);
+		freedom((void **)&lst->content);
+		freedom((void **)&lst);
 		lst = next;
 	}
 }
@@ -70,7 +70,7 @@ t_list_red	*red_list_push_back(t_list_red **head, const char *s, int doble)
 		tail->next = new;
 		new->prev = tail;
 	}
-	free((char *)s); /////////////ERA ESTOOOOOOOOOOOOOO
+	freedom((void **)&s);
 	return (new);
 }
 
@@ -81,8 +81,8 @@ void	red_list_free(t_list_red *lst)
 	while (lst)
 	{
 		next = lst->next;
-		free(lst->content);
-		free(lst);
+		freedom((void **)&lst->content);
+		freedom((void **)&lst);
 		lst = next;
 	}
 }
