@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_cd.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 12:44:37 by fda-roch          #+#    #+#             */
-/*   Updated: 2026/03/21 04:05:03 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 20:07:11 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,11 @@ static int	cd_change_dir(char *path, char *oldpwd)
 {
 	if (chdir(path) != 0)
 	{
-		perror("minishell: cd");
+		write(2, "minishell: cd: ", 16);
+		write(2, path, ft_strlen(path));
+		write(2, ": ", 2);
+		write(2, strerror(errno), ft_strlen(strerror(errno)));
+		write(2, "\n", 1);
 		free(oldpwd);
 		return (1);
 	}

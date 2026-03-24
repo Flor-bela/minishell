@@ -6,7 +6,7 @@
 /*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 19:45:51 by fda-roch         ###   ########.fr       */
+/*   Updated: 2026/03/24 20:09:12 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -512,10 +512,10 @@ static int	execute_pipeline_2ndpart(t_cmdnode *data_tmp, char ***envp, t_exit_ct
 
 int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 {
-	int			**arr_fds;
-	t_exit_ctx	ctx; // clean
-	t_exec_pack        p; // execute
-	t_pipeline_state    s; // pipelineeeeeee
+	int					**arr_fds;
+	t_exit_ctx			ctx; // clean
+	t_exec_pack			p; // execute
+	t_pipeline_state	s; // pipelineeeeeee
 
 	// t_pipeline_state    s; // crearla aquí
 	s.i = 0;
@@ -525,6 +525,15 @@ int	execute_cmds(t_cmdnode **data, char ***envp, char *line, t_intvec *codes)
 	s.last_exit_status = 0;
 	s.return_value = 0;
 	
+	//ctx
+/* 	t_list		*args;
+	int			in_child;
+	char		***envp;
+	t_cmdnode	**data;
+	char		*line;
+	t_intvec	*codes; */
+
+
 
 	arr_fds = NULL;
 	ctx = init_variable_ctx(envp, data, line, codes);
