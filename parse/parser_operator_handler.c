@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_operator_handler.c                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <fda-roch@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/16 10:13:35 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 16:23:53 by oscar            ###   ########.fr       */
+/*   Updated: 2026/03/24 21:09:02 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,10 @@ int	handle_redirection(t_parse_ctx *ctx)
 
 	target = get_redir_target(ctx->line, &ctx->p->i, ctx->env, ctx->p->op_code);
 	if (!target)
+	{
+		write(0, "minishell: syntax error near unexpected token\n", 47);
 		return (-1);
+	}
 	if (ctx->p->current_cmd)
 	{
 		p.ctx = ctx;
