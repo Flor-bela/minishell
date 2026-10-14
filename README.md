@@ -7,12 +7,14 @@ The program handles user input in an interactive prompt, interprets commands, an
 
 ## Instructions
 ### Compilation:
+To compile the project, run the following commands:
 
-To compile the project:
-make    # Compile the project
+```bash
+make        # Compile the project
 make clean  # Remove object files
 make fclean # Remove object files and executable
 make re     # Recompile everything
+```
 
 ### Execution:
 
