@@ -1,54 +1,38 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   execution2 copy.c                                  :+:      :+:    :+:   */
+/*   exec_err.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/03/24 20:04:03 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 20:06:58 by oscar            ###   ########.fr       */
+/*   Created: 2026/10/14 23:12:49 by fda-roch          #+#    #+#             */
+/*   Updated: 2026/10/14 23:36:46 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-void	error_pipe(t_cmdnode **data,
-		t_intvec **codes, char *line, char **envp)
+void	error_execve(char **envp, char *cmd_path)
 {
-	perror("minishell: pipe");
-	change_exit_value("1", &envp);
-	free_envp_copy(envp);
-	cmd_list_destroy(*data);
-	free(line);
-	intvec_destroy(*codes);
-	exit(1);
-}
+	char	*error;
 
-char	**get_args(t_list *phrase)
-{
-	t_list	*tmp;
-	int		args_count;
-	char	**args;
-	int		i;
-
-	args_count = 0;
-	i = 0;
-	tmp = phrase;
-	while (tmp != NULL)
+	error = ft_strjoin_modif("minishell: ", cmd_path);
+	perror(error);
+	if (errno == EACCES)
 	{
-		args_count++;
-		tmp = tmp->next;
+		change_exit_value("126", &envp);
+		exit(126);
 	}
-	args = (char **)ft_malloc(sizeof(char *) * (args_count + 2));
-	tmp = phrase;
-	while (i < args_count)
+	else if (errno == ENOENT)
 	{
-		args[i + 1] = tmp->content;
-		tmp = tmp->next;
-		i++;
+		change_exit_value("127", &envp);
+		exit(127);
 	}
-	args[args_count + 1] = NULL;
-	return (args);
+	else
+	{
+		change_exit_value("126", &envp);
+		exit(126);
+	}
 }
 
 void	exit_error(t_exec_pack *p, char *code, int exit_code)
@@ -88,4 +72,14 @@ void	handle_xok_error(t_exec_pack *p, char *data_cmd)
 	free(p->line);
 	intvec_destroy(p->codes);
 	exit(126);
+}
+
+void	handle_exec_error(t_exec_pipe_ctx *c, int return_value)
+{
+	if (return_value != 0 || !c->data_tmp->cmd)
+	{
+		clean_execution(c->p->envp, c->p->data,
+			c->p->line, c->p->codes);
+		exit(return_value);
+	}
 }

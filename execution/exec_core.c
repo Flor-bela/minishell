@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   execution.c                                        :+:      :+:    :+:   */
+/*   exec.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 07:47:27 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 20:19:17 by oscar            ###   ########.fr       */
+/*   Updated: 2026/10/14 23:17:47 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,4 +84,17 @@ int	execute_cmds(t_cmdnode **data, char ***envp,
 	c.last_exit_status = wait_and_signals(c.len, c.pids,
 			c.last_exit_status, *envp);
 	return (c.last_exit_status);
+}
+
+int	execute_cmd_or_builtin(t_exec_pipe_ctx *c)
+{
+	int	return_value;
+
+	return_value = 0;
+	if (is_built_in(c->data_tmp->cmd) == 1)
+		return_value = execute_built_ins(c->data_tmp,
+				&c->p->envp, &c->ctx);
+	else
+		execute_execve(c->data_tmp, c->p->envp, *c->p);
+	return (return_value);
 }

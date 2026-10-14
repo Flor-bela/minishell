@@ -1,42 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   execution2 copy 4.c                                :+:      :+:    :+:   */
+/*   exec_builtin.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/03/24 20:03:41 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 20:09:22 by oscar            ###   ########.fr       */
+/*   Created: 2026/10/14 23:08:19 by fda-roch          #+#    #+#             */
+/*   Updated: 2026/10/14 23:37:04 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
-
-int	handle_outfile_redirections(t_list_red **tmp_outfiles)
-{
-	int		fd_file;
-	char	*error;
-
-	while (*tmp_outfiles != NULL)
-	{
-		if ((*tmp_outfiles)->doble == 0)
-			fd_file = open((*tmp_outfiles)->content,
-					O_WRONLY | O_CREAT | O_TRUNC, 0666);
-		else
-			fd_file = open((*tmp_outfiles)->content,
-					O_WRONLY | O_CREAT | O_APPEND, 0666);
-		if (fd_file == -1)
-		{
-			error = ft_strjoin_modif("minishell: ", (*tmp_outfiles)->content);
-			perror(error);
-			return (1);
-		}
-		dup2(fd_file, STDOUT_FILENO);
-		close(fd_file);
-		*tmp_outfiles = (*tmp_outfiles)->next;
-	}
-	return (0);
-}
 
 int	execute_built_ins(t_cmdnode *data_tmp,
 		char ***envp, t_exit_ctx *ctx)
@@ -68,47 +42,45 @@ int	execute_built_ins(t_cmdnode *data_tmp,
 	return (return_value);
 }
 
-int	**execute_pipe(t_cmdnode **data,
-		t_intvec **codes, char *line, char **envp)
+int	execute_only_built_in(t_builtin_ctx c)
 {
-	int			**arr_fds;
-	int			len;
-	int			i;
+	int	saved_stdin;
+	int	saved_stdout;
+	int	return_value;
 
-	i = 0;
-	len = len_data(*data);
-	arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1));
-	while (i < len - 1)
-	{
-		arr_fds[i] = (int *)ft_malloc(sizeof(int) * 2);
-		if (pipe(arr_fds[i]) == -1)
-			error_pipe(data, codes, line, envp);
-		i++;
-	}
-	return (arr_fds);
+	saved_stdin = -1;
+	saved_stdout = -1;
+	return_value = 0;
+	saved_stdin = dup(STDIN_FILENO);
+	return_value = handle_redirects_builtin(&c, &saved_stdout);
+	return_value = execute_builtin_if_needed(&c, return_value);
+	restore_fds(saved_stdin, saved_stdout);
+	return (return_value);
 }
 
-void	error_execve(char **envp, char *cmd_path)
+int	handle_redirects_builtin(t_builtin_ctx *c,
+	int *saved_stdout)
 {
-	char	*error;
+	int	return_value;
 
-	error = ft_strjoin_modif("minishell: ", cmd_path);
-	perror(error);
-	if (errno == EACCES)
+	return_value = 0;
+	if (c->data_infiles != NULL)
+		return_value = handle_infile_redirections(&c->data_infiles);
+	if (c->data_outfiles != NULL)
 	{
-		change_exit_value("126", &envp);
-		exit(126);
+		*saved_stdout = dup(STDOUT_FILENO);
+		return_value = handle_outfile_redirections(&c->data_outfiles);
 	}
-	else if (errno == ENOENT)
-	{
-		change_exit_value("127", &envp);
-		exit(127);
-	}
-	else
-	{
-		change_exit_value("126", &envp);
-		exit(126);
-	}
+	return (return_value);
+}
+
+int	execute_builtin_if_needed(t_builtin_ctx *c,
+	int return_value)
+{
+	if (is_built_in((*c->data_tmp)->cmd) == 1)
+		return_value = execute_built_ins(*c->data_tmp,
+				c->envp, c->ctx);
+	return (return_value);
 }
 
 int	check_if_single_cmd_parent(char *data_tmp_cmd)

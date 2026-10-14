@@ -1,53 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   execution2 copy 2.c                                :+:      :+:    :+:   */
+/*   exec_pipeline.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/03/24 20:03:28 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 20:11:52 by oscar            ###   ########.fr       */
+/*   Created: 2026/10/14 23:06:11 by fda-roch          #+#    #+#             */
+/*   Updated: 2026/10/14 23:08:00 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
 
-int	execute_only_built_in(t_builtin_ctx c)
+int	**execute_pipe(t_cmdnode **data,
+		t_intvec **codes, char *line, char **envp)
 {
-	int	saved_stdin;
-	int	saved_stdout;
-	int	return_value;
+	int			**arr_fds;
+	int			len;
+	int			i;
 
-	saved_stdin = -1;
-	saved_stdout = -1;
-	return_value = 0;
-	saved_stdin = dup(STDIN_FILENO);
-	return_value = handle_redirects_builtin(&c, &saved_stdout);
-	return_value = execute_builtin_if_needed(&c, return_value);
-	restore_fds(saved_stdin, saved_stdout);
-	return (return_value);
-}
-
-int	handle_single_cmd_parent(t_cmdnode *data_tmp,
-		t_cmdnode **data, char ***envp, t_exit_ctx *ctx)
-{
-	int	return_value;
-
-	return_value = 0;
-	if ((data_tmp->cmd == NULL || data_tmp->cmd[0] == '\0'))
-		return (execute_only_redirect(data_tmp->infiles, data_tmp->outfiles));
-	if ((is_built_in(data_tmp->cmd) == 1))
+	i = 0;
+	len = len_data(*data);
+	arr_fds = (int **)ft_malloc(sizeof(int *) * (len - 1));
+	while (i < len - 1)
 	{
-		return_value = execute_only_built_in((t_builtin_ctx){
-				data_tmp->infiles,
-				data_tmp->outfiles,
-				data,
-				envp,
-				ctx
-			});
-		return (return_value);
+		arr_fds[i] = (int *)ft_malloc(sizeof(int) * 2);
+		if (pipe(arr_fds[i]) == -1)
+			error_pipe(data, codes, line, envp);
+		i++;
 	}
-	return (0);
+	return (arr_fds);
 }
 
 int	execute_red_first_cmd(t_list_red *data_infiles,

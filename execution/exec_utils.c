@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   execution2.c                                       :+:      :+:    :+:   */
+/*   exec_utils.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/03/24 20:04:09 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 20:05:59 by oscar            ###   ########.fr       */
+/*   Created: 2026/10/14 23:00:54 by fda-roch          #+#    #+#             */
+/*   Updated: 2026/10/14 23:36:17 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,14 +62,24 @@ void	clean_execution(char **envp,
 	intvec_destroy(codes);
 }
 
-void	error_fork(t_exec_pack *p)
+int	setup_and_redirect(t_exec_pipe_ctx *c)
 {
-	perror("minishell: fork");
-	change_exit_value("1", &p->envp);
-	ft_free_malloc();
-	free_envp_copy(p->envp);
-	cmd_list_destroy(*p->data);
-	free(p->line);
-	intvec_destroy(p->codes);
-	exit(1);
+	int	return_value;
+
+	return_value = 0;
+	signal(SIGINT, SIG_DFL);
+	signal(SIGQUIT, SIG_DFL);
+	c->ctx.args = c->data_tmp->phrase;
+	c->ctx.in_child = 1;
+	if (c->i == 0)
+		return_value = execute_red_first_cmd(c->data_tmp->infiles,
+				c->data_tmp->outfiles, c->p->len, c->p->arr_fds);
+	else if (c->i == c->p->len - 1)
+		return_value = execute_red_last_cmd(c->data_tmp->infiles,
+				c->data_tmp->outfiles, c->p->arr_fds, c->i);
+	else
+		return_value = execute_other_cmds(c->data_tmp->infiles,
+				c->data_tmp->outfiles, c->p->arr_fds, c->i);
+	close_fds(c->p->arr_fds, c->p->len);
+	return (return_value);
 }

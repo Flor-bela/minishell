@@ -1,46 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   execution2 copy 5.c                                :+:      :+:    :+:   */
+/*   exec_infile.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oscar <oscar@student.42.fr>                +#+  +:+       +#+        */
+/*   By: fda-roch <<fda-roch@student.42.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/03/24 20:03:45 by oscar             #+#    #+#             */
-/*   Updated: 2026/03/24 20:08:30 by oscar            ###   ########.fr       */
+/*   Created: 2026/10/14 23:19:29 by fda-roch          #+#    #+#             */
+/*   Updated: 2026/10/14 23:36:36 by fda-roch         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minishell.h"
-
-char	*handle_direct_cmd(t_exec_pack *p, char *data_cmd)
-{
-	if (access(data_cmd, F_OK) != 0)
-		handle_fok_error(p, data_cmd);
-	if (access(data_cmd, X_OK) != 0)
-		handle_xok_error(p, data_cmd);
-	return (data_cmd);
-}
-
-char	*get_cmd_name_and_path(t_exec_pack *p,
-	char **args, char *data_cmd)
-{
-	char	*cmd_name;
-	char	*cmd_path;
-
-	cmd_path = NULL;
-	if (find_chr(data_cmd, '/') == 1)
-	{
-		cmd_name = strchr_modif(data_cmd, '/');
-		cmd_path = handle_direct_cmd(p, data_cmd);
-		args[0] = cmd_name;
-	}
-	else
-	{
-		cmd_path = get_cmd_path(p, data_cmd);
-		args[0] = data_cmd;
-	}
-	return (cmd_path);
-}
 
 void	handle_infile_doble(t_list_red *infile)
 {
